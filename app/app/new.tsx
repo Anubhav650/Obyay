@@ -10,7 +10,7 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useHobbies, getErrorMessage } from '../src/hooks/useHobbies';
@@ -26,22 +26,30 @@ import {
   getLevelDimColor,
   getLevelGlowColor,
 } from '../src/theme/tokens';
-
-const LEVELS: { value: GoalLevel; icon: string; label: string; subtitle: string }[] = [
-  { value: 'casual', icon: '🎮', label: 'Casual', subtitle: 'Just for fun' },
-  { value: 'hobbyist', icon: '🎯', label: 'Hobbyist', subtitle: 'Get pretty good' },
-  { value: 'serious', icon: '🏆', label: 'Serious', subtitle: 'Go deep' },
-];
-
-const LOADING_MESSAGES = [
-  'Asking the experts…',
-  'Ordering techniques…',
-  'Almost there…',
-];
+import { LEVELS, LOADING_MESSAGES } from '../src/constants';
 
 export default function NewHobbyScreen() {
   const router = useRouter();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <Pressable
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.dismiss();
+          }}
+          style={styles.cancelButton}
+          accessibilityRole="button"
+          accessibilityLabel="Cancel and close modal"
+        >
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </Pressable>
+      ),
+    });
+  }, [navigation, router]);
   const { createHobby } = useHobbies();
 
   const [hobbyName, setHobbyName] = useState('');
@@ -83,7 +91,8 @@ export default function NewHobbyScreen() {
     try {
       const hobby = await createHobby(hobbyName.trim(), selectedLevel);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace(`/hobby/${hobby.id}`);
+      router.dismiss();
+      router.push(`/hobby/${hobby.id}`);
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setError(getErrorMessage(err));
@@ -333,5 +342,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+  },
+  cancelButton: {
+    paddingHorizontal: spacing.sm,
+    justifyContent: 'center',
+    alignItems: 'center',
+    minHeight: 44,
+  },
+  cancelButtonText: {
+    color: colors.textSecondary,
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.medium,
   },
 });

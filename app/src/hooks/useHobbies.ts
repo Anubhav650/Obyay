@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import type { Hobby, GoalLevel, TechniqueStatus } from '../types/models';
 import * as store from '../store/hobbyStore';
 import { generatePlan, getErrorMessage } from '../api/client';
+import { generateUUID } from '../utils/uuid';
 
 interface UseHobbiesReturn {
   hobbies: Hobby[];
@@ -53,15 +53,17 @@ export function useHobbies(): UseHobbiesReturn {
 
   const createHobby = useCallback(
     async (name: string, level: GoalLevel): Promise<Hobby> => {
-      const plan = await generatePlan(name, level);
+      const profile = await store.loadProfile();
+      const plan = await generatePlan(name, level, profile);
 
       const hobby: Hobby = {
-        id: uuidv4(),
+        id: generateUUID(),
         name: plan.hobby,
         level: plan.level,
         summary: plan.summary,
         techniques: plan.techniques.map((t) => ({
           ...t,
+          id: t.id || generateUUID(),
           status: 'pending' as TechniqueStatus,
           statusUpdatedAt: null,
           resources: null,

@@ -1,4 +1,4 @@
-import type { GoalLevel, Hobby, Resource, Technique } from '../types/models';
+import type { GoalLevel, Hobby, Resource, Technique, UserProfile } from '../types/models';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -82,7 +82,7 @@ async function apiFetch<T>(
         // Response body not JSON
       }
 
-      const code = mapErrorCode(errorData.code, response.status);
+      const code = mapErrorCode(errorData.code || errorData.error, response.status);
       throw new ApiError(
         code,
         errorData.error || `Server error: ${response.status}`,
@@ -121,13 +121,34 @@ function mapErrorCode(code: string | undefined, status: number): ApiErrorCode {
 
 export async function generatePlan(
   hobby: string,
-  level: GoalLevel
+  level: GoalLevel,
+  profile?: UserProfile | null
 ): Promise<PlanResponse> {
-  return apiFetch<PlanResponse>('/api/plan', {
+  interface ServerResponse {
+    plan: {
+      hobby: string;
+      summary: string;
+      techniques: Array<{
+        id: string;
+        name: string;
+        description: string;
+        whyItMatters: string;
+        order: number;
+        searchQuery: string;
+      }>;
+    };
+  }
+
+  const response = await apiFetch<ServerResponse>('/api/plan', {
     method: 'POST',
-    body: { hobby, level },
+    body: { hobby, level, profile },
     timeoutMs: 30000, // Plan generation can take longer
   });
+
+  return {
+    ...response.plan,
+    level,
+  };
 }
 
 export async function fetchResources(

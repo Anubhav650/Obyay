@@ -1,23 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Hobby, TechniqueStatus, Resource, Progress } from '../types/models';
+import type { Hobby, TechniqueStatus, Resource, Progress, UserProfile } from '../types/models';
 
 // ─── Storage Keys ────────────────────────────────────────────────────────────
 
 const HOBBY_IDS_KEY = 'obyay:hobbyIds';
+const PROFILE_KEY = 'obyay:profile';
 const hobbyKey = (id: string) => `obyay:hobby:${id}`;
 
 // ─── Pure Functions ──────────────────────────────────────────────────────────
 
-export function getProgress(hobby: Hobby): Progress {
-  const total = hobby.techniques.length;
-  const mastered = hobby.techniques.filter((t) => t.status === 'mastered').length;
-  const skipped = hobby.techniques.filter((t) => t.status === 'skipped').length;
-  const remaining = total - mastered - skipped;
-  const denominator = total - skipped;
-  const percent = denominator > 0 ? Math.round((mastered / denominator) * 100) : 0;
-
-  return { total, mastered, skipped, remaining, percent };
-}
+export { getProgress } from '../utils/progress';
 
 // ─── Index Management ────────────────────────────────────────────────────────
 
@@ -128,4 +120,18 @@ export async function updateTechniqueResources(
 
   const updated: Hobby = { ...hobby, techniques: updatedTechniques };
   await AsyncStorage.setItem(hobbyKey(hobbyId), JSON.stringify(updated));
+}
+
+export async function saveProfile(profile: UserProfile): Promise<void> {
+  await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+}
+
+export async function loadProfile(): Promise<UserProfile | null> {
+  try {
+    const raw = await AsyncStorage.getItem(PROFILE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as UserProfile;
+  } catch {
+    return null;
+  }
 }

@@ -1,8 +1,9 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { View, FlatList, Alert, Platform, ActionSheetIOS, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useHobbies } from '../src/hooks/useHobbies';
+import { loadProfile } from '../src/store/hobbyStore';
 import { HobbyCard } from '../src/components/HobbyCard';
 import { EmptyState } from '../src/components/EmptyState';
 import { FAB } from '../src/components/FAB';
@@ -14,6 +15,18 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { hobbies, loading, deleteHobby } = useHobbies();
+  const [checkingProfile, setCheckingProfile] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      const profile = await loadProfile();
+      if (!profile) {
+        router.replace('/onboarding');
+      } else {
+        setCheckingProfile(false);
+      }
+    })();
+  }, [router]);
 
   const handleAddPress = useCallback(() => {
     router.push('/new');
@@ -75,7 +88,7 @@ export default function HomeScreen() {
 
   const keyExtractor = useCallback((item: Hobby) => item.id, []);
 
-  if (loading) {
+  if (loading || checkingProfile) {
     return (
       <View style={styles.container}>
         <Skeleton rows={4} />
@@ -101,6 +114,7 @@ export default function HomeScreen() {
             { paddingBottom: insets.bottom + 80 },
           ]}
           showsVerticalScrollIndicator={false}
+          contentInsetAdjustmentBehavior="automatic"
         />
       )}
       <FAB onPress={handleAddPress} />

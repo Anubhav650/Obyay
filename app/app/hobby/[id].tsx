@@ -10,7 +10,11 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
+import BottomSheet, {
+  BottomSheetView,
+  BottomSheetBackdrop,
+  BottomSheetScrollView,
+} from '@gorhom/bottom-sheet';
 import * as Linking from 'expo-linking';
 import * as Haptics from 'expo-haptics';
 import type { Hobby, Technique, TechniqueStatus } from '../../src/types/models';
@@ -39,23 +43,42 @@ function TechniqueSheetContent({
   technique,
   hobbyId,
   onUpdateStatus,
+  onClose,
 }: {
   technique: Technique;
   hobbyId: string;
   onUpdateStatus: (status: TechniqueStatus) => void;
+  onClose: () => void;
 }) {
   const { resources, loading, error } = useTechniqueResources(
     hobbyId,
     technique
   );
+  const insets = useSafeAreaInsets();
 
   return (
-    <ScrollView
+    <BottomSheetScrollView
       style={sheetStyles.scroll}
-      contentContainerStyle={sheetStyles.scrollContent}
+      contentContainerStyle={[
+        sheetStyles.scrollContent,
+        { paddingBottom: insets.bottom + 40 },
+      ]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={sheetStyles.name}>{technique.name}</Text>
+      <View style={sheetStyles.headerRow}>
+        <Text style={sheetStyles.name}>{technique.name}</Text>
+        <Pressable
+          style={sheetStyles.closeButton}
+          onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onClose();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Close sheet"
+        >
+          <Text style={sheetStyles.closeButtonText}>✕</Text>
+        </Pressable>
+      </View>
 
       {/* Why It Matters */}
       <View style={sheetStyles.section}>
@@ -156,7 +179,7 @@ function TechniqueSheetContent({
           </Pressable>
         )}
       </View>
-    </ScrollView>
+    </BottomSheetScrollView>
   );
 }
 
@@ -167,13 +190,34 @@ const sheetStyles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.base,
-    paddingBottom: spacing['4xl'],
+  },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: spacing.xl,
   },
   name: {
     fontSize: fontSize['2xl'],
     fontWeight: fontWeight.bold,
     color: colors.textPrimary,
-    marginBottom: spacing.xl,
+    flex: 1,
+    marginRight: spacing.base,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: radii.full,
+    backgroundColor: colors.surfaceElevated,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+  },
+  closeButtonText: {
+    color: colors.textSecondary,
+    fontSize: fontSize.base,
+    fontWeight: 'bold',
   },
   section: {
     marginBottom: spacing.xl,
@@ -438,6 +482,7 @@ export default function HobbyDetailScreen() {
               technique={selectedTechnique}
               hobbyId={hobby.id}
               onUpdateStatus={handleSheetStatusChange}
+              onClose={() => bottomSheetRef.current?.close()}
             />
           )}
         </BottomSheetView>

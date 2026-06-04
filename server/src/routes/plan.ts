@@ -11,9 +11,17 @@ const router = Router();
 
 // ── Request validation ─────────────────────────────────────────────────────
 
+const profileSchema = z.object({
+  roles: z.array(z.string()),
+  goals: z.array(z.string()),
+  interests: z.array(z.string()),
+  learningPreferences: z.array(z.string()),
+});
+
 const planRequestSchema = z.object({
   hobby: z.string().min(1, "hobby must be a non-empty string"),
   level: z.enum(["casual", "hobbyist", "serious"]),
+  profile: profileSchema.nullable().optional(),
 });
 
 // ── POST /api/plan ─────────────────────────────────────────────────────────
@@ -29,10 +37,10 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const { hobby, level } = parseResult.data;
+  const { hobby, level, profile } = parseResult.data;
 
   try {
-    const output = await generatePlan(hobby, level);
+    const output = await generatePlan(hobby, level, profile);
 
     // Check if it's a NOT_A_HOBBY error
     if ("error" in output) {
@@ -55,6 +63,7 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
       return;
     }
     if (err instanceof AIUnavailableError) {
+      console.error("AI_UNAVAILABLE error:", err.message);
       res.status(502).json({ error: "AI_UNAVAILABLE" });
       return;
     }

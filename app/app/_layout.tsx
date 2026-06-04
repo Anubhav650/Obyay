@@ -3,11 +3,13 @@ import { Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { StyleSheet } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { colors } from '../src/theme/tokens';
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
+      <StatusBar style="light" />
       <BottomSheetModalProvider>
         <Stack
           screenOptions={{
@@ -43,6 +45,13 @@ export default function RootLayout() {
             options={{
               title: '',
               headerBackTitle: 'Back',
+            }}
+          />
+          <Stack.Screen
+            name="onboarding"
+            options={{
+              headerShown: false,
+              gestureEnabled: false,
             }}
           />
         </Stack>
