@@ -6,6 +6,7 @@ import Animated, {
   withSpring,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { colors, radii, shadows, animation, spacing } from '../theme/tokens';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -30,6 +31,11 @@ function FABComponent({ onPress }: FABProps) {
     scale.value = withSpring(1, animation.springSnappy);
   }, []);
 
+  const handlePress = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onPress();
+  }, [onPress]);
+
   return (
     <AnimatedPressable
       style={[
@@ -40,7 +46,7 @@ function FABComponent({ onPress }: FABProps) {
           right: spacing.lg,
         },
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       accessibilityRole="button"

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { useHobbies, getErrorMessage } from '../src/hooks/useHobbies';
 import type { GoalLevel } from '../src/types/models';
 import {
@@ -77,11 +78,14 @@ export default function NewHobbyScreen() {
 
     setIsLoading(true);
     setError(null);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
       const hobby = await createHobby(hobbyName.trim(), selectedLevel);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace(`/hobby/${hobby.id}`);
     } catch (err) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setError(getErrorMessage(err));
       setIsLoading(false);
     }
@@ -147,7 +151,10 @@ export default function NewHobbyScreen() {
                     },
                   ]}
                   onPress={() => {
-                    if (!isLoading) setSelectedLevel(level.value);
+                    if (!isLoading) {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setSelectedLevel(level.value);
+                    }
                   }}
                   accessibilityRole="radio"
                   accessibilityState={{ selected: isSelected }}

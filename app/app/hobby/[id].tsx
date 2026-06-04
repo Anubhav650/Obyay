@@ -12,6 +12,7 @@ import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import * as Linking from 'expo-linking';
+import * as Haptics from 'expo-haptics';
 import type { Hobby, Technique, TechniqueStatus } from '../../src/types/models';
 import { loadHobby, getProgress } from '../../src/store/hobbyStore';
 import { useHobbies } from '../../src/hooks/useHobbies';
@@ -22,6 +23,7 @@ import { TechniqueRow } from '../../src/components/TechniqueRow';
 import { SwipeableRow } from '../../src/components/SwipeableRow';
 import { VideoCard } from '../../src/components/VideoCard';
 import { Skeleton } from '../../src/components/Skeleton';
+import { Confetti } from '../../src/components/Confetti';
 import {
   colors,
   spacing,
@@ -116,7 +118,10 @@ function TechniqueSheetContent({
                 sheetStyles.masterButton,
                 pressed && sheetStyles.actionPressed,
               ]}
-              onPress={() => onUpdateStatus('mastered')}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                onUpdateStatus('mastered');
+              }}
             >
               <Text style={sheetStyles.masterButtonText}>✓ Mark Mastered</Text>
             </Pressable>
@@ -126,7 +131,10 @@ function TechniqueSheetContent({
                 sheetStyles.skipButton,
                 pressed && sheetStyles.actionPressed,
               ]}
-              onPress={() => onUpdateStatus('skipped')}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onUpdateStatus('skipped');
+              }}
             >
               <Text style={sheetStyles.skipButtonText}>Skip This</Text>
             </Pressable>
@@ -139,7 +147,10 @@ function TechniqueSheetContent({
               sheetStyles.undoButton,
               pressed && sheetStyles.actionPressed,
             ]}
-            onPress={() => onUpdateStatus('pending')}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              onUpdateStatus('pending');
+            }}
           >
             <Text style={sheetStyles.undoButtonText}>↩ Undo</Text>
           </Pressable>
@@ -270,6 +281,7 @@ export default function HobbyDetailScreen() {
   const [hobby, setHobby] = useState<Hobby | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedTechnique, setSelectedTechnique] = useState<Technique | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['50%', '90%'], []);
@@ -303,9 +315,15 @@ export default function HobbyDetailScreen() {
   const handleStatusChange = useCallback(
     async (techniqueId: string, status: TechniqueStatus) => {
       if (!id) return;
+      const prevPercent = progress.percent;
       const updated = await updateTechniqueStatus(id, techniqueId, status);
       if (updated) {
         setHobby(updated);
+        const nextProgress = getProgress(updated);
+        if (nextProgress.percent === 100 && prevPercent < 100) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setShowConfetti(true);
+        }
         // Update the selected technique if it's the one that changed
         const updatedTechnique = updated.techniques.find((t) => t.id === techniqueId);
         if (updatedTechnique && selectedTechnique?.id === techniqueId) {
@@ -313,7 +331,7 @@ export default function HobbyDetailScreen() {
         }
       }
     },
-    [id, updateTechniqueStatus, selectedTechnique]
+    [id, updateTechniqueStatus, selectedTechnique, progress.percent]
   );
 
   const handleSheetStatusChange = useCallback(
@@ -424,6 +442,9 @@ export default function HobbyDetailScreen() {
           )}
         </BottomSheetView>
       </BottomSheet>
+
+      {/* Confetti Animation Overlay */}
+      <Confetti active={showConfetti} onAnimationEnd={() => setShowConfetti(false)} />
     </View>
   );
 }
