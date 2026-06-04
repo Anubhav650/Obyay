@@ -1,0 +1,61 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# Build outputs
+build/
+.build/
+*.apk
+*.aab
+*.ipa
+*.xcarchive
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.production.local
+.env.development.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Editor
+.editorconfig
+
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Testing
+.nyc_output/
+coverage/
+
+# Metro bundler
+.metro-cache/
+
+# React Native / Hermes
+.haste_cache/
+.bundle/
+
+# Watchman
+.watchmanconfig
+
+# Temporary files
+*.tmp
+tmp/
