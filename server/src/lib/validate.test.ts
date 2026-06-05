@@ -13,6 +13,7 @@ describe('validatePlanOutput', () => {
   ];
 
   const validPlan = {
+    category: 'general',
     summary: 'A bouldering starter curriculum',
     techniques: [
       {
@@ -130,6 +131,7 @@ describe('validatePlanOutput', () => {
 
   it('rejects output with duplicate order numbers', () => {
     const invalidPlan = {
+      category: 'general',
       summary: 'Duplicate orders',
       techniques: [
         { name: 'T1', description: 'Desc', whyItMatters: 'Why', order: 1, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
@@ -144,6 +146,7 @@ describe('validatePlanOutput', () => {
 
   it('rejects output with non-contiguous order numbers', () => {
     const invalidPlan = {
+      category: 'general',
       summary: 'Non-contiguous orders',
       techniques: [
         { name: 'T1', description: 'Desc', whyItMatters: 'Why', order: 1, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
@@ -158,6 +161,7 @@ describe('validatePlanOutput', () => {
 
   it('rejects output with order numbers not starting from 1', () => {
     const invalidPlan = {
+      category: 'general',
       summary: 'Starts from 2',
       techniques: [
         { name: 'T1', description: 'Desc', whyItMatters: 'Why', order: 2, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },

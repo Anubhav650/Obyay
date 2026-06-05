@@ -4,17 +4,17 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { colors } from '../src/theme/tokens';
+import { colors, letterSpacing } from '../src/theme/tokens';
 
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <BottomSheetModalProvider>
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: colors.bg },
-            headerTintColor: colors.textPrimary,
+            headerTintColor: colors.accentDark,
             headerTitleStyle: { fontWeight: '600' },
             headerShadowVisible: false,
             contentStyle: { backgroundColor: colors.bg },

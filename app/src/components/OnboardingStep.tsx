@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, ScrollView, StyleSheet } from 'react-native';
 import Animated, { FadeInRight, FadeOutLeft } from 'react-native-reanimated';
-import { colors, spacing, fontSize, fontWeight, lineHeight } from '../theme/tokens';
+import { colors, spacing, fontSize, fontWeight, lineHeight, letterSpacing } from '../theme/tokens';
 
 interface OnboardingStepProps {
   title?: string;
@@ -56,8 +56,9 @@ const styles = StyleSheet.create({
   questionTitle: {
     fontSize: fontSize.xl,
     fontWeight: fontWeight.bold,
-    color: colors.textPrimary,
+    color: colors.obyayTeal,
     marginBottom: spacing.sm,
+    letterSpacing: letterSpacing.tight,
   },
   questionSubtitle: {
     fontSize: fontSize.sm,

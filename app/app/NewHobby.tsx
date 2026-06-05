@@ -102,7 +102,7 @@ export default function NewHobbyScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setLevelValidationError(true);
       setError(
-        "Please select how serious you are to build your learning path.",
+        "Please select your current level to build your learning path.",
       );
       return;
     }
@@ -225,7 +225,7 @@ export default function NewHobbyScreen() {
               levelValidationError && { color: colors.error },
             ]}
           >
-            How serious are you?
+            What is your current level?
           </Text>
           <View style={styles.levelGrid}>
             {LEVELS.map((level) => {
@@ -284,7 +284,7 @@ export default function NewHobbyScreen() {
           {levelValidationError && (
             <View style={styles.inlineErrorContainer}>
               <Text style={styles.inlineErrorText}>
-                ⚠️ Please select a seriousness level above.
+                ⚠️ Please select your level above.
               </Text>
             </View>
           )}
@@ -329,7 +329,7 @@ export default function NewHobbyScreen() {
         <Pressable
           style={({ pressed }) => [
             styles.submitButton,
-            !canSubmit && styles.submitDisabled,
+            !canSubmit && !isLoading && styles.submitDisabled,
             pressed && canSubmit && styles.submitPressed,
           ]}
           onPress={handleSubmit}
@@ -345,7 +345,9 @@ export default function NewHobbyScreen() {
               </Text>
             </View>
           ) : (
-            <Text style={styles.submitText}>Generate Plan</Text>
+            <Text style={[styles.submitText, !canSubmit && styles.submitTextDisabled]}>
+              Generate Plan
+            </Text>
           )}
         </Pressable>
       </View>
@@ -397,7 +399,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.sm,
-    borderRadius: radii.lg,
+    borderRadius: radii.card,
     borderWidth: 1.5,
     minHeight: 120,
     justifyContent: "center",
@@ -444,7 +446,7 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: colors.accent,
-    borderRadius: radii.lg,
+    borderRadius: radii.pill,
     paddingVertical: spacing.base,
     alignItems: "center",
     justifyContent: "center",
@@ -455,11 +457,15 @@ const styles = StyleSheet.create({
   },
   submitPressed: {
     backgroundColor: colors.accentDark,
+    transform: [{ scale: 0.95 }],
   },
   submitText: {
     color: colors.white,
     fontSize: fontSize.lg,
     fontWeight: fontWeight.semibold,
+  },
+  submitTextDisabled: {
+    color: colors.textTertiary,
   },
   loadingContent: {
     flexDirection: "row",
@@ -472,7 +478,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   cancelButtonText: {
-    color: colors.textSecondary,
+    color: colors.accentDark,
     fontSize: fontSize.base,
     fontWeight: fontWeight.medium,
   },
@@ -514,7 +520,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.base,
     borderRadius: radii.md,
     borderWidth: 1,
-    borderColor: "rgba(248, 113, 113, 0.2)",
+    borderColor: "rgba(200, 32, 20, 0.2)",
   },
   inlineErrorText: {
     color: colors.error,

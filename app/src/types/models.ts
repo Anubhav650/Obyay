@@ -1,5 +1,6 @@
-export type GoalLevel = 'casual' | 'hobbyist' | 'serious';
+export type GoalLevel = 'beginner' | 'intermediate' | 'advanced';
 export type TechniqueStatus = 'pending' | 'mastered' | 'skipped';
+export type HobbyCategory = 'music' | 'strategy' | 'arts' | 'fitness' | 'culinary' | 'general';
 
 export interface Resource {
   videoId: string;
@@ -22,6 +23,30 @@ export interface Flashcard {
   back: string;
 }
 
+export interface PracticeToolConfig {
+  bpm?: number;
+  timeSignature?: string;
+  pattern?: string;
+  chords?: string[];
+  boardType?: string;
+  setup?: string;
+  puzzlePrompt?: string;
+  solution?: string[];
+  gridSize?: string;
+  subjectStyle?: string;
+  aspectRatio?: string;
+  referenceImagePrompt?: string;
+  timerSeconds?: number;
+  intervals?: Array<{ name: string; duration: number }>;
+  cycles?: number;
+  instruction?: string;
+  steps?: Array<{ name: string; duration: number; sensoryCheck: string }>;
+  targetTemperature?: string;
+  focusTime?: number;
+  milestones?: string[];
+  reflectionQuestions?: string[];
+}
+
 export interface Technique {
   id: string;
   name: string;
@@ -34,12 +59,14 @@ export interface Technique {
   resources: Resource[] | null; // null = not fetched, [] = fetched but empty
   quiz?: QuizQuestion;
   flashcards?: Flashcard[];
+  practiceTool?: PracticeToolConfig;
 }
 
 export interface Hobby {
   id: string;
   name: string;
   level: GoalLevel;
+  category: HobbyCategory;
   summary: string;
   techniques: Technique[];
   createdAt: string;

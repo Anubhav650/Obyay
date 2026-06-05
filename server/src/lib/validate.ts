@@ -14,6 +14,45 @@ export const flashcardSchema = z.object({
   back: z.string().min(1, "back must be non-empty"),
 });
 
+export const practiceToolSchema = z.object({
+  bpm: z.number().optional(),
+  timeSignature: z.string().optional(),
+  pattern: z.string().optional(),
+  chords: z.array(z.string()).optional(),
+  boardType: z.string().optional(),
+  setup: z.string().optional(),
+  puzzlePrompt: z.string().optional(),
+  solution: z.array(z.string()).optional(),
+  gridSize: z.string().optional(),
+  subjectStyle: z.string().optional(),
+  aspectRatio: z.string().optional(),
+  referenceImagePrompt: z.string().optional(),
+  timerSeconds: z.number().optional(),
+  intervals: z
+    .array(
+      z.object({
+        name: z.string(),
+        duration: z.number(),
+      })
+    )
+    .optional(),
+  cycles: z.number().optional(),
+  instruction: z.string().optional(),
+  steps: z
+    .array(
+      z.object({
+        name: z.string(),
+        duration: z.number(),
+        sensoryCheck: z.string(),
+      })
+    )
+    .optional(),
+  targetTemperature: z.string().optional(),
+  focusTime: z.number().optional(),
+  milestones: z.array(z.string()).optional(),
+  reflectionQuestions: z.array(z.string()).optional(),
+});
+
 export const techniqueSchema = z.object({
   name: z.string().min(1, "name must be non-empty"),
   description: z.string().min(1, "description must be non-empty"),
@@ -25,9 +64,11 @@ export const techniqueSchema = z.object({
     .max(100, "searchQuery must be at most 100 characters"),
   quiz: quizSchema,
   flashcards: z.array(flashcardSchema).min(2).max(2, "flashcards must have exactly 2 items"),
+  practiceTool: practiceToolSchema.optional(),
 });
 
 export const planOutputSchema = z.object({
+  category: z.enum(["music", "strategy", "arts", "fitness", "culinary", "general"]),
   summary: z.string().min(1, "summary must be non-empty"),
   techniques: z
     .array(techniqueSchema)

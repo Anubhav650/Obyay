@@ -5,7 +5,8 @@ describe('getProgress', () => {
   const baseHobby: Hobby = {
     id: 'test-id',
     name: 'Bouldering',
-    level: 'hobbyist',
+    level: 'intermediate',
+    category: 'general',
     summary: 'A bouldering starter curriculum',
     techniques: [],
     createdAt: new Date().toISOString(),

@@ -63,6 +63,7 @@ export function useHobbies(): UseHobbiesReturn {
         id: generateUUID(),
         name: plan.hobby,
         level: plan.level,
+        category: plan.category,
         summary: plan.summary,
         techniques: plan.techniques.map((t) => ({
           ...t,

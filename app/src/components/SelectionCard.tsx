@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+    borderRadius: radii.card,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     minHeight: 56,
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   textSelected: {
-    color: colors.white,
+    color: colors.textPrimary,
     fontWeight: fontWeight.semibold,
   },
   checkIcon: {

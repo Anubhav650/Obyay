@@ -61,9 +61,9 @@ export interface LevelOption {
 }
 
 export const LEVELS: LevelOption[] = [
-  { value: 'casual', icon: '🎮', label: 'Casual', subtitle: 'Just for fun' },
-  { value: 'hobbyist', icon: '🎯', label: 'Hobbyist', subtitle: 'Get pretty good' },
-  { value: 'serious', icon: '🏆', label: 'Serious', subtitle: 'Go deep' },
+  { value: 'beginner', icon: '🌱', label: 'Beginner', subtitle: 'Start from scratch' },
+  { value: 'intermediate', icon: '📈', label: 'Intermediate', subtitle: 'Build on what I know' },
+  { value: 'advanced', icon: '🔥', label: 'Advanced', subtitle: 'Master high-level skills' },
 ];
 
 export const LOADING_MESSAGES = [

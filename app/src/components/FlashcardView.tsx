@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable } from 'react-native';
+import { StyleSheet, Text, View, Pressable, type ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -8,7 +8,7 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, radii, fontSize, fontWeight, shadows } from '../theme/tokens';
+import { colors, spacing, radii, fontSize, fontWeight, shadows, animation } from '../theme/tokens';
 import type { Flashcard } from '../types/models';
 
 interface FlashcardViewProps {
@@ -128,21 +128,21 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    borderRadius: radii.lg,
+    borderRadius: radii.card,
     padding: spacing.xl,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
     backfaceVisibility: 'hidden',
-    ...shadows.glow,
+    ...shadows.card,
   },
   frontCard: {
     backgroundColor: colors.surfaceElevated,
     borderColor: colors.borderSubtle,
   },
   backCard: {
-    backgroundColor: 'rgba(99, 102, 241, 0.08)',
-    borderColor: 'rgba(99, 102, 241, 0.4)',
+    backgroundColor: colors.accentGlow,
+    borderColor: colors.accent,
   },
   sideLabel: {
     fontSize: fontSize.xs,
@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    borderRadius: radii.md,
+    borderRadius: radii.pill,
   },
   nextButtonText: {
     color: colors.textPrimary,
@@ -210,8 +210,8 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
   },
   buttonPressed: {
-    opacity: 0.8,
-  },
+    transform: [{ scale: animation.buttonActiveScale }],
+  } as ViewStyle,
   emptyContainer: {
     padding: spacing.xl,
     alignItems: 'center',

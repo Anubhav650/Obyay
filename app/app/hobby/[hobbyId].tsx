@@ -34,6 +34,12 @@ import { Confetti } from "../../src/components/Confetti";
 import { HoldToMasterButton } from "../../src/components/HoldToMasterButton";
 import { FlashcardView } from "../../src/components/FlashcardView";
 import { QuizView } from "../../src/components/QuizView";
+import { MetronomeTool } from "../../src/components/practice/MetronomeTool";
+import { InteractiveChessBoard } from "../../src/components/practice/InteractiveChessBoard";
+import { CameraGridOverlay } from "../../src/components/practice/CameraGridOverlay";
+import { WorkoutTimer } from "../../src/components/practice/WorkoutTimer";
+import { CulinaryTimer } from "../../src/components/practice/CulinaryTimer";
+import { FocusPracticeTool } from "../../src/components/practice/FocusPracticeTool";
 import {
   colors,
   spacing,
@@ -42,29 +48,34 @@ import {
   fontWeight,
   lineHeight,
   shadows,
+  letterSpacing,
 } from "../../src/theme/tokens";
 
 // ─── Technique Sheet Content ─────────────────────────────────────────────────
 
 function TechniqueSheetContent({
   technique,
-  hobbyId,
+  hobby,
   onUpdateStatus,
   onClose,
 }: {
   technique: Technique;
-  hobbyId: string;
+  hobby: Hobby;
   onUpdateStatus: (status: TechniqueStatus) => void;
   onClose: () => void;
 }) {
   const { resources, loading, error } = useTechniqueResources(
-    hobbyId,
+    hobby.id,
     technique,
   );
   const insets = useSafeAreaInsets();
-  const [activeTab, setActiveTab] = useState<"lesson" | "cards" | "quiz">(
-    "lesson",
-  );
+  const [activeTab, setActiveTab] = useState<
+    "lesson" | "practice" | "cards" | "quiz"
+  >("lesson");
+
+  useEffect(() => {
+    setActiveTab("lesson");
+  }, []);
 
   const ScrollContainer = ScrollView;
 
@@ -116,6 +127,27 @@ function TechniqueSheetContent({
             📚 Lesson
           </Text>
         </Pressable>
+        {technique.practiceTool && (
+          <Pressable
+            style={[
+              sheetStyles.tabButton,
+              activeTab === "practice" && sheetStyles.activeTabButton,
+            ]}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setActiveTab("practice");
+            }}
+          >
+            <Text
+              style={[
+                sheetStyles.tabButtonText,
+                activeTab === "practice" && sheetStyles.activeTabButtonText,
+              ]}
+            >
+              ⚡️ Practice
+            </Text>
+          </Pressable>
+        )}
         {hasCards && (
           <Pressable
             style={[
@@ -161,6 +193,34 @@ function TechniqueSheetContent({
       </View>
 
       {/* Render selected format content */}
+      {activeTab === "practice" && technique.practiceTool && (
+        <View style={sheetStyles.practiceWrapper}>
+          {hobby.category === "music" && (
+            <MetronomeTool config={technique.practiceTool} />
+          )}
+          {hobby.category === "strategy" && (
+            <InteractiveChessBoard config={technique.practiceTool} />
+          )}
+          {hobby.category === "arts" && (
+            <CameraGridOverlay config={technique.practiceTool} />
+          )}
+          {hobby.category === "fitness" && (
+            <WorkoutTimer config={technique.practiceTool} />
+          )}
+          {hobby.category === "culinary" && (
+            <CulinaryTimer config={technique.practiceTool} />
+          )}
+          {hobby.category === "general" && (
+            <FocusPracticeTool
+              config={technique.practiceTool}
+              onCompletePractice={() => {
+                onUpdateStatus("mastered");
+              }}
+            />
+          )}
+        </View>
+      )}
+
       {activeTab === "lesson" && (
         <>
           {/* Why It Matters */}
@@ -270,6 +330,9 @@ function TechniqueSheetContent({
 const sheetStyles = StyleSheet.create({
   scroll: {
     flex: 1,
+  },
+  practiceWrapper: {
+    marginBottom: spacing.xl,
   },
   tabBar: {
     flexDirection: "row",
@@ -385,7 +448,7 @@ const sheetStyles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    borderRadius: radii.md,
+    borderRadius: radii.pill,
     paddingVertical: spacing.md,
     alignItems: "center",
     justifyContent: "center",
@@ -393,11 +456,12 @@ const sheetStyles = StyleSheet.create({
   },
   actionPressed: {
     opacity: 0.8,
+    transform: [{ scale: 0.95 }],
   },
   masterButton: {
     backgroundColor: colors.successDim,
     borderWidth: 1,
-    borderColor: "rgba(52, 211, 153, 0.3)",
+    borderColor: "rgba(13, 138, 110, 0.3)",
   },
   masterButtonText: {
     color: colors.success,
@@ -605,7 +669,7 @@ export default function HobbyDetailScreen() {
             {selectedTechnique && hobby && (
               <TechniqueSheetContent
                 technique={selectedTechnique}
-                hobbyId={hobby.id}
+                hobby={hobby}
                 onUpdateStatus={handleSheetStatusChange}
                 onClose={handleCloseSheet}
               />
@@ -656,6 +720,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.heavy,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
+    letterSpacing: letterSpacing.tight,
   },
   summary: {
     fontSize: fontSize.base,
@@ -690,8 +755,8 @@ const styles = StyleSheet.create({
   },
   mobileModalContent: {
     backgroundColor: colors.surface,
-    borderTopLeftRadius: radii.xl,
-    borderTopRightRadius: radii.xl,
+    borderTopLeftRadius: radii.card,
+    borderTopRightRadius: radii.card,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     flex: 1,
@@ -718,7 +783,7 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     maxHeight: "85%",
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+    borderRadius: radii.card,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     overflow: "hidden",

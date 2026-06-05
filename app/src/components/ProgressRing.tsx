@@ -49,10 +49,9 @@ function ProgressRingComponent({ progress, size = 48 }: ProgressRingProps) {
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          stroke={colors.border}
+          stroke={colors.surfaceElevated}
           strokeWidth={strokeWidth}
           fill="none"
-          opacity={0.5}
         />
         {/* Foreground ring */}
         <AnimatedCircle

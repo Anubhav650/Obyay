@@ -5,6 +5,7 @@ import Animated, {
   useAnimatedStyle,
   withRepeat,
   withTiming,
+  interpolateColor,
   Easing,
 } from 'react-native-reanimated';
 import { colors, spacing, radii } from '../theme/tokens';
@@ -14,18 +15,22 @@ interface SkeletonProps {
 }
 
 function SkeletonRow({ width }: { width: string }) {
-  const opacity = useSharedValue(0.3);
+  const pulse = useSharedValue(0);
 
   useEffect(() => {
-    opacity.value = withRepeat(
-      withTiming(0.7, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
+    pulse.value = withRepeat(
+      withTiming(1, { duration: 1000, easing: Easing.inOut(Easing.ease) }),
       -1,
       true
     );
   }, []);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    opacity: opacity.value,
+    backgroundColor: interpolateColor(
+      pulse.value,
+      [0, 1],
+      [colors.surfaceElevated, colors.surface]
+    ),
   }));
 
   return (
@@ -52,8 +57,7 @@ const styles = StyleSheet.create({
   },
   row: {
     height: 56,
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: radii.md,
+    borderRadius: radii.card,
     marginBottom: spacing.sm,
   },
 });

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable } from 'react-native';
+import { StyleSheet, Text, View, Pressable, type ViewStyle } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -8,7 +8,7 @@ import Animated, {
   withRepeat,
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, radii, fontSize, fontWeight, shadows } from '../theme/tokens';
+import { colors, spacing, radii, fontSize, fontWeight, shadows, animation } from '../theme/tokens';
 import type { QuizQuestion } from '../types/models';
 
 interface QuizViewProps {
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceElevated,
     borderColor: colors.borderSubtle,
     borderWidth: 1,
-    borderRadius: radii.md,
+    borderRadius: radii.card,
     padding: spacing.md,
     minHeight: 56,
     justifyContent: 'center',
@@ -207,7 +207,7 @@ const styles = StyleSheet.create({
   },
   selectedOption: {
     borderColor: colors.accent,
-    backgroundColor: 'rgba(99, 102, 241, 0.05)',
+    backgroundColor: colors.accentGlow,
   },
   correctOption: {
     borderColor: colors.success,
@@ -232,15 +232,15 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
   optionPressed: {
-    opacity: 0.8,
+    transform: [{ scale: animation.buttonActiveScale }],
     borderColor: colors.accent,
-  },
+  } as ViewStyle,
   explanationBox: {
     marginTop: spacing.xl,
     backgroundColor: colors.surfaceElevated,
     borderColor: colors.borderSubtle,
     borderWidth: 1,
-    borderRadius: radii.md,
+    borderRadius: radii.card,
     padding: spacing.xl,
     alignItems: 'flex-start',
   },
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
-    borderRadius: radii.md,
+    borderRadius: radii.pill,
     alignSelf: 'stretch',
     alignItems: 'center',
   },
@@ -272,8 +272,8 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
   },
   buttonPressed: {
-    opacity: 0.8,
-  },
+    transform: [{ scale: animation.buttonActiveScale }],
+  } as ViewStyle,
   emptyContainer: {
     padding: spacing.xl,
     alignItems: 'center',

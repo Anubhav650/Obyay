@@ -4,7 +4,8 @@ export const CURATED_HOBBIES: Hobby[] = [
   {
     id: 'curated-guitar',
     name: 'Guitar Basics',
-    level: 'casual',
+    level: 'beginner',
+    category: 'music',
     summary: 'A beginner-friendly roadmap to get comfortable with the guitar, master open chords, and strum your first songs.',
     createdAt: new Date().toISOString(),
     techniques: [
@@ -173,7 +174,8 @@ export const CURATED_HOBBIES: Hobby[] = [
   {
     id: 'curated-chess',
     name: 'Chess Strategies',
-    level: 'hobbyist',
+    level: 'intermediate',
+    category: 'strategy',
     summary: 'Master opening principles, develop minor pieces, castle early, and learn fundamental tactical forks and pins.',
     createdAt: new Date().toISOString(),
     techniques: [

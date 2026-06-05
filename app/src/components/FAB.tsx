@@ -24,7 +24,7 @@ function FABComponent({ onPress }: FABProps) {
   }));
 
   const handlePressIn = useCallback(() => {
-    scale.value = withSpring(0.9, animation.springSnappy);
+    scale.value = withSpring(animation.buttonActiveScale, animation.springSnappy);
   }, []);
 
   const handlePressOut = useCallback(() => {
@@ -60,13 +60,13 @@ function FABComponent({ onPress }: FABProps) {
 const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
-    width: 60,
-    height: 60,
+    width: 56,
+    height: 56,
     borderRadius: radii.full,
     backgroundColor: colors.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    ...shadows.glow,
+    ...shadows.fabBase,
   },
   icon: {
     color: colors.white,

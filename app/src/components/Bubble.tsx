@@ -43,7 +43,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.medium,
   },
   bubbleTextSelected: {
-    color: colors.white,
+    color: colors.tealAccent,
     fontWeight: fontWeight.bold,
   },
 });

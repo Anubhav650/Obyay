@@ -11,7 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import * as Haptics from 'expo-haptics';
-import { colors, spacing, radii, fontSize, fontWeight } from '../theme/tokens';
+import { colors, spacing, radii, fontSize, fontWeight, animation } from '../theme/tokens';
 
 interface HoldToMasterButtonProps {
   onComplete: () => void;
@@ -137,14 +137,14 @@ export function HoldToMasterButton({ onComplete }: HoldToMasterButtonProps) {
     });
 
   const buttonStyle = useAnimatedStyle(() => {
-    const baseScale = isPressing.value ? 0.97 : 1;
+    const baseScale = isPressing.value ? animation.buttonActiveScale : 1;
     const progressScaleReduction = progress.value * 0.03;
     const scale = baseScale - progressScaleReduction;
 
     return {
       transform: [{ scale }],
-      borderColor: isPressing.value ? colors.success : 'rgba(52, 211, 153, 0.3)',
-      backgroundColor: isPressing.value ? 'rgba(52, 211, 153, 0.1)' : colors.successDim,
+      borderColor: isPressing.value ? colors.tealAccent : colors.accentGlow,
+      backgroundColor: isPressing.value ? colors.accentGlow : colors.successDim,
     };
   });
 
@@ -190,7 +190,7 @@ const styles = StyleSheet.create({
   },
   button: {
     width: '100%',
-    borderRadius: radii.md,
+    borderRadius: radii.pill,
     height: 56,
     borderWidth: 1,
     alignItems: 'center',
@@ -203,10 +203,10 @@ const styles = StyleSheet.create({
     left: 0,
     top: 0,
     bottom: 0,
-    backgroundColor: colors.success,
+    backgroundColor: colors.tealAccent,
   },
   text: {
-    color: colors.success,
+    color: colors.tealAccent,
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
     zIndex: 2,

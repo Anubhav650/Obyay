@@ -1,4 +1,4 @@
-import type { GoalLevel, Hobby, Resource, Technique, UserProfile } from '../types/models';
+import type { GoalLevel, Hobby, Resource, Technique, UserProfile, HobbyCategory, QuizQuestion, Flashcard, PracticeToolConfig } from '../types/models';
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
@@ -31,14 +31,18 @@ export class ApiError extends Error {
 export interface PlanResponse {
   hobby: string;
   level: GoalLevel;
+  category: HobbyCategory;
   summary: string;
   techniques: Array<{
-    id: string;
+    id?: string;
     name: string;
     description: string;
     whyItMatters: string;
     order: number;
     searchQuery: string;
+    quiz?: QuizQuestion;
+    flashcards?: Flashcard[];
+    practiceTool?: PracticeToolConfig;
   }>;
 }
 
@@ -127,14 +131,18 @@ export async function generatePlan(
   interface ServerResponse {
     plan: {
       hobby: string;
+      category: HobbyCategory;
       summary: string;
       techniques: Array<{
-        id: string;
+        id?: string;
         name: string;
         description: string;
         whyItMatters: string;
         order: number;
         searchQuery: string;
+        quiz?: QuizQuestion;
+        flashcards?: Flashcard[];
+        practiceTool?: PracticeToolConfig;
       }>;
     };
   }

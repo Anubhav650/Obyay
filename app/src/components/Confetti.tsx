@@ -13,13 +13,13 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 const PARTICLE_COUNT = 60;
 const COLORS = [
-  '#2DD4BF', // casual teal
-  '#F59E0B', // hobbyist amber
-  '#8B5CF6', // serious violet
-  '#34D399', // success green
-  '#6366F1', // indigo
-  '#EC4899', // pink
-  '#3B82F6', // blue
+  '#0d8a6e', // Teal Accent
+  '#0a6e5c', // Obyay Teal
+  '#c9963a', // Amber
+  '#2e5e52', // Teal Uplift
+  '#34D399', // Warm green
+  '#ddb97a', // Amber light
+  '#1a4035', // Deep Teal
 ];
 
 interface ConfettiProps {

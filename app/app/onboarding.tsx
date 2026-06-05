@@ -1,12 +1,14 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Pressable,
   TextInput,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,338 +18,310 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
 } from 'react-native-reanimated';
-import { colors, spacing, radii, fontSize, fontWeight, shadows, animation } from '../src/theme/tokens';
+import {
+  colors,
+  spacing,
+  radii,
+  fontSize,
+  fontWeight,
+  shadows,
+  animation,
+  lineHeight,
+  getLevelColor,
+  getLevelDimColor,
+  getLevelGlowColor,
+} from '../src/theme/tokens';
 import { saveProfile } from '../src/store/hobbyStore';
-import { OnboardingStep } from '../src/components/OnboardingStep';
-import { SelectionCard } from '../src/components/SelectionCard';
-import { Bubble } from '../src/components/Bubble';
-import { ROLES, GOALS, TOPICS, PREFERENCES } from '../src/constants';
+import { useHobbies, getErrorMessage } from '../src/hooks/useHobbies';
+import type { GoalLevel } from '../src/types/models';
+import { LEVELS, LOADING_MESSAGES } from '../src/constants';
+
+const SUGGESTED_HOBBIES = [
+  'Guitar',
+  'Chess',
+  'Watercolor',
+  'Bouldering',
+  'Sourdough Baking',
+  'Running',
+];
 
 export default function OnboardingScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { createHobby } = useHobbies();
 
-  const [step, setStep] = useState(1);
-  const totalSteps = 6;
+  const [step, setStep] = useState(1); // 1 = Hobby, 2 = Level, 3 = Loading/Error
+  const [hobbyName, setHobbyName] = useState('');
+  const [selectedLevel, setSelectedLevel] = useState<GoalLevel | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // ─── State for user answers ────────────────────────────────────────────────
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [otherRole, setOtherRole] = useState('');
+  // Loading status messages cycling
+  const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const [selectedGoals, setSelectedGoals] = useState<string[]>([]);
-  const [otherGoal, setOtherGoal] = useState('');
-
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [customTopic, setCustomTopic] = useState('');
-
-  const [selectedPrefs, setSelectedPrefs] = useState<string[]>([]);
-  const [customPref, setCustomPref] = useState('');
-
-  // ─── Transition Shared Value ───────────────────────────────────────────────
-  const progressShared = useSharedValue(1 / totalSteps);
-
-  // ─── Actions ───────────────────────────────────────────────────────────────
-
-  const nextStep = useCallback(async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
-    if (step < totalSteps) {
-      setStep((prev) => prev + 1);
-      progressShared.value = withSpring((step + 1) / totalSteps, animation.spring);
+  useEffect(() => {
+    if (isLoading) {
+      setLoadingMsgIndex(0);
+      intervalRef.current = setInterval(() => {
+        setLoadingMsgIndex((prev) =>
+          prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev
+        );
+      }, 3000);
     } else {
-      // Finalize and save
-      const finalRoles = [...selectedRoles];
-      if (otherRole.trim()) finalRoles.push(otherRole.trim());
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isLoading]);
 
-      const finalGoals = [...selectedGoals];
-      if (otherGoal.trim()) finalGoals.push(otherGoal.trim());
+  // Transition shared value
+  const progressShared = useSharedValue(0.33);
 
-      const finalTopics = [...selectedTopics];
-      const finalPrefs = [...selectedPrefs];
+  const handleNextFromHobby = () => {
+    if (!hobbyName.trim()) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setStep(2);
+    progressShared.value = withSpring(0.66, animation.spring);
+  };
 
+  const handleBackToHobby = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setStep(1);
+    progressShared.value = withSpring(0.33, animation.spring);
+  };
+
+  const handleGenerateRoadmap = async (level: GoalLevel) => {
+    setSelectedLevel(level);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setStep(3);
+    progressShared.value = withSpring(1.0, animation.spring);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      // Create profile first so check on home screen succeeds
       await saveProfile({
-        roles: finalRoles,
-        goals: finalGoals,
-        interests: finalTopics,
-        learningPreferences: finalPrefs,
+        roles: [],
+        goals: [],
+        interests: [hobbyName.trim()],
+        learningPreferences: [],
       });
 
+      // Fetch plan from Gemini and save
+      const hobby = await createHobby(hobbyName.trim(), level);
+
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/');
-    }
-  }, [step, selectedRoles, otherRole, selectedGoals, otherGoal, selectedTopics, selectedPrefs, router, progressShared]);
+      setIsLoading(false);
 
-  const prevStep = useCallback(() => {
-    if (step > 1) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      setStep((prev) => prev - 1);
-      progressShared.value = withSpring((step - 1) / totalSteps, animation.spring);
-    }
-  }, [step, progressShared]);
-
-  // ─── Selection Helpers ─────────────────────────────────────────────────────
-
-  const toggleSelection = (item: string, list: string[], setter: React.Dispatch<React.SetStateAction<string[]>>) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (list.includes(item)) {
-      setter(list.filter((i) => i !== item));
-    } else {
-      setter([...list, item]);
+      // Redirect directly to the roadmap details!
+      router.replace(`/hobby/${hobby.id}`);
+    } catch (err) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setError(getErrorMessage(err));
+      setIsLoading(false);
     }
   };
 
-  const addCustomTopic = () => {
-    if (customTopic.trim() && !selectedTopics.includes(customTopic.trim())) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setSelectedTopics([...selectedTopics, customTopic.trim()]);
-      setCustomTopic('');
+  const handleRetry = () => {
+    if (selectedLevel) {
+      handleGenerateRoadmap(selectedLevel);
     }
   };
 
-  const addCustomPref = () => {
-    if (customPref.trim() && !selectedPrefs.includes(customPref.trim())) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setSelectedPrefs([...selectedPrefs, customPref.trim()]);
-      setCustomPref('');
-    }
-  };
-
-  // ─── Styles & Animated Style for Progress Bar ──────────────────────────────
+  // Progress line style
   const progressStyle = useAnimatedStyle(() => ({
     width: `${progressShared.value * 100}%`,
   }));
 
-  // ─── Content Renderers ─────────────────────────────────────────────────────
+  // Render Hobby Input Step
+  const renderHobbyStep = () => (
+    <View style={styles.stepContent}>
+      <Text style={styles.title}>What do you want to learn?</Text>
+      <Text style={styles.subtitle}>
+        Enter any hobby, instrument, or skill. We'll generate a personalized active practice roadmap for you.
+      </Text>
 
-  const renderWelcome = () => (
-    <OnboardingStep key="welcome" scrollable={false}>
-      <View style={styles.centerContent}>
-        <View style={styles.iconContainer}>
-          <Text style={styles.largeIcon}>⚡</Text>
-        </View>
-        <Text style={styles.title}>Personalized learning for you</Text>
-        <Text style={styles.subtitle}>
-          Just 5 short steps to build a learning journey designed for you!
-        </Text>
+      <TextInput
+        style={styles.input}
+        placeholder="e.g. Acoustic Guitar, Chess, Sourdough..."
+        placeholderTextColor={colors.textDisabled}
+        value={hobbyName}
+        onChangeText={setHobbyName}
+        autoFocus
+        autoCapitalize="words"
+        autoCorrect={false}
+        maxLength={60}
+      />
+
+      <Text style={styles.sectionLabel}>Popular Topics</Text>
+      <View style={styles.suggestionsContainer}>
+        {SUGGESTED_HOBBIES.map((item) => {
+          const isSelected = hobbyName.toLowerCase() === item.toLowerCase();
+          return (
+            <Pressable
+              key={item}
+              style={[
+                styles.suggestionChip,
+                isSelected && styles.suggestionChipSelected,
+              ]}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                setHobbyName(item);
+              }}
+            >
+              <Text
+                style={[
+                  styles.suggestionText,
+                  isSelected && styles.suggestionTextSelected,
+                ]}
+              >
+                {item}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
-    </OnboardingStep>
+
+      <View style={styles.pushBottom} />
+
+      <Pressable
+        style={({ pressed }) => [
+          styles.continueButton,
+          !hobbyName.trim() && styles.buttonDisabled,
+          pressed && hobbyName.trim() && styles.buttonPressed,
+        ]}
+        onPress={handleNextFromHobby}
+        disabled={!hobbyName.trim()}
+      >
+        <Text style={[styles.continueButtonText, !hobbyName.trim() && styles.buttonTextDisabled]}>
+          Continue
+        </Text>
+      </Pressable>
+    </View>
   );
 
-  const renderRoles = () => {
-    return (
-      <OnboardingStep
-        key="roles"
-        title="What types of work do you do?"
-        subtitle="Select all that apply. We'll use examples that are relevant to your role when helpful."
-      >
-        <View style={styles.rolesList}>
-          {ROLES.map((role) => (
-            <SelectionCard
-              key={role}
-              label={role}
-              isSelected={selectedRoles.includes(role)}
-              onPress={() => toggleSelection(role, selectedRoles, setSelectedRoles)}
-            />
-          ))}
+  // Render Proficiency Select Step
+  const renderLevelStep = () => (
+    <View style={styles.stepContent}>
+      <View style={styles.backRow}>
+        <Pressable style={styles.backTextButton} onPress={handleBackToHobby}>
+          <Text style={styles.backText}>← Back</Text>
+        </Pressable>
+      </View>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Other (optional)"
-            placeholderTextColor={colors.textDisabled}
-            value={otherRole}
-            onChangeText={setOtherRole}
-            autoCapitalize="words"
-          />
+      <Text style={styles.title}>How good are you at {hobbyName}?</Text>
+      <Text style={styles.subtitle}>
+        Select your current level. We will calibrate your roadmap and techniques accordingly.
+      </Text>
+
+      <View style={styles.levelGrid}>
+        {LEVELS.map((level) => {
+          const color = getLevelColor(level.value);
+          const dimColor = getLevelDimColor(level.value);
+
+          return (
+            <Pressable
+              key={level.value}
+              style={({ pressed }) => [
+                styles.levelCard,
+                {
+                  borderColor: colors.borderSubtle,
+                  backgroundColor: colors.surface,
+                },
+                pressed && { borderColor: color, backgroundColor: dimColor },
+              ]}
+              onPress={() => handleGenerateRoadmap(level.value)}
+            >
+              <View style={styles.levelCardHeader}>
+                <Text style={styles.levelIcon}>{level.icon}</Text>
+                <Text style={[styles.levelLabel, { color }]}>{level.label}</Text>
+              </View>
+              <Text style={styles.levelSubtitle}>
+                {level.value === 'beginner' && 'Starting from scratch. Teach me the core foundations.'}
+                {level.value === 'intermediate' && 'I know the basics. Help me level up my skills.'}
+                {level.value === 'advanced' && 'I am already decent. Help me master advanced techniques.'}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+
+  // Render Loading / Error Step
+  const renderLoadingStep = () => (
+    <View style={[styles.stepContent, styles.centerContent]}>
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator color={colors.accent} size="large" style={styles.spinner} />
+          <Text style={styles.loadingTitle}>Generating Roadmap</Text>
+          <Text style={styles.loadingSubtitle}>{LOADING_MESSAGES[loadingMsgIndex]}</Text>
         </View>
-      </OnboardingStep>
-    );
-  };
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorIcon}>⚠️</Text>
+          <Text style={styles.errorTitle}>Plan Generation Failed</Text>
+          <Text style={styles.errorText}>{error}</Text>
 
-  const renderGoals = () => {
-    return (
-      <OnboardingStep
-        key="goals"
-        title="What do you want to achieve?"
-        subtitle="Select all that apply."
-      >
-        <View style={styles.rolesList}>
-          {GOALS.map((goal) => (
-            <SelectionCard
-              key={goal}
-              label={goal}
-              isSelected={selectedGoals.includes(goal)}
-              onPress={() => toggleSelection(goal, selectedGoals, setSelectedGoals)}
-            />
-          ))}
+          <Pressable
+            style={({ pressed }) => [
+              styles.continueButton,
+              styles.retryButton,
+              pressed && styles.buttonPressed,
+            ]}
+            onPress={handleRetry}
+          >
+            <Text style={styles.continueButtonText}>Try Again</Text>
+          </Pressable>
 
-          <TextInput
-            style={styles.input}
-            placeholder="Other (optional)"
-            placeholderTextColor={colors.textDisabled}
-            value={otherGoal}
-            onChangeText={setOtherGoal}
-            autoCapitalize="sentences"
-          />
-        </View>
-      </OnboardingStep>
-    );
-  };
-
-  const renderTopics = () => {
-    return (
-      <OnboardingStep
-        key="topics"
-        title="What topics interest you?"
-        subtitle="Don't worry, the choice won't limit your experience."
-      >
-        <View style={styles.bubbleGrid}>
-          {TOPICS.map((topic) => (
-            <Bubble
-              key={topic}
-              label={topic}
-              isSelected={selectedTopics.includes(topic)}
-              onPress={() => toggleSelection(topic, selectedTopics, setSelectedTopics)}
-            />
-          ))}
-        </View>
-
-        <View style={styles.customInputContainer}>
-          <TextInput
-            style={[styles.input, styles.customInput]}
-            placeholder="Other topics (optional)"
-            placeholderTextColor={colors.textDisabled}
-            value={customTopic}
-            onChangeText={setCustomTopic}
-            onSubmitEditing={addCustomTopic}
-          />
-          <Pressable style={styles.addButton} onPress={addCustomTopic}>
-            <Text style={styles.addButtonText}>+</Text>
+          <Pressable
+            style={styles.backToStartButton}
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setStep(1);
+              progressShared.value = withSpring(0.33, animation.spring);
+            }}
+          >
+            <Text style={styles.backToStartText}>Change Hobby or Level</Text>
           </Pressable>
         </View>
-      </OnboardingStep>
-    );
-  };
-
-  const renderPreferences = () => {
-    return (
-      <OnboardingStep
-        key="preferences"
-        title="What matters to you when learning?"
-        subtitle="Select all that apply."
-      >
-        <View style={styles.bubbleGrid}>
-          {PREFERENCES.map((pref) => (
-            <Bubble
-              key={pref}
-              label={pref}
-              isSelected={selectedPrefs.includes(pref)}
-              onPress={() => toggleSelection(pref, selectedPrefs, setSelectedPrefs)}
-            />
-          ))}
-        </View>
-
-        <View style={styles.customInputContainer}>
-          <TextInput
-            style={[styles.input, styles.customInput]}
-            placeholder="Other (optional)"
-            placeholderTextColor={colors.textDisabled}
-            value={customPref}
-            onChangeText={setCustomPref}
-            onSubmitEditing={addCustomPref}
-          />
-          <Pressable style={styles.addButton} onPress={addCustomPref}>
-            <Text style={styles.addButtonText}>+</Text>
-          </Pressable>
-        </View>
-      </OnboardingStep>
-    );
-  };
-
-  const renderSummary = () => {
-    return (
-      <OnboardingStep key="summary">
-        <View style={[styles.centerContent, { marginTop: spacing.xl }]}>
-          <View style={[styles.iconContainer, { backgroundColor: 'rgba(52, 211, 153, 0.1)' }]}>
-            <Text style={[styles.largeIcon, { color: colors.success }]}>🗳️</Text>
-          </View>
-          <Text style={styles.title}>Noted!</Text>
-          <Text style={styles.subtitle}>We'll try to satisfy all your learning needs</Text>
-        </View>
-
-        <View style={styles.summaryBox}>
-          <Text style={styles.summaryHeading}>Obyay currently supports:</Text>
-          <View style={styles.supportList}>
-            <Text style={styles.supportItem}>🔹 Bite-sized lessons</Text>
-            <Text style={styles.supportItem}>🔹 Practice exercises</Text>
-            <Text style={styles.supportItem}>🔹 Visual explanations</Text>
-            <Text style={styles.supportItem}>🔹 Real-world examples</Text>
-          </View>
-
-          <Text style={[styles.summaryHeading, { marginTop: spacing.xl }]}>Obyay also supports:</Text>
-          <View style={styles.supportList}>
-            <Text style={styles.supportItem}>🔹 Clear learning path</Text>
-            <Text style={styles.supportItem}>🔹 Regular review</Text>
-            <Text style={styles.supportItem}>🔹 Personalized difficulty</Text>
-          </View>
-        </View>
-      </OnboardingStep>
-    );
-  };
+      ) : null}
+    </View>
+  );
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      {/* Top Header / Progress Indicator */}
+      {/* Progress Track */}
       <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.base) }]}>
-        {step > 1 ? (
-          <Pressable style={styles.backButton} onPress={prevStep}>
-            <Text style={styles.backButtonText}>←</Text>
-          </Pressable>
-        ) : (
-          <View style={styles.backPlaceholder} />
-        )}
         <View style={styles.progressTrack}>
           <Animated.View style={[styles.progressBar, progressStyle]} />
         </View>
-        <View style={styles.backPlaceholder} />
       </View>
 
-      {/* Screen Steps */}
-      <View style={styles.content}>
-        {step === 1 && renderWelcome()}
-        {step === 2 && renderRoles()}
-        {step === 3 && renderGoals()}
-        {step === 4 && renderTopics()}
-        {step === 5 && renderPreferences()}
-        {step === 6 && renderSummary()}
-      </View>
-
-      {/* Bottom Action Footer */}
-      <View
-        style={[
-          styles.footer,
-          { paddingBottom: Math.max(insets.bottom, spacing.base) + spacing.sm },
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: Math.max(insets.bottom, spacing.base) + spacing.xl },
         ]}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
-        <Pressable
-          style={({ pressed }) => [
-            styles.continueButton,
-            pressed && styles.continueButtonPressed,
-          ]}
-          onPress={nextStep}
-        >
-          <Text style={styles.continueButtonText}>
-            {step === totalSteps ? 'GET STARTED' : 'CONTINUE'}
-          </Text>
-        </Pressable>
-      </View>
+        {step === 1 && renderHobbyStep()}
+        {step === 2 && renderLevelStep()}
+        {step === 3 && renderLoadingStep()}
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }
-
-// ─── Styles ──────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
   container: {
@@ -355,36 +329,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.base,
+    paddingHorizontal: spacing.xl,
     paddingBottom: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.borderSubtle,
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radii.full,
-    backgroundColor: colors.surface,
-  },
-  backButtonText: {
-    color: colors.textPrimary,
-    fontSize: fontSize.lg,
-    fontWeight: fontWeight.bold,
-  },
-  backPlaceholder: {
-    width: 40,
-  },
   progressTrack: {
-    flex: 1,
     height: 6,
     backgroundColor: colors.surfaceElevated,
     borderRadius: radii.full,
-    marginHorizontal: spacing.lg,
     overflow: 'hidden',
   },
   progressBar: {
@@ -392,133 +345,204 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderRadius: radii.full,
   },
-  content: {
+  scroll: {
     flex: 1,
   },
-  centerContent: {
+  scrollContent: {
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+    flexGrow: 1,
+  },
+  stepContent: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing['3xl'],
-  },
-  iconContainer: {
-    width: 100,
-    height: 100,
-    borderRadius: radii.full,
-    backgroundColor: colors.warningDim,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing['2xl'],
-    borderWidth: 1,
-    borderColor: 'rgba(251, 191, 36, 0.2)',
-  },
-  largeIcon: {
-    fontSize: 48,
   },
   title: {
     fontSize: fontSize['2xl'],
     fontWeight: fontWeight.heavy,
     color: colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: spacing.base,
+    marginBottom: spacing.sm,
+    lineHeight: lineHeight.lg,
   },
   subtitle: {
     fontSize: fontSize.base,
     color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: fontSize.base * 1.5,
-    paddingHorizontal: spacing.sm,
-  },
-  rolesList: {
-    gap: spacing.base,
-    paddingBottom: spacing.xl,
+    marginBottom: spacing.xl,
+    lineHeight: lineHeight.base,
   },
   input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-    borderRadius: radii.lg,
+    fontSize: fontSize.lg,
+    fontWeight: fontWeight.semibold,
+    color: colors.textPrimary,
     paddingVertical: spacing.md,
     paddingHorizontal: spacing.base,
-    color: colors.textPrimary,
-    fontSize: fontSize.base,
-    minHeight: 56,
-  },
-  bubbleGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-    marginBottom: spacing.xl,
-  },
-  customInputContainer: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  customInput: {
-    flex: 1,
-  },
-  addButton: {
-    width: 56,
-    height: 56,
-    backgroundColor: colors.surfaceElevated,
-    borderRadius: radii.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.borderSubtle,
-  },
-  addButtonText: {
-    fontSize: 24,
-    color: colors.textPrimary,
-    fontWeight: '300',
-  },
-  summaryBox: {
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
-    padding: spacing.xl,
+    minHeight: 56,
     marginBottom: spacing.xl,
   },
-  summaryHeading: {
-    fontSize: fontSize.base,
+  sectionLabel: {
+    fontSize: fontSize.xs,
     fontWeight: fontWeight.bold,
-    color: colors.textPrimary,
-    marginBottom: spacing.md,
+    color: colors.textTertiary,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    marginBottom: spacing.md,
   },
-  supportList: {
+  suggestionsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
+    marginBottom: spacing.xl,
   },
-  supportItem: {
-    fontSize: fontSize.base,
+  suggestionChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    minHeight: 36,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  suggestionChipSelected: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accentGlow,
+  },
+  suggestionText: {
+    fontSize: fontSize.sm,
     color: colors.textSecondary,
-    lineHeight: fontSize.base * 1.4,
+    fontWeight: fontWeight.medium,
   },
-  footer: {
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.sm,
-    backgroundColor: colors.bg,
+  suggestionTextSelected: {
+    color: colors.accent,
+  },
+  pushBottom: {
+    flex: 1,
   },
   continueButton: {
     backgroundColor: colors.accent,
-    borderRadius: radii.lg,
+    borderRadius: radii.pill,
     paddingVertical: spacing.base,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: 56,
-    ...shadows.glow,
+    ...shadows.card,
+    marginTop: spacing.xl,
   },
-  continueButtonPressed: {
+  buttonDisabled: {
+    backgroundColor: colors.surfaceElevated,
+    opacity: 0.5,
+  },
+  buttonPressed: {
     backgroundColor: colors.accentDark,
+    transform: [{ scale: 0.95 }],
   },
   continueButtonText: {
     color: colors.white,
     fontSize: fontSize.lg,
     fontWeight: fontWeight.bold,
     letterSpacing: 0.5,
+  },
+  buttonTextDisabled: {
+    color: colors.textTertiary,
+  },
+  backRow: {
+    flexDirection: 'row',
+    marginBottom: spacing.lg,
+  },
+  backTextButton: {
+    paddingVertical: spacing.xs,
+  },
+  backText: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.textSecondary,
+  },
+  levelGrid: {
+    gap: spacing.base,
+  },
+  levelCard: {
+    borderRadius: radii.lg,
+    borderWidth: 1.5,
+    padding: spacing.lg,
+    minHeight: 100,
+  },
+  levelCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xs,
+    gap: spacing.sm,
+  },
+  levelIcon: {
+    fontSize: 24,
+  },
+  levelLabel: {
+    fontSize: fontSize.base,
+    fontWeight: fontWeight.bold,
+  },
+  levelSubtitle: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    lineHeight: lineHeight.sm,
+  },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: spacing['3xl'],
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  spinner: {
+    marginBottom: spacing.xl,
+  },
+  loadingTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  loadingSubtitle: {
+    fontSize: fontSize.base,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  errorContainer: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+  },
+  errorIcon: {
+    fontSize: 48,
+    marginBottom: spacing.lg,
+  },
+  errorTitle: {
+    fontSize: fontSize.xl,
+    fontWeight: fontWeight.bold,
+    color: colors.error,
+    marginBottom: spacing.sm,
+  },
+  errorText: {
+    fontSize: fontSize.base,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: lineHeight.base,
+    marginBottom: spacing.xl,
+  },
+  retryButton: {
+    width: '100%',
+    minWidth: 200,
+  },
+  backToStartButton: {
+    marginTop: spacing.lg,
+    paddingVertical: spacing.sm,
+  },
+  backToStartText: {
+    color: colors.textTertiary,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
   },
 });

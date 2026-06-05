@@ -10,7 +10,7 @@ import { CuratedHobbyCard } from '../src/components/CuratedHobbyCard';
 import { FAB } from '../src/components/FAB';
 import { Skeleton } from '../src/components/Skeleton';
 import type { Hobby } from '../src/types/models';
-import { colors, spacing, fontSize, fontWeight } from '../src/theme/tokens';
+import { colors, spacing, fontSize, fontWeight, letterSpacing } from '../src/theme/tokens';
 import { CURATED_HOBBIES } from '../src/constants/curatedHobbies';
 
 export default function HomeScreen() {
@@ -196,6 +196,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: spacing.sm,
+    letterSpacing: letterSpacing.tight,
   },
   emptySubtitle: {
     fontSize: fontSize.base,
@@ -210,7 +211,7 @@ const styles = StyleSheet.create({
   curatedTitle: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.bold,
-    color: colors.textSecondary,
+    color: colors.accentDark,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: spacing.md,

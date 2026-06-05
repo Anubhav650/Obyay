@@ -20,7 +20,7 @@ const profileSchema = z.object({
 
 const planRequestSchema = z.object({
   hobby: z.string().min(1, "hobby must be a non-empty string"),
-  level: z.enum(["casual", "hobbyist", "serious"]),
+  level: z.enum(["beginner", "intermediate", "advanced"]),
   profile: profileSchema.nullable().optional(),
 });
 
@@ -53,6 +53,7 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
     res.status(200).json({
       plan: {
         hobby,
+        category: plan.category,
         summary: plan.summary,
         techniques: plan.techniques,
       },

@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
   badge: {
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
-    borderRadius: radii.full,
+    borderRadius: radii.pill,
     alignSelf: 'flex-start',
   },
   text: {

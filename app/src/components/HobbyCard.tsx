@@ -15,6 +15,7 @@ import {
   radii,
   fontSize,
   fontWeight,
+  shadows,
   animation,
 } from '../theme/tokens';
 
@@ -73,12 +74,13 @@ function HobbyCardComponent({ hobby, onPress, onLongPress }: HobbyCardProps) {
 const styles = StyleSheet.create({
   card: {
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+    borderRadius: radii.card,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     marginHorizontal: spacing.base,
     marginBottom: spacing.md,
     overflow: 'hidden',
+    ...shadows.card,
   },
   content: {
     flexDirection: 'row',
