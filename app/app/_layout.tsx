@@ -33,7 +33,7 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
-            name="new"
+            name="NewHobby"
             options={{
               presentation: 'modal',
               title: 'New Hobby',
@@ -41,7 +41,7 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen
-            name="hobby/[id]"
+            name="hobby/[hobbyId]"
             options={{
               title: '',
               headerBackTitle: 'Back',

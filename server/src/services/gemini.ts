@@ -44,7 +44,9 @@ Rules:
    high-quality tutorial for this technique at this level. Include the
    hobby name and the word "tutorial" or "technique".
 7. "summary": one sentence framing the whole plan for this learner.
-8. If the input is not a learnable hobby or skill (e.g. gibberish, a
+8. "quiz": A simple conceptual question to verify the learner understands this technique. Include a "question" (string), an array of exactly 4 multiple-choice "options" (strings), the "correctIndex" (number, 0-3), and a brief "explanation" (string) of why it's correct.
+9. "flashcards": An array of exactly 2 flashcards. Each flashcard must have a "front" (a question or concept key term to recall) and a "back" (a brief explanation, definition, or answer).
+10. If the input is not a learnable hobby or skill (e.g. gibberish, a
    request for something else), return {"error": "NOT_A_HOBBY"}.
 
 Respond with ONLY valid JSON matching exactly this shape, no markdown,
@@ -58,7 +60,17 @@ no commentary:
       "description": string,
       "whyItMatters": string,
       "order": number,
-      "searchQuery": string
+      "searchQuery": string,
+      "quiz": {
+        "question": string,
+        "options": [string, string, string, string],
+        "correctIndex": number,
+        "explanation": string
+      },
+      "flashcards": [
+        { "front": string, "back": string },
+        { "front": string, "back": string }
+      ]
     }
   ]
 }`;

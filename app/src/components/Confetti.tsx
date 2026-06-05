@@ -6,6 +6,7 @@ import Animated, {
   withTiming,
   runOnJS,
   Easing,
+  SharedValue,
 } from 'react-native-reanimated';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -38,10 +39,58 @@ interface Particle {
   fallSpeed: number;
 }
 
+interface ConfettiParticleProps {
+  particle: Particle;
+  progress: SharedValue<number>;
+}
+
+function ConfettiParticle({ particle, progress }: ConfettiParticleProps) {
+  const style = useAnimatedStyle(() => {
+    const val = progress.value;
+    const y = particle.startY + val * (SCREEN_HEIGHT + 150) * particle.fallSpeed;
+    const x = particle.startX + Math.sin(val * particle.swingFreq) * particle.swingAmp;
+    const rotate = val * particle.rotationSpeed;
+
+    return {
+      transform: [
+        { translateX: x },
+        { translateY: y },
+        { rotate: `${rotate}deg` },
+      ],
+      opacity: val > 0.8 ? (1 - val) * 5 : 1, // fade out at the end
+    };
+  });
+
+  const particleShape = useMemo(() => {
+    const isStrip = Math.random() > 0.5;
+    const isRound = Math.random() > 0.7;
+    return {
+      height: particle.size * (isStrip ? 1.5 : 1),
+      borderRadius: isRound ? particle.size / 2 : 2,
+    };
+  }, [particle.size]);
+
+  return (
+    <Animated.View
+      style={[
+        styles.particle,
+        style,
+        {
+          backgroundColor: particle.color,
+          width: particle.size,
+          height: particleShape.height,
+          borderRadius: particleShape.borderRadius,
+        },
+      ]}
+    />
+  );
+}
+
 export function Confetti({ active, onAnimationEnd }: ConfettiProps) {
   const animationProgress = useSharedValue(0);
 
   const particles = useMemo(() => {
+    if (!active) return [];
     return Array.from({ length: PARTICLE_COUNT }).map((_, i) => {
       const size = Math.random() * 8 + 6; // size between 6 and 14
       return {
@@ -80,40 +129,9 @@ export function Confetti({ active, onAnimationEnd }: ConfettiProps) {
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
-      {particles.map((p) => {
-        // eslint-disable-next-line react-hooks/rules-of-hooks
-        const style = useAnimatedStyle(() => {
-          const progress = animationProgress.value;
-          const y = p.startY + progress * (SCREEN_HEIGHT + 150) * p.fallSpeed;
-          const x = p.startX + Math.sin(progress * p.swingFreq) * p.swingAmp;
-          const rotate = progress * p.rotationSpeed;
-
-          return {
-            transform: [
-              { translateX: x },
-              { translateY: y },
-              { rotate: `${rotate}deg` },
-            ],
-            opacity: progress > 0.8 ? (1 - progress) * 5 : 1, // fade out at the end
-          };
-        });
-
-        return (
-          <Animated.View
-            key={p.id}
-            style={[
-              styles.particle,
-              style,
-              {
-                backgroundColor: p.color,
-                width: p.size,
-                height: p.size * (Math.random() > 0.5 ? 1.5 : 1), // some strips, some squares
-                borderRadius: Math.random() > 0.7 ? p.size / 2 : 2, // round or rectangle
-              },
-            ]}
-          />
-        );
-      })}
+      {particles.map((p) => (
+        <ConfettiParticle key={p.id} particle={p} progress={animationProgress} />
+      ))}
     </View>
   );
 }

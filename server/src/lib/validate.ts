@@ -2,6 +2,18 @@ import { z } from "zod";
 
 // ── Schemas ────────────────────────────────────────────────────────────────
 
+export const quizSchema = z.object({
+  question: z.string().min(1, "question must be non-empty"),
+  options: z.array(z.string().min(1)).min(4).max(4, "options must have exactly 4 items"),
+  correctIndex: z.number().int().min(0).max(3, "correctIndex must be between 0 and 3"),
+  explanation: z.string().min(1, "explanation must be non-empty"),
+});
+
+export const flashcardSchema = z.object({
+  front: z.string().min(1, "front must be non-empty"),
+  back: z.string().min(1, "back must be non-empty"),
+});
+
 export const techniqueSchema = z.object({
   name: z.string().min(1, "name must be non-empty"),
   description: z.string().min(1, "description must be non-empty"),
@@ -11,6 +23,8 @@ export const techniqueSchema = z.object({
     .string()
     .min(1, "searchQuery must be non-empty")
     .max(100, "searchQuery must be at most 100 characters"),
+  quiz: quizSchema,
+  flashcards: z.array(flashcardSchema).min(2).max(2, "flashcards must have exactly 2 items"),
 });
 
 export const planOutputSchema = z.object({

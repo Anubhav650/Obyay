@@ -1,21 +1,29 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, FlatList, Alert, Platform, ActionSheetIOS, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { View, FlatList, Alert, Platform, ActionSheetIOS, StyleSheet, ScrollView, Text } from 'react-native';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import * as Haptics from 'expo-haptics';
 import { useHobbies } from '../src/hooks/useHobbies';
 import { loadProfile } from '../src/store/hobbyStore';
 import { HobbyCard } from '../src/components/HobbyCard';
-import { EmptyState } from '../src/components/EmptyState';
+import { CuratedHobbyCard } from '../src/components/CuratedHobbyCard';
 import { FAB } from '../src/components/FAB';
 import { Skeleton } from '../src/components/Skeleton';
 import type { Hobby } from '../src/types/models';
-import { colors, spacing } from '../src/theme/tokens';
+import { colors, spacing, fontSize, fontWeight } from '../src/theme/tokens';
+import { CURATED_HOBBIES } from '../src/constants/curatedHobbies';
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { hobbies, loading, deleteHobby } = useHobbies();
+  const { hobbies, loading, deleteHobby, importCuratedHobby, refreshHobbies } = useHobbies();
   const [checkingProfile, setCheckingProfile] = useState(true);
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshHobbies();
+    }, [refreshHobbies])
+  );
 
   useEffect(() => {
     (async () => {
@@ -29,7 +37,7 @@ export default function HomeScreen() {
   }, [router]);
 
   const handleAddPress = useCallback(() => {
-    router.push('/new');
+    router.push('/NewHobby');
   }, [router]);
 
   const handleHobbyPress = useCallback(
@@ -37,6 +45,20 @@ export default function HomeScreen() {
       router.push(`/hobby/${hobby.id}`);
     },
     [router]
+  );
+
+  const handleCuratedPress = useCallback(
+    async (curatedHobby: Hobby) => {
+      try {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+        const imported = await importCuratedHobby(curatedHobby);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        router.push(`/hobby/${imported.id}`);
+      } catch (err) {
+        Alert.alert('Error', 'Failed to start curated hobby');
+      }
+    },
+    [importCuratedHobby, router]
   );
 
   const handleHobbyLongPress = useCallback(
@@ -99,11 +121,32 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       {hobbies.length === 0 ? (
-        <EmptyState
-          emoji="🚀"
-          title="No hobbies yet"
-          subtitle="Tap + to start learning something new"
-        />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={[
+            styles.emptyScrollContent,
+            { paddingBottom: insets.bottom + 100 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.emptyHeader}>
+            <Text style={styles.emptyEmoji}>🚀</Text>
+            <Text style={styles.emptyTitle}>Start your journey</Text>
+            <Text style={styles.emptySubtitle}>
+              Select a pre-built roadmap below for instant learning, or tap the + button to build a custom hobby plan!
+            </Text>
+          </View>
+          <View style={styles.curatedSection}>
+            <Text style={styles.curatedTitle}>Curated Roadmaps</Text>
+            {CURATED_HOBBIES.map((curated) => (
+              <CuratedHobbyCard
+                key={curated.id}
+                hobby={curated}
+                onPress={() => handleCuratedPress(curated)}
+              />
+            ))}
+          </View>
+        </ScrollView>
       ) : (
         <FlatList
           data={hobbies}
@@ -129,5 +172,47 @@ const styles = StyleSheet.create({
   },
   list: {
     paddingTop: spacing.base,
+  },
+  scroll: {
+    flex: 1,
+  },
+  emptyScrollContent: {
+    paddingHorizontal: spacing.base,
+    paddingTop: spacing['4xl'],
+    alignItems: 'stretch',
+  },
+  emptyHeader: {
+    alignItems: 'center',
+    marginBottom: spacing['2xl'],
+    paddingHorizontal: spacing.md,
+  },
+  emptyEmoji: {
+    fontSize: 56,
+    marginBottom: spacing.lg,
+  },
+  emptyTitle: {
+    fontSize: fontSize['2xl'],
+    fontWeight: fontWeight.bold,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: spacing.sm,
+  },
+  emptySubtitle: {
+    fontSize: fontSize.base,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 22,
+    maxWidth: 300,
+  },
+  curatedSection: {
+    marginTop: spacing.base,
+  },
+  curatedTitle: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: spacing.md,
   },
 });

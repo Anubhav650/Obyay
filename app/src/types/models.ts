@@ -10,6 +10,18 @@ export interface Resource {
   url: string;
 }
 
+export interface QuizQuestion {
+  question: string;
+  options: string[];
+  correctIndex: number;
+  explanation: string;
+}
+
+export interface Flashcard {
+  front: string;
+  back: string;
+}
+
 export interface Technique {
   id: string;
   name: string;
@@ -20,6 +32,8 @@ export interface Technique {
   status: TechniqueStatus;
   statusUpdatedAt: string | null;
   resources: Resource[] | null; // null = not fetched, [] = fetched but empty
+  quiz?: QuizQuestion;
+  flashcards?: Flashcard[];
 }
 
 export interface Hobby {

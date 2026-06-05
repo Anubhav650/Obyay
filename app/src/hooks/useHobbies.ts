@@ -9,6 +9,7 @@ interface UseHobbiesReturn {
   loading: boolean;
   error: string | null;
   createHobby: (name: string, level: GoalLevel) => Promise<Hobby>;
+  importCuratedHobby: (curatedHobby: Hobby) => Promise<Hobby>;
   deleteHobby: (id: string) => Promise<void>;
   updateTechniqueStatus: (
     hobbyId: string,
@@ -32,9 +33,11 @@ export function useHobbies(): UseHobbiesReturn {
     };
   }, []);
 
-  const loadAll = useCallback(async () => {
+  const loadAll = useCallback(async (showLoading = true) => {
     try {
-      setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
       setError(null);
       const loaded = await store.loadHobbies();
       if (mountedRef.current) {
@@ -45,7 +48,7 @@ export function useHobbies(): UseHobbiesReturn {
         setError('Failed to load hobbies');
       }
     } finally {
-      if (mountedRef.current) {
+      if (showLoading && mountedRef.current) {
         setLoading(false);
       }
     }
@@ -69,6 +72,32 @@ export function useHobbies(): UseHobbiesReturn {
           resources: null,
         })),
         createdAt: new Date().toISOString(),
+      };
+
+      await store.saveHobby(hobby);
+
+      if (mountedRef.current) {
+        setHobbies((prev) => [hobby, ...prev]);
+      }
+
+      return hobby;
+    },
+    []
+  );
+
+  const importCuratedHobby = useCallback(
+    async (curatedHobby: Hobby): Promise<Hobby> => {
+      const hobby: Hobby = {
+        ...curatedHobby,
+        id: generateUUID(),
+        createdAt: new Date().toISOString(),
+        techniques: curatedHobby.techniques.map((t) => ({
+          ...t,
+          id: generateUUID(),
+          status: 'pending' as TechniqueStatus,
+          statusUpdatedAt: null,
+          resources: null,
+        })),
       };
 
       await store.saveHobby(hobby);
@@ -117,7 +146,7 @@ export function useHobbies(): UseHobbiesReturn {
   );
 
   const refreshHobbies = useCallback(async () => {
-    await loadAll();
+    await loadAll(false);
   }, [loadAll]);
 
   return {
@@ -125,6 +154,7 @@ export function useHobbies(): UseHobbiesReturn {
     loading,
     error,
     createHobby,
+    importCuratedHobby,
     deleteHobby,
     updateTechniqueStatus,
     refreshHobbies,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,12 +9,12 @@ import {
   Platform,
   ScrollView,
   StyleSheet,
-} from 'react-native';
-import { useRouter, useNavigation } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
-import { useHobbies, getErrorMessage } from '../src/hooks/useHobbies';
-import type { GoalLevel } from '../src/types/models';
+} from "react-native";
+import { useRouter, useNavigation } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
+import { useHobbies, getErrorMessage } from "../src/hooks/useHobbies";
+import type { GoalLevel, Hobby } from "../src/types/models";
 import {
   colors,
   spacing,
@@ -25,8 +25,21 @@ import {
   getLevelColor,
   getLevelDimColor,
   getLevelGlowColor,
-} from '../src/theme/tokens';
-import { LEVELS, LOADING_MESSAGES } from '../src/constants';
+} from "../src/theme/tokens";
+import { LEVELS, LOADING_MESSAGES } from "../src/constants";
+import { CURATED_HOBBIES } from "../src/constants/curatedHobbies";
+import { CuratedHobbyCard } from "../src/components/CuratedHobbyCard";
+
+const SUGGESTED_HOBBIES = [
+  "Guitar",
+  "Chess",
+  "Ukulele",
+  "Watercolor",
+  "Bouldering",
+  "Cooking",
+  "Python",
+  "Gardening",
+];
 
 export default function NewHobbyScreen() {
   const router = useRouter();
@@ -50,16 +63,17 @@ export default function NewHobbyScreen() {
       ),
     });
   }, [navigation, router]);
-  const { createHobby } = useHobbies();
+  const { createHobby, importCuratedHobby } = useHobbies();
 
-  const [hobbyName, setHobbyName] = useState('');
+  const [hobbyName, setHobbyName] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [levelValidationError, setLevelValidationError] = useState(false);
   const [loadingMsgIndex, setLoadingMsgIndex] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const canSubmit = hobbyName.trim().length > 0 && selectedLevel !== null && !isLoading;
+  const canSubmit = hobbyName.trim().length > 0 && !isLoading;
 
   // Cycle loading messages
   useEffect(() => {
@@ -67,7 +81,7 @@ export default function NewHobbyScreen() {
       setLoadingMsgIndex(0);
       intervalRef.current = setInterval(() => {
         setLoadingMsgIndex((prev) =>
-          prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev
+          prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev,
         );
       }, 3000);
     } else {
@@ -82,10 +96,20 @@ export default function NewHobbyScreen() {
   }, [isLoading]);
 
   const handleSubmit = useCallback(async () => {
-    if (!canSubmit || !selectedLevel) return;
+    if (!canSubmit) return;
+
+    if (!selectedLevel) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setLevelValidationError(true);
+      setError(
+        "Please select how serious you are to build your learning path.",
+      );
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
+    setLevelValidationError(false);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
     try {
@@ -100,10 +124,31 @@ export default function NewHobbyScreen() {
     }
   }, [canSubmit, hobbyName, selectedLevel, createHobby, router]);
 
+  const handleCuratedPress = useCallback(
+    async (curated: Hobby) => {
+      setIsLoading(true);
+      setError(null);
+      setLevelValidationError(false);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+      try {
+        const hobby = await importCuratedHobby(curated);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        router.dismiss();
+        router.push(`/hobby/${hobby.id}`);
+      } catch (err) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setError("Failed to start curated hobby.");
+        setIsLoading(false);
+      }
+    },
+    [importCuratedHobby, router],
+  );
+
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={100}
     >
       <ScrollView
@@ -122,7 +167,10 @@ export default function NewHobbyScreen() {
             placeholder="What do you want to learn?"
             placeholderTextColor={colors.textDisabled}
             value={hobbyName}
-            onChangeText={setHobbyName}
+            onChangeText={(text) => {
+              setHobbyName(text);
+              setError(null);
+            }}
             autoFocus
             autoCapitalize="words"
             autoCorrect={false}
@@ -130,11 +178,55 @@ export default function NewHobbyScreen() {
             editable={!isLoading}
             maxLength={60}
           />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.suggestionsScroll}
+            contentContainerStyle={styles.suggestionsContainer}
+            keyboardShouldPersistTaps="handled"
+          >
+            {SUGGESTED_HOBBIES.map((item) => {
+              const isSelected = hobbyName.toLowerCase() === item.toLowerCase();
+              return (
+                <Pressable
+                  key={item}
+                  style={[
+                    styles.suggestionChip,
+                    isSelected && styles.suggestionChipSelected,
+                  ]}
+                  onPress={() => {
+                    if (!isLoading) {
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      setHobbyName(item);
+                    }
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Select suggested hobby: ${item}`}
+                >
+                  <Text
+                    style={[
+                      styles.suggestionText,
+                      isSelected && styles.suggestionTextSelected,
+                    ]}
+                  >
+                    {item}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </ScrollView>
         </View>
 
         {/* Level Selector */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>How serious are you?</Text>
+          <Text
+            style={[
+              styles.sectionLabel,
+              levelValidationError && { color: colors.error },
+            ]}
+          >
+            How serious are you?
+          </Text>
           <View style={styles.levelGrid}>
             {LEVELS.map((level) => {
               const isSelected = selectedLevel === level.value;
@@ -149,7 +241,11 @@ export default function NewHobbyScreen() {
                     styles.levelCard,
                     {
                       backgroundColor: isSelected ? dimColor : colors.surface,
-                      borderColor: isSelected ? color : colors.borderSubtle,
+                      borderColor: isSelected
+                        ? color
+                        : levelValidationError
+                          ? colors.error
+                          : colors.borderSubtle,
                     },
                     isSelected && {
                       shadowColor: color,
@@ -163,6 +259,8 @@ export default function NewHobbyScreen() {
                     if (!isLoading) {
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       setSelectedLevel(level.value);
+                      setLevelValidationError(false);
+                      setError(null);
                     }
                   }}
                   accessibilityRole="radio"
@@ -183,10 +281,35 @@ export default function NewHobbyScreen() {
               );
             })}
           </View>
+          {levelValidationError && (
+            <View style={styles.inlineErrorContainer}>
+              <Text style={styles.inlineErrorText}>
+                ⚠️ Please select a seriousness level above.
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Curated Suggestions Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>
+            Or start with a curated roadmap
+          </Text>
+          {CURATED_HOBBIES.map((curated) => (
+            <CuratedHobbyCard
+              key={curated.id}
+              hobby={curated}
+              onPress={() => {
+                if (!isLoading) {
+                  handleCuratedPress(curated);
+                }
+              }}
+            />
+          ))}
         </View>
 
         {/* Error Message */}
-        {error && (
+        {error && !levelValidationError && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorText}>{error}</Text>
             <Pressable onPress={handleSubmit}>
@@ -243,18 +366,18 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xl,
   },
   section: {
-    marginBottom: spacing['2xl'],
+    marginBottom: spacing["2xl"],
   },
   sectionLabel: {
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
     color: colors.textSecondary,
     marginBottom: spacing.md,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
   },
   input: {
-    fontSize: fontSize['2xl'],
+    fontSize: fontSize["2xl"],
     fontWeight: fontWeight.semibold,
     color: colors.textPrimary,
     paddingVertical: spacing.base,
@@ -266,18 +389,18 @@ const styles = StyleSheet.create({
     minHeight: 64,
   },
   levelGrid: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.md,
   },
   levelCard: {
     flex: 1,
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.sm,
     borderRadius: radii.lg,
     borderWidth: 1.5,
     minHeight: 120,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   levelIcon: {
     fontSize: 32,
@@ -291,19 +414,19 @@ const styles = StyleSheet.create({
   levelSubtitle: {
     fontSize: fontSize.xs,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorContainer: {
     backgroundColor: colors.errorDim,
     borderRadius: radii.md,
     padding: spacing.base,
-    alignItems: 'center',
+    alignItems: "center",
   },
   errorText: {
     color: colors.error,
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: lineHeight.sm,
     marginBottom: spacing.sm,
   },
@@ -323,8 +446,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderRadius: radii.lg,
     paddingVertical: spacing.base,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 56,
   },
   submitDisabled: {
@@ -339,19 +462,63 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
   },
   loadingContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   cancelButton: {
     paddingHorizontal: spacing.sm,
-    justifyContent: 'center',
-    alignItems: 'center',
-    minHeight: 44,
+    justifyContent: "center",
+    alignItems: "center",
   },
   cancelButtonText: {
     color: colors.textSecondary,
     fontSize: fontSize.base,
     fontWeight: fontWeight.medium,
+  },
+  suggestionsScroll: {
+    marginTop: spacing.sm,
+  },
+  suggestionsContainer: {
+    gap: spacing.sm,
+    paddingRight: spacing.base,
+    paddingVertical: spacing.xs,
+  },
+  suggestionChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.full,
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    minHeight: 36,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  suggestionChipSelected: {
+    borderColor: colors.accent,
+    backgroundColor: colors.accentGlow,
+  },
+  suggestionText: {
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
+    fontWeight: fontWeight.medium,
+  },
+  suggestionTextSelected: {
+    color: colors.accent,
+  },
+  inlineErrorContainer: {
+    marginTop: spacing.md,
+    backgroundColor: colors.errorDim,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.base,
+    borderRadius: radii.md,
+    borderWidth: 1,
+    borderColor: "rgba(248, 113, 113, 0.2)",
+  },
+  inlineErrorText: {
+    color: colors.error,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
   },
 });

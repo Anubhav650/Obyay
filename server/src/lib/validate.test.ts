@@ -1,6 +1,17 @@
 import { validatePlanOutput, stripMarkdownFences } from './validate';
 
 describe('validatePlanOutput', () => {
+  const mockQuiz = {
+    question: 'Q?',
+    options: ['A', 'B', 'C', 'D'],
+    correctIndex: 0,
+    explanation: 'Why it is A.',
+  };
+  const mockFlashcards = [
+    { front: 'Front 1', back: 'Back 1' },
+    { front: 'Front 2', back: 'Back 2' },
+  ];
+
   const validPlan = {
     summary: 'A bouldering starter curriculum',
     techniques: [
@@ -10,6 +21,8 @@ describe('validatePlanOutput', () => {
         whyItMatters: 'Important for B.',
         order: 1,
         searchQuery: 'query 1',
+        quiz: mockQuiz,
+        flashcards: mockFlashcards,
       },
       {
         name: 'Technique 2',
@@ -17,6 +30,8 @@ describe('validatePlanOutput', () => {
         whyItMatters: 'Important for D.',
         order: 2,
         searchQuery: 'query 2',
+        quiz: mockQuiz,
+        flashcards: mockFlashcards,
       },
       {
         name: 'Technique 3',
@@ -24,6 +39,8 @@ describe('validatePlanOutput', () => {
         whyItMatters: 'Important for F.',
         order: 3,
         searchQuery: 'query 3',
+        quiz: mockQuiz,
+        flashcards: mockFlashcards,
       },
       {
         name: 'Technique 4',
@@ -31,6 +48,8 @@ describe('validatePlanOutput', () => {
         whyItMatters: 'Important for H.',
         order: 4,
         searchQuery: 'query 4',
+        quiz: mockQuiz,
+        flashcards: mockFlashcards,
       },
       {
         name: 'Technique 5',
@@ -38,6 +57,8 @@ describe('validatePlanOutput', () => {
         whyItMatters: 'Important for J.',
         order: 5,
         searchQuery: 'query 5',
+        quiz: mockQuiz,
+        flashcards: mockFlashcards,
       },
     ],
   };
@@ -72,6 +93,8 @@ describe('validatePlanOutput', () => {
           whyItMatters: 'Why',
           order: 6,
           searchQuery: 'Q6',
+          quiz: mockQuiz,
+          flashcards: mockFlashcards,
         },
         {
           name: 'T7',
@@ -79,6 +102,8 @@ describe('validatePlanOutput', () => {
           whyItMatters: 'Why',
           order: 7,
           searchQuery: 'Q7',
+          quiz: mockQuiz,
+          flashcards: mockFlashcards,
         },
         {
           name: 'T8',
@@ -86,6 +111,8 @@ describe('validatePlanOutput', () => {
           whyItMatters: 'Why',
           order: 8,
           searchQuery: 'Q8',
+          quiz: mockQuiz,
+          flashcards: mockFlashcards,
         },
         {
           name: 'T9',
@@ -93,6 +120,8 @@ describe('validatePlanOutput', () => {
           whyItMatters: 'Why',
           order: 9,
           searchQuery: 'Q9',
+          quiz: mockQuiz,
+          flashcards: mockFlashcards,
         },
       ],
     };
@@ -103,11 +132,11 @@ describe('validatePlanOutput', () => {
     const invalidPlan = {
       summary: 'Duplicate orders',
       techniques: [
-        { name: 'T1', description: 'Desc', whyItMatters: 'Why', order: 1, searchQuery: 'Q' },
-        { name: 'T2', description: 'Desc', whyItMatters: 'Why', order: 2, searchQuery: 'Q' },
-        { name: 'T3', description: 'Desc', whyItMatters: 'Why', order: 2, searchQuery: 'Q' },
-        { name: 'T4', description: 'Desc', whyItMatters: 'Why', order: 4, searchQuery: 'Q' },
-        { name: 'T5', description: 'Desc', whyItMatters: 'Why', order: 5, searchQuery: 'Q' },
+        { name: 'T1', description: 'Desc', whyItMatters: 'Why', order: 1, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T2', description: 'Desc', whyItMatters: 'Why', order: 2, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T3', description: 'Desc', whyItMatters: 'Why', order: 2, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T4', description: 'Desc', whyItMatters: 'Why', order: 4, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T5', description: 'Desc', whyItMatters: 'Why', order: 5, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
       ],
     };
     expect(() => validatePlanOutput(invalidPlan)).toThrow(/unique/);
@@ -117,11 +146,11 @@ describe('validatePlanOutput', () => {
     const invalidPlan = {
       summary: 'Non-contiguous orders',
       techniques: [
-        { name: 'T1', description: 'Desc', whyItMatters: 'Why', order: 1, searchQuery: 'Q' },
-        { name: 'T2', description: 'Desc', whyItMatters: 'Why', order: 3, searchQuery: 'Q' }, // skip 2
-        { name: 'T3', description: 'Desc', whyItMatters: 'Why', order: 4, searchQuery: 'Q' },
-        { name: 'T4', description: 'Desc', whyItMatters: 'Why', order: 5, searchQuery: 'Q' },
-        { name: 'T5', description: 'Desc', whyItMatters: 'Why', order: 6, searchQuery: 'Q' },
+        { name: 'T1', description: 'Desc', whyItMatters: 'Why', order: 1, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T2', description: 'Desc', whyItMatters: 'Why', order: 3, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards }, // skip 2
+        { name: 'T3', description: 'Desc', whyItMatters: 'Why', order: 4, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T4', description: 'Desc', whyItMatters: 'Why', order: 5, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T5', description: 'Desc', whyItMatters: 'Why', order: 6, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
       ],
     };
     expect(() => validatePlanOutput(invalidPlan)).toThrow(/contiguous/);
@@ -131,11 +160,11 @@ describe('validatePlanOutput', () => {
     const invalidPlan = {
       summary: 'Starts from 2',
       techniques: [
-        { name: 'T1', description: 'Desc', whyItMatters: 'Why', order: 2, searchQuery: 'Q' },
-        { name: 'T2', description: 'Desc', whyItMatters: 'Why', order: 3, searchQuery: 'Q' },
-        { name: 'T3', description: 'Desc', whyItMatters: 'Why', order: 4, searchQuery: 'Q' },
-        { name: 'T4', description: 'Desc', whyItMatters: 'Why', order: 5, searchQuery: 'Q' },
-        { name: 'T5', description: 'Desc', whyItMatters: 'Why', order: 6, searchQuery: 'Q' },
+        { name: 'T1', description: 'Desc', whyItMatters: 'Why', order: 2, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T2', description: 'Desc', whyItMatters: 'Why', order: 3, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T3', description: 'Desc', whyItMatters: 'Why', order: 4, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T4', description: 'Desc', whyItMatters: 'Why', order: 5, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
+        { name: 'T5', description: 'Desc', whyItMatters: 'Why', order: 6, searchQuery: 'Q', quiz: mockQuiz, flashcards: mockFlashcards },
       ],
     };
     expect(() => validatePlanOutput(invalidPlan)).toThrow(/contiguous/);
