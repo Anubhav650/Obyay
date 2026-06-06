@@ -1,15 +1,30 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable, type ViewStyle } from 'react-native';
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+  type ViewStyle,
+} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withSequence,
   withRepeat,
-} from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
-import { colors, spacing, radii, fontSize, fontWeight, shadows, animation } from '../theme/tokens';
-import type { QuizQuestion } from '../types/models';
+} from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import {
+  colors,
+  spacing,
+  radii,
+  fontSize,
+  fontWeight,
+  shadows,
+  animation,
+} from "../theme/tokens";
+import { Ionicons } from "@expo/vector-icons";
+import type { QuizQuestion } from "../types/models";
 
 interface QuizViewProps {
   quiz: QuizQuestion;
@@ -23,7 +38,9 @@ export function QuizView({ quiz }: QuizViewProps) {
   if (!quiz) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No quiz generated for this technique.</Text>
+        <Text style={styles.emptyText}>
+          No quiz generated for this technique.
+        </Text>
       </View>
     );
   }
@@ -40,14 +57,14 @@ export function QuizView({ quiz }: QuizViewProps) {
     } else {
       // Incorrect!
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      
+
       // Shake animation
       shakeOffset.value = withSequence(
         withTiming(-10, { duration: 60 }),
         withTiming(10, { duration: 60 }),
         withTiming(-10, { duration: 60 }),
         withTiming(10, { duration: 60 }),
-        withTiming(0, { duration: 60 })
+        withTiming(0, { duration: 60 }),
       );
     }
   };
@@ -72,7 +89,7 @@ export function QuizView({ quiz }: QuizViewProps) {
         {quiz.options.map((option, idx) => {
           const isSelected = selectedIdx === idx;
           const isCorrectOption = idx === quiz.correctIndex;
-          
+
           let optionStyle: any = styles.optionButton;
           let textStyle: any = styles.optionText;
 
@@ -88,7 +105,9 @@ export function QuizView({ quiz }: QuizViewProps) {
               textStyle = [styles.optionText, styles.disabledText];
             }
           } else {
-            optionStyle = isSelected ? [styles.optionButton, styles.selectedOption] : styles.optionButton;
+            optionStyle = isSelected
+              ? [styles.optionButton, styles.selectedOption]
+              : styles.optionButton;
           }
 
           return (
@@ -102,15 +121,24 @@ export function QuizView({ quiz }: QuizViewProps) {
               disabled={isAnswered}
             >
               <View style={styles.optionRow}>
-                <View style={[
-                  styles.badge,
-                  isAnswered && isCorrectOption && styles.badgeCorrect,
-                  isAnswered && isSelected && !isCorrectOption && styles.badgeIncorrect
-                ]}>
-                  <Text style={[
-                    styles.badgeText,
-                    isAnswered && (isCorrectOption || isSelected) && styles.badgeTextAnswered
-                  ]}>
+                <View
+                  style={[
+                    styles.badge,
+                    isAnswered && isCorrectOption && styles.badgeCorrect,
+                    isAnswered &&
+                      isSelected &&
+                      !isCorrectOption &&
+                      styles.badgeIncorrect,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      isAnswered &&
+                        (isCorrectOption || isSelected) &&
+                        styles.badgeTextAnswered,
+                    ]}
+                  >
                     {String.fromCharCode(65 + idx)}
                   </Text>
                 </View>
@@ -124,9 +152,31 @@ export function QuizView({ quiz }: QuizViewProps) {
       {/* Explanation Banner */}
       {isAnswered && (
         <Animated.View style={styles.explanationBox}>
-          <Text style={styles.explanationTitle}>
-            {selectedIdx === quiz.correctIndex ? '🎉 Correct!' : '❌ Incorrect'}
-          </Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              marginBottom: spacing.sm,
+            }}
+          >
+            <Ionicons
+              name={
+                selectedIdx === quiz.correctIndex
+                  ? "checkmark-circle"
+                  : "close-circle"
+              }
+              size={20}
+              color={
+                selectedIdx === quiz.correctIndex
+                  ? colors.success
+                  : colors.error
+              }
+            />
+            <Text style={styles.explanationTitle}>
+              {selectedIdx === quiz.correctIndex ? "Correct!" : "Incorrect"}
+            </Text>
+          </View>
           <Text style={styles.explanationText}>{quiz.explanation}</Text>
 
           <Pressable
@@ -147,7 +197,7 @@ export function QuizView({ quiz }: QuizViewProps) {
 const styles = StyleSheet.create({
   container: {
     paddingVertical: spacing.md,
-    width: '100%',
+    width: "100%",
   },
   questionText: {
     fontSize: fontSize.base,
@@ -166,11 +216,11 @@ const styles = StyleSheet.create({
     borderRadius: radii.card,
     padding: spacing.md,
     minHeight: 56,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   optionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.md,
   },
   badge: {
@@ -178,8 +228,8 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: radii.full,
     backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: colors.borderSubtle,
   },
@@ -242,7 +292,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: radii.card,
     padding: spacing.xl,
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
   },
   explanationTitle: {
     fontSize: fontSize.base,
@@ -263,8 +313,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderRadius: radii.pill,
-    alignSelf: 'stretch',
-    alignItems: 'center',
+    alignSelf: "stretch",
+    alignItems: "center",
   },
   resetButtonText: {
     color: colors.textPrimary,
@@ -276,7 +326,7 @@ const styles = StyleSheet.create({
   } as ViewStyle,
   emptyContainer: {
     padding: spacing.xl,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     color: colors.textTertiary,

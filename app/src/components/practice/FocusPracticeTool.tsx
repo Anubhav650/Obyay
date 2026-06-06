@@ -1,8 +1,25 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, TextInput, ScrollView, Keyboard } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { colors, spacing, radii, fontSize, fontWeight, shadows, lineHeight } from '../../theme/tokens';
-import type { PracticeToolConfig } from '../../types/models';
+import React, { useState, useEffect, useRef } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  ScrollView,
+  Keyboard,
+} from "react-native";
+import * as Haptics from "expo-haptics";
+import {
+  colors,
+  spacing,
+  radii,
+  fontSize,
+  fontWeight,
+  shadows,
+  lineHeight,
+} from "../../theme/tokens";
+import { Ionicons } from "@expo/vector-icons";
+import type { PracticeToolConfig } from "../../types/models";
 
 export function FocusPracticeTool({
   config,
@@ -13,13 +30,13 @@ export function FocusPracticeTool({
 }) {
   const focusTimeSeconds = config?.focusTime || 600; // default 10 minutes
   const milestones = config?.milestones || [
-    'Isolate the core sub-skill and practice it slowly.',
-    'Identify mistakes and repeat to build correct muscle memory.',
-    'Gradually increase speed once form is flawless.'
+    "Isolate the core sub-skill and practice it slowly.",
+    "Identify mistakes and repeat to build correct muscle memory.",
+    "Gradually increase speed once form is flawless.",
   ];
   const reflectionQuestions = config?.reflectionQuestions || [
-    'What was the trickiest part of this session?',
-    'What adjustments will you make next time?'
+    "What was the trickiest part of this session?",
+    "What adjustments will you make next time?",
   ];
 
   // Timer State
@@ -28,12 +45,14 @@ export function FocusPracticeTool({
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Milestones State
-  const [checkedMilestones, setCheckedMilestones] = useState<Record<number, boolean>>({});
+  const [checkedMilestones, setCheckedMilestones] = useState<
+    Record<number, boolean>
+  >({});
 
   // Reflection State
   const [showReflection, setShowReflection] = useState(false);
-  const [reflectionText1, setReflectionText1] = useState('');
-  const [reflectionText2, setReflectionText2] = useState('');
+  const [reflectionText1, setReflectionText1] = useState("");
+  const [reflectionText2, setReflectionText2] = useState("");
 
   // Reset timer on config change
   useEffect(() => {
@@ -41,8 +60,8 @@ export function FocusPracticeTool({
     setIsTimerRunning(false);
     setCheckedMilestones({});
     setShowReflection(false);
-    setReflectionText1('');
-    setReflectionText2('');
+    setReflectionText1("");
+    setReflectionText2("");
   }, [focusTimeSeconds]);
 
   // Timer loop
@@ -86,7 +105,7 @@ export function FocusPracticeTool({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setCheckedMilestones((prev) => ({
       ...prev,
-      [idx]: !prev[idx]
+      [idx]: !prev[idx],
     }));
   };
 
@@ -101,10 +120,11 @@ export function FocusPracticeTool({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
-  const allMilestonesChecked = milestones.length > 0 &&
+  const allMilestonesChecked =
+    milestones.length > 0 &&
     milestones.every((_, idx) => checkedMilestones[idx]);
 
   return (
@@ -119,11 +139,19 @@ export function FocusPracticeTool({
             <Text style={styles.timerSubtitle}>REMAINING FOCUS TIME</Text>
             <View style={styles.timerBtnRow}>
               <Pressable
-                style={[styles.timerBtn, isTimerRunning ? styles.pauseBtn : styles.startBtn]}
+                style={[
+                  styles.timerBtn,
+                  isTimerRunning ? styles.pauseBtn : styles.startBtn,
+                ]}
                 onPress={toggleTimer}
               >
-                <Text style={[styles.timerBtnText, isTimerRunning && styles.pauseBtnText]}>
-                  {isTimerRunning ? 'Pause' : 'Start Focus'}
+                <Text
+                  style={[
+                    styles.timerBtnText,
+                    isTimerRunning && styles.pauseBtnText,
+                  ]}
+                >
+                  {isTimerRunning ? "Pause" : "Start Focus"}
                 </Text>
               </Pressable>
               <Pressable style={styles.resetBtn} onPress={resetTimer}>
@@ -140,13 +168,32 @@ export function FocusPracticeTool({
               return (
                 <Pressable
                   key={idx}
-                  style={[styles.milestoneRow, isChecked && styles.milestoneRowChecked]}
+                  style={[
+                    styles.milestoneRow,
+                    isChecked && styles.milestoneRowChecked,
+                  ]}
                   onPress={() => handleMilestoneToggle(idx)}
                 >
-                  <View style={[styles.checkbox, isChecked && styles.checkboxChecked]}>
-                    {isChecked && <Text style={styles.checkmark}>✓</Text>}
+                  <View
+                    style={[
+                      styles.checkbox,
+                      isChecked && styles.checkboxChecked,
+                    ]}
+                  >
+                    {isChecked && (
+                      <Ionicons
+                        name="checkmark"
+                        size={12}
+                        color={colors.white}
+                      />
+                    )}
                   </View>
-                  <Text style={[styles.milestoneText, isChecked && styles.milestoneTextChecked]}>
+                  <Text
+                    style={[
+                      styles.milestoneText,
+                      isChecked && styles.milestoneTextChecked,
+                    ]}
+                  >
                     {item}
                   </Text>
                 </Pressable>
@@ -162,19 +209,37 @@ export function FocusPracticeTool({
               setShowReflection(true);
             }}
           >
-            <Text style={styles.reflectionUnlockText}>Skip directly to Reflection & Log →</Text>
+            <Text style={styles.reflectionUnlockText}>
+              Skip directly to Reflection & Log →
+            </Text>
           </Pressable>
         </View>
       ) : (
         <View style={styles.practiceCard}>
-          <Text style={[styles.cardHeading, { color: colors.success }]}>📝 LOG PRACTICE REFLECTION</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              justifyContent: "center",
+              marginBottom: spacing.lg,
+            }}
+          >
+            <Ionicons name="document-text" size={16} color={colors.success} />
+            <Text style={[styles.cardHeading, { color: colors.success }]}>
+              LOG PRACTICE REFLECTION
+            </Text>
+          </View>
           <Text style={styles.reflectionIntro}>
-            Reflecting on your errors is the fastest way to master a skill. Answer these brief cues:
+            Reflecting on your errors is the fastest way to master a skill.
+            Answer these brief cues:
           </Text>
 
           {/* Reflection Question 1 */}
           <View style={styles.reflectionField}>
-            <Text style={styles.reflectionLabel}>{reflectionQuestions[0] || 'What was difficult?'}</Text>
+            <Text style={styles.reflectionLabel}>
+              {reflectionQuestions[0] || "What was difficult?"}
+            </Text>
             <TextInput
               style={styles.reflectionInput}
               placeholder="Type your notes here..."
@@ -188,7 +253,9 @@ export function FocusPracticeTool({
 
           {/* Reflection Question 2 */}
           <View style={styles.reflectionField}>
-            <Text style={styles.reflectionLabel}>{reflectionQuestions[1] || 'What is your adjustment?'}</Text>
+            <Text style={styles.reflectionLabel}>
+              {reflectionQuestions[1] || "What is your adjustment?"}
+            </Text>
             <TextInput
               style={styles.reflectionInput}
               placeholder="Type your notes here..."
@@ -203,11 +270,13 @@ export function FocusPracticeTool({
           <Pressable
             style={({ pressed }) => [
               styles.submitBtn,
-              pressed && styles.btnPressed
+              pressed && styles.btnPressed,
             ]}
             onPress={handleSubmitReflection}
           >
-            <Text style={styles.submitBtnText}>Complete & Save Practice Log</Text>
+            <Text style={styles.submitBtnText}>
+              Complete & Save Practice Log
+            </Text>
           </Pressable>
 
           <Pressable
@@ -243,11 +312,11 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
     color: colors.textTertiary,
     letterSpacing: 1,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.lg,
   },
   timerContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: colors.surfaceElevated,
     borderRadius: radii.md,
     padding: spacing.md,
@@ -269,16 +338,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   timerBtnRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
-    width: '100%',
+    width: "100%",
   },
   timerBtn: {
     flex: 2,
     borderRadius: radii.pill,
     minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   startBtn: {
     backgroundColor: colors.accent,
@@ -302,8 +371,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     borderRadius: radii.pill,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 44,
   },
   resetBtnText: {
@@ -323,8 +392,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   milestoneRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     backgroundColor: colors.surfaceElevated,
     borderWidth: 1,
     borderColor: colors.borderSubtle,
@@ -342,8 +411,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     borderWidth: 2,
     borderColor: colors.textSecondary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 1,
   },
   checkboxChecked: {
@@ -364,10 +433,10 @@ const styles = StyleSheet.create({
   },
   milestoneTextChecked: {
     color: colors.textSecondary,
-    textDecorationLine: 'line-through',
+    textDecorationLine: "line-through",
   },
   reflectionUnlockLink: {
-    alignSelf: 'center',
+    alignSelf: "center",
     paddingVertical: spacing.xs,
   },
   reflectionUnlockText: {
@@ -399,14 +468,14 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: fontSize.sm,
     minHeight: 80,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
   },
   submitBtn: {
     backgroundColor: colors.success,
     borderRadius: radii.pill,
     minHeight: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     ...shadows.card,
     marginTop: spacing.md,
   },
@@ -416,7 +485,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
   },
   backBtn: {
-    alignSelf: 'center',
+    alignSelf: "center",
     marginTop: spacing.md,
     paddingVertical: spacing.xs,
   },

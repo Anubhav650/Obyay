@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, ScrollView } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { colors, spacing, radii, fontSize, fontWeight, shadows, lineHeight } from '../../theme/tokens';
-import type { PracticeToolConfig } from '../../types/models';
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
+import * as Haptics from "expo-haptics";
+import {
+  colors,
+  spacing,
+  radii,
+  fontSize,
+  fontWeight,
+  shadows,
+  lineHeight,
+} from "../../theme/tokens";
+import { Ionicons } from "@expo/vector-icons";
+import type { PracticeToolConfig } from "../../types/models";
 
 interface CulinaryStep {
   name: string;
@@ -12,9 +21,24 @@ interface CulinaryStep {
 
 export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
   const steps: CulinaryStep[] = config?.steps || [
-    { name: 'Autolyse', duration: 1800, sensoryCheck: 'Flour is fully hydrated, no dry pockets remain. Gluten is starting to relax.' },
-    { name: 'Bulk Fermentation', duration: 7200, sensoryCheck: 'Dough has risen by 50%, shows bubbles on the surface, and feels light/aerated.' },
-    { name: 'Baking', duration: 2400, sensoryCheck: 'Crust is dark mahogany brown, bread sounds hollow when tapped on the bottom.' }
+    {
+      name: "Autolyse",
+      duration: 1800,
+      sensoryCheck:
+        "Flour is fully hydrated, no dry pockets remain. Gluten is starting to relax.",
+    },
+    {
+      name: "Bulk Fermentation",
+      duration: 7200,
+      sensoryCheck:
+        "Dough has risen by 50%, shows bubbles on the surface, and feels light/aerated.",
+    },
+    {
+      name: "Baking",
+      duration: 2400,
+      sensoryCheck:
+        "Crust is dark mahogany brown, bread sounds hollow when tapped on the bottom.",
+    },
   ];
   const targetTemp = config?.targetTemperature;
 
@@ -81,7 +105,7 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
   };
 
   const currentStep = steps[activeStepIdx];
@@ -92,14 +116,28 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
       {targetTemp && (
         <View style={styles.tempBadge}>
           <Text style={styles.tempBadgeLabel}>TARGET TEMPERATURE</Text>
-          <Text style={styles.tempBadgeVal}>🔥 {targetTemp}</Text>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8,
+              marginTop: spacing.xs,
+            }}
+          >
+            <Ionicons name="flame" size={18} color={colors.intermediate} />
+            <Text style={styles.tempBadgeVal}>{targetTemp}</Text>
+          </View>
         </View>
       )}
 
       {/* Steps List Overview */}
       <View style={styles.stepsTimeline}>
         <Text style={styles.guideTitle}>PRACTICE STEPS</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.timelineScroll}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.timelineScroll}
+        >
           {steps.map((step, idx) => {
             const isActive = idx === activeStepIdx;
             const isDone = idx < activeStepIdx;
@@ -109,15 +147,30 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
                 style={[
                   styles.timelineNode,
                   isActive && styles.activeNode,
-                  isDone && styles.doneNode
+                  isDone && styles.doneNode,
                 ]}
                 onPress={() => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setActiveStepIdx(idx);
                 }}
               >
-                <Text style={[styles.nodeText, isActive && styles.activeNodeText, isDone && styles.doneNodeText]}>
-                  {isDone ? '✓' : idx + 1}. {step.name}
+                <Text
+                  style={[
+                    styles.nodeText,
+                    isActive && styles.activeNodeText,
+                    isDone && styles.doneNodeText,
+                  ]}
+                >
+                  {isDone ? (
+                    <Ionicons
+                      name="checkmark"
+                      size={14}
+                      color={colors.success}
+                    />
+                  ) : (
+                    `${idx + 1}.`
+                  )}{" "}
+                  {step.name}
                 </Text>
               </Pressable>
             );
@@ -137,30 +190,63 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
               style={({ pressed }) => [
                 styles.playPauseBtn,
                 isTimerRunning ? styles.pauseColor : styles.playColor,
-                pressed && styles.btnPressed
+                pressed && styles.btnPressed,
               ]}
               onPress={toggleTimer}
             >
-              <Text style={[styles.playPauseText, isTimerRunning && styles.pauseText]}>
-                {isTimerRunning ? 'Pause' : 'Start Timer'}
+              <Text
+                style={[
+                  styles.playPauseText,
+                  isTimerRunning && styles.pauseText,
+                ]}
+              >
+                {isTimerRunning ? "Pause" : "Start Timer"}
               </Text>
             </Pressable>
           </View>
 
           {/* Sensory Checklist Checkbox */}
           <View style={styles.sensoryBox}>
-            <Text style={styles.sensoryTitle}>🧠 SENSORY CHECKLIST (FIRST PRINCIPLES)</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: spacing.xs,
+              }}
+            >
+              <Ionicons name="brain" size={14} color={colors.intermediate} />
+              <Text style={styles.sensoryTitle}>
+                SENSORY CHECKLIST (FIRST PRINCIPLES)
+              </Text>
+            </View>
             <Text style={styles.sensoryDescription}>
-              Don't just wait for the timer. Inspect your prep physically and verify:
+              Don't just wait for the timer. Inspect your prep physically and
+              verify:
             </Text>
             <Pressable
-              style={[styles.checkboxRow, checklistChecked && styles.checkboxRowChecked]}
+              style={[
+                styles.checkboxRow,
+                checklistChecked && styles.checkboxRowChecked,
+              ]}
               onPress={handleCheckboxToggle}
             >
-              <View style={[styles.checkbox, checklistChecked && styles.checkboxChecked]}>
-                {checklistChecked && <Text style={styles.checkmark}>✓</Text>}
+              <View
+                style={[
+                  styles.checkbox,
+                  checklistChecked && styles.checkboxChecked,
+                ]}
+              >
+                {checklistChecked && (
+                  <Ionicons name="checkmark" size={14} color={colors.white} />
+                )}
               </View>
-              <Text style={[styles.checkboxText, checklistChecked && styles.checkboxTextChecked]}>
+              <Text
+                style={[
+                  styles.checkboxText,
+                  checklistChecked && styles.checkboxTextChecked,
+                ]}
+              >
                 {currentStep.sensoryCheck}
               </Text>
             </Pressable>
@@ -171,14 +257,32 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
             style={({ pressed }) => [
               styles.nextStepBtn,
               !checklistChecked && styles.nextDisabled,
-              pressed && checklistChecked && styles.btnPressed
+              pressed && checklistChecked && styles.btnPressed,
             ]}
             onPress={nextStep}
             disabled={!checklistChecked}
           >
-            <Text style={[styles.nextStepBtnText, !checklistChecked && styles.nextBtnTextDisabled]}>
-              {activeStepIdx + 1 < steps.length ? 'Next Step ✓' : 'Complete Routine 🎉'}
-            </Text>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
+              <Text
+                style={[
+                  styles.nextStepBtnText,
+                  !checklistChecked && styles.nextBtnTextDisabled,
+                ]}
+              >
+                {activeStepIdx + 1 < steps.length
+                  ? "Next Step"
+                  : "Complete Routine"}
+              </Text>
+              <Ionicons
+                name={
+                  activeStepIdx + 1 < steps.length ? "arrow-forward" : "trophy"
+                }
+                size={18}
+                color={colors.white}
+              />
+            </View>
           </Pressable>
         </View>
       )}
@@ -196,7 +300,7 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSubtle,
     borderRadius: radii.md,
     padding: spacing.md,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: spacing.md,
     ...shadows.card,
   },
@@ -234,8 +338,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     minHeight: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   activeNode: {
     backgroundColor: colors.intermediateDim,
@@ -268,11 +372,11 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: fontSize.xl,
     fontWeight: fontWeight.bold,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.lg,
   },
   timerDisplay: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: spacing.xl,
   },
   timerText: {
@@ -286,8 +390,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: radii.pill,
     minWidth: 140,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 48,
   },
   playColor: {
@@ -330,8 +434,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   checkboxRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     backgroundColor: colors.surface,
     borderWidth: 1.5,
     borderColor: colors.borderSubtle,
@@ -349,8 +453,8 @@ const styles = StyleSheet.create({
     borderRadius: radii.sm,
     borderWidth: 2,
     borderColor: colors.textSecondary,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginTop: 2,
   },
   checkboxChecked: {
@@ -371,14 +475,14 @@ const styles = StyleSheet.create({
   },
   checkboxTextChecked: {
     color: colors.textSecondary,
-    textDecorationLine: 'line-through',
+    textDecorationLine: "line-through",
   },
   nextStepBtn: {
     backgroundColor: colors.success,
     borderRadius: radii.pill,
     minHeight: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     ...shadows.card,
   },
   nextDisabled: {

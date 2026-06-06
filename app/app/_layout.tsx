@@ -37,6 +37,7 @@ export default function RootLayout() {
                 color: colors.textPrimary,
                 fontWeight: "800",
               },
+              headerBackVisible: false,
             }}
           />
           <Stack.Screen

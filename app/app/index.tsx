@@ -1,35 +1,51 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, FlatList, Alert, Platform, ActionSheetIOS, StyleSheet, ScrollView, Text } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
-import { useHobbies } from '../src/hooks/useHobbies';
-import { loadProfile } from '../src/store/hobbyStore';
-import { HobbyCard } from '../src/components/HobbyCard';
-import { CuratedHobbyCard } from '../src/components/CuratedHobbyCard';
-import { FAB } from '../src/components/FAB';
-import { Skeleton } from '../src/components/Skeleton';
-import type { Hobby } from '../src/types/models';
-import { colors, spacing, fontSize, fontWeight, letterSpacing } from '../src/theme/tokens';
-import { CURATED_HOBBIES } from '../src/constants/curatedHobbies';
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  View,
+  FlatList,
+  Alert,
+  Platform,
+  ActionSheetIOS,
+  StyleSheet,
+  ScrollView,
+  Text,
+} from "react-native";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
+import { useHobbies } from "../src/hooks/useHobbies";
+import { loadProfile } from "../src/store/hobbyStore";
+import { HobbyCard } from "../src/components/HobbyCard";
+import { CuratedHobbyCard } from "../src/components/CuratedHobbyCard";
+import { FAB } from "../src/components/FAB";
+import { Skeleton } from "../src/components/Skeleton";
+import type { Hobby } from "../src/types/models";
+import {
+  colors,
+  spacing,
+  fontSize,
+  fontWeight,
+  letterSpacing,
+} from "../src/theme/tokens";
+import { CURATED_HOBBIES } from "../src/constants/curatedHobbies";
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { hobbies, loading, deleteHobby, importCuratedHobby, refreshHobbies } = useHobbies();
+  const { hobbies, loading, deleteHobby, importCuratedHobby, refreshHobbies } =
+    useHobbies();
   const [checkingProfile, setCheckingProfile] = useState(true);
 
   useFocusEffect(
     useCallback(() => {
       refreshHobbies();
-    }, [refreshHobbies])
+    }, [refreshHobbies]),
   );
 
   useEffect(() => {
     (async () => {
       const profile = await loadProfile();
       if (!profile) {
-        router.replace('/onboarding');
+        router.replace("/onboarding");
       } else {
         setCheckingProfile(false);
       }
@@ -37,14 +53,14 @@ export default function HomeScreen() {
   }, [router]);
 
   const handleAddPress = useCallback(() => {
-    router.push('/NewHobby');
+    router.push("/NewHobby");
   }, [router]);
 
   const handleHobbyPress = useCallback(
     (hobby: Hobby) => {
       router.push(`/hobby/${hobby.id}`);
     },
-    [router]
+    [router],
   );
 
   const handleCuratedPress = useCallback(
@@ -55,46 +71,46 @@ export default function HomeScreen() {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.push(`/hobby/${imported.id}`);
       } catch (err) {
-        Alert.alert('Error', 'Failed to start curated hobby');
+        Alert.alert("Error", "Failed to start curated hobby");
       }
     },
-    [importCuratedHobby, router]
+    [importCuratedHobby, router],
   );
 
   const handleHobbyLongPress = useCallback(
     (hobby: Hobby) => {
       const doDelete = () => {
         Alert.alert(
-          'Delete Hobby',
+          "Delete Hobby",
           `Are you sure you want to delete "${hobby.name}"? This cannot be undone.`,
           [
-            { text: 'Cancel', style: 'cancel' },
+            { text: "Cancel", style: "cancel" },
             {
-              text: 'Delete',
-              style: 'destructive',
+              text: "Delete",
+              style: "destructive",
               onPress: () => deleteHobby(hobby.id),
             },
-          ]
+          ],
         );
       };
 
-      if (Platform.OS === 'ios') {
+      if (Platform.OS === "ios") {
         ActionSheetIOS.showActionSheetWithOptions(
           {
-            options: ['Cancel', 'Delete Hobby'],
+            options: ["Cancel", "Delete Hobby"],
             destructiveButtonIndex: 1,
             cancelButtonIndex: 0,
             title: hobby.name,
           },
           (index) => {
             if (index === 1) doDelete();
-          }
+          },
         );
       } else {
         doDelete();
       }
     },
-    [deleteHobby]
+    [deleteHobby],
   );
 
   const renderItem = useCallback(
@@ -105,7 +121,7 @@ export default function HomeScreen() {
         onLongPress={() => handleHobbyLongPress(item)}
       />
     ),
-    [handleHobbyPress, handleHobbyLongPress]
+    [handleHobbyPress, handleHobbyLongPress],
   );
 
   const keyExtractor = useCallback((item: Hobby) => item.id, []);
@@ -133,7 +149,8 @@ export default function HomeScreen() {
             <Text style={styles.emptyEmoji}>🚀</Text>
             <Text style={styles.emptyTitle}>Start your journey</Text>
             <Text style={styles.emptySubtitle}>
-              Select a pre-built roadmap below for instant learning, or tap the + button to build a custom hobby plan!
+              Select a pre-built roadmap below for instant learning, or tap the
+              + button to build a custom hobby plan!
             </Text>
           </View>
           <View style={styles.curatedSection}>
@@ -178,12 +195,12 @@ const styles = StyleSheet.create({
   },
   emptyScrollContent: {
     paddingHorizontal: spacing.base,
-    paddingTop: spacing['4xl'],
-    alignItems: 'stretch',
+    paddingTop: spacing["4xl"],
+    alignItems: "stretch",
   },
   emptyHeader: {
-    alignItems: 'center',
-    marginBottom: spacing['2xl'],
+    alignItems: "center",
+    marginBottom: spacing["2xl"],
     paddingHorizontal: spacing.md,
   },
   emptyEmoji: {
@@ -191,17 +208,17 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   emptyTitle: {
-    fontSize: fontSize['2xl'],
+    fontSize: fontSize["2xl"],
     fontWeight: fontWeight.bold,
     color: colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.sm,
     letterSpacing: letterSpacing.tight,
   },
   emptySubtitle: {
     fontSize: fontSize.base,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 22,
     maxWidth: 300,
   },
@@ -212,7 +229,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.sm,
     fontWeight: fontWeight.bold,
     color: colors.accentDark,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: spacing.md,
   },

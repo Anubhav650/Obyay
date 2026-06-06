@@ -1,13 +1,8 @@
-import React, { memo } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
-import type { Technique } from '../types/models';
-import {
-  colors,
-  spacing,
-  radii,
-  fontSize,
-  fontWeight,
-} from '../theme/tokens';
+import React, { memo } from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
+import type { Technique } from "../types/models";
+import { colors, spacing, radii, fontSize, fontWeight } from "../theme/tokens";
+import { Ionicons } from "@expo/vector-icons";
 
 interface TechniqueRowProps {
   technique: Technique;
@@ -15,8 +10,8 @@ interface TechniqueRowProps {
 }
 
 function TechniqueRowComponent({ technique, onPress }: TechniqueRowProps) {
-  const isMastered = technique.status === 'mastered';
-  const isSkipped = technique.status === 'skipped';
+  const isMastered = technique.status === "mastered";
+  const isSkipped = technique.status === "skipped";
 
   return (
     <Pressable
@@ -31,12 +26,7 @@ function TechniqueRowComponent({ technique, onPress }: TechniqueRowProps) {
       accessibilityLabel={`${technique.name}, ${technique.status}`}
     >
       <View style={styles.orderContainer}>
-        <Text
-          style={[
-            styles.order,
-            isSkipped && styles.skippedText,
-          ]}
-        >
+        <Text style={[styles.order, isSkipped && styles.skippedText]}>
           {technique.order}
         </Text>
       </View>
@@ -55,11 +45,13 @@ function TechniqueRowComponent({ technique, onPress }: TechniqueRowProps) {
       </View>
 
       <View style={styles.statusContainer}>
-        {isMastered && <Text style={styles.statusIcon}>✓</Text>}
-        {isSkipped && <Text style={styles.skippedIcon}>—</Text>}
-        {technique.status === 'pending' && (
-          <View style={styles.pendingDot} />
+        {isMastered && (
+          <Ionicons name="checkmark" size={18} color={colors.success} />
         )}
+        {isSkipped && (
+          <Ionicons name="close" size={18} color={colors.textDisabled} />
+        )}
+        {technique.status === "pending" && <View style={styles.pendingDot} />}
       </View>
     </Pressable>
   );
@@ -67,8 +59,8 @@ function TechniqueRowComponent({ technique, onPress }: TechniqueRowProps) {
 
 const styles = StyleSheet.create({
   row: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.base,
     paddingVertical: spacing.md,
@@ -79,7 +71,7 @@ const styles = StyleSheet.create({
   },
   masteredRow: {
     backgroundColor: colors.successDim,
-    borderColor: 'rgba(52, 211, 153, 0.2)',
+    borderColor: "rgba(52, 211, 153, 0.2)",
   },
   skippedRow: {
     opacity: 0.5,
@@ -112,13 +104,13 @@ const styles = StyleSheet.create({
     color: colors.success,
   },
   skippedName: {
-    textDecorationLine: 'line-through',
+    textDecorationLine: "line-through",
     color: colors.textDisabled,
   },
   statusContainer: {
     width: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   statusIcon: {
     fontSize: fontSize.lg,

@@ -1,15 +1,29 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, Pressable, type ViewStyle } from 'react-native';
+import React, { useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Pressable,
+  type ViewStyle,
+} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   interpolate,
-  runOnJS,
-} from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
-import { colors, spacing, radii, fontSize, fontWeight, shadows, animation } from '../theme/tokens';
-import type { Flashcard } from '../types/models';
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+import * as Haptics from "expo-haptics";
+import {
+  colors,
+  spacing,
+  radii,
+  fontSize,
+  fontWeight,
+  shadows,
+  animation,
+} from "../theme/tokens";
+import type { Flashcard } from "../types/models";
 
 interface FlashcardViewProps {
   flashcards: Flashcard[];
@@ -18,12 +32,14 @@ interface FlashcardViewProps {
 export function FlashcardView({ flashcards }: FlashcardViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const isFlipped = useSharedValue(0); // 0 = front, 1 = back
-  const [cardSide, setCardSide] = useState<'front' | 'back'>('front');
+  const [cardSide, setCardSide] = useState<"front" | "back">("front");
 
   if (!flashcards || flashcards.length === 0) {
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No flashcards generated for this technique.</Text>
+        <Text style={styles.emptyText}>
+          No flashcards generated for this technique.
+        </Text>
       </View>
     );
   }
@@ -34,12 +50,15 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
 
+  const _setCardSide = (targetValue: number) => {
+    setCardSide(targetValue === 0 ? "front" : "back");
+  };
+
   const handleFlip = () => {
     triggerFlipHaptic();
     const targetValue = isFlipped.value === 0 ? 1 : 0;
-    isFlipped.value = withTiming(targetValue, { duration: 400 }, () => {
-      runOnJS(setCardSide)(targetValue === 0 ? 'front' : 'back');
-    });
+    isFlipped.value = withTiming(targetValue, { duration: 400 }, () => {});
+    _setCardSide(targetValue);
   };
 
   const handleNext = () => {
@@ -47,11 +66,13 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
     // If flipped, flip back first, then change index
     if (isFlipped.value === 1) {
       isFlipped.value = withTiming(0, { duration: 250 }, () => {
-        runOnJS(setCardSide)('front');
-        runOnJS(setCurrentIndex)((currentIndex + 1) % flashcards.length);
+        scheduleOnRN(() => {
+          setCardSide("front");
+          setCurrentIndex((prev) => (prev + 1) % flashcards.length);
+        });
       });
     } else {
-      setCurrentIndex((currentIndex + 1) % flashcards.length);
+      setCurrentIndex((prev) => (prev + 1) % flashcards.length);
     }
   };
 
@@ -77,14 +98,18 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
     <View style={styles.container}>
       <Pressable onPress={handleFlip} style={styles.cardContainer}>
         {/* Front Face */}
-        <Animated.View style={[styles.card, styles.frontCard, frontAnimatedStyle]}>
+        <Animated.View
+          style={[styles.card, styles.frontCard, frontAnimatedStyle]}
+        >
           <Text style={styles.sideLabel}>QUESTION</Text>
           <Text style={styles.text}>{activeCard.front}</Text>
           <Text style={styles.hint}>Tap card to reveal answer</Text>
         </Animated.View>
 
         {/* Back Face */}
-        <Animated.View style={[styles.card, styles.backCard, backAnimatedStyle]}>
+        <Animated.View
+          style={[styles.card, styles.backCard, backAnimatedStyle]}
+        >
           <Text style={styles.sideLabelBack}>ANSWER</Text>
           <Text style={styles.textBack}>{activeCard.back}</Text>
           <Text style={styles.hint}>Tap card to see question</Text>
@@ -113,28 +138,28 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
 const styles = StyleSheet.create({
   container: {
     paddingVertical: spacing.md,
-    alignItems: 'center',
-    width: '100%',
+    alignItems: "center",
+    width: "100%",
   },
   cardContainer: {
-    width: '100%',
+    width: "100%",
     height: 220,
-    position: 'relative',
+    position: "relative",
     marginBottom: spacing.xl,
+    ...shadows.card,
   },
   card: {
-    position: 'absolute',
+    position: "absolute",
     left: 0,
     right: 0,
     top: 0,
     bottom: 0,
     borderRadius: radii.card,
     padding: spacing.xl,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderWidth: 1,
-    backfaceVisibility: 'hidden',
-    ...shadows.card,
+    backfaceVisibility: "hidden",
   },
   frontCard: {
     backgroundColor: colors.surfaceElevated,
@@ -150,7 +175,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     letterSpacing: 1.5,
     marginBottom: spacing.md,
-    position: 'absolute',
+    position: "absolute",
     top: spacing.md,
   },
   sideLabelBack: {
@@ -159,14 +184,14 @@ const styles = StyleSheet.create({
     color: colors.accent,
     letterSpacing: 1.5,
     marginBottom: spacing.md,
-    position: 'absolute',
+    position: "absolute",
     top: spacing.md,
   },
   text: {
     fontSize: fontSize.lg,
     color: colors.textPrimary,
     fontWeight: fontWeight.semibold,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 26,
     paddingHorizontal: spacing.sm,
   },
@@ -174,21 +199,21 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
     color: colors.textSecondary,
     fontWeight: fontWeight.medium,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: 22,
     paddingHorizontal: spacing.sm,
   },
   hint: {
     fontSize: fontSize.xs,
     color: colors.textDisabled,
-    position: 'absolute',
+    position: "absolute",
     bottom: spacing.md,
   },
   controls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
     paddingHorizontal: spacing.xs,
   },
   indexLabel: {
@@ -214,7 +239,7 @@ const styles = StyleSheet.create({
   } as ViewStyle,
   emptyContainer: {
     padding: spacing.xl,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyText: {
     color: colors.textTertiary,

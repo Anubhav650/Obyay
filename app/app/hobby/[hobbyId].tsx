@@ -16,10 +16,11 @@ import {
   Platform,
   Modal,
 } from "react-native";
-import { useLocalSearchParams, useNavigation } from "expo-router";
+import { useLocalSearchParams, useNavigation, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Linking from "expo-linking";
 import * as Haptics from "expo-haptics";
+import { Ionicons } from "@expo/vector-icons";
 import type { Hobby, Technique, TechniqueStatus } from "../../src/types/models";
 import { loadHobby, getProgress } from "../../src/store/hobbyStore";
 import { useHobbies } from "../../src/hooks/useHobbies";
@@ -493,8 +494,15 @@ const sheetStyles = StyleSheet.create({
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
 export default function HobbyDetailScreen() {
-  const { hobbyId } = useLocalSearchParams<{ hobbyId: string }>();
+  const {
+    hobbyId,
+    isHobbyCreatedFromOnboarding: isHobbyCreatedFromOnboardingParam,
+  } = useLocalSearchParams<{
+    hobbyId: string;
+    isHobbyCreatedFromOnboarding?: string;
+  }>();
   const navigation = useNavigation();
+  const router = useRouter();
   const insets = useSafeAreaInsets();
   const { updateTechniqueStatus } = useHobbies();
 
@@ -512,14 +520,29 @@ export default function HobbyDetailScreen() {
     (async () => {
       setLoading(true);
       const loaded = await loadHobby(hobbyId);
+      const isHobbyCreatedFromOnboarding =
+        isHobbyCreatedFromOnboardingParam === "true";
       setHobby(loaded);
       setLoading(false);
 
-      if (loaded) {
-        navigation.setOptions({ title: loaded.name });
+      if (loaded && isHobbyCreatedFromOnboarding) {
+        navigation.setOptions({
+          title: "Home",
+          headerLeft: () => (
+            <Pressable
+              style={styles.backButton}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push("/");
+              }}
+            >
+              <Ionicons name="chevron-back" size={28} color={colors.accent} />
+            </Pressable>
+          ),
+        });
       }
     })();
-  }, [hobbyId, navigation]);
+  }, [hobbyId, navigation, router]);
 
   const progress = useMemo(
     () =>
@@ -788,5 +811,10 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSubtle,
     overflow: "hidden",
     ...shadows.glow,
+  },
+  backButton: {
+    paddingHorizontal: spacing.xs,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

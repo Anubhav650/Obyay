@@ -1,6 +1,7 @@
-import React from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
-import { colors, spacing, radii, fontSize, fontWeight } from '../theme/tokens';
+import React from "react";
+import { Pressable, Text, StyleSheet } from "react-native";
+import { colors, spacing, radii, fontSize, fontWeight } from "../theme/tokens";
+import { Ionicons } from "@expo/vector-icons";
 
 interface SelectionCardProps {
   label: string;
@@ -9,7 +10,12 @@ interface SelectionCardProps {
   icon?: string;
 }
 
-export function SelectionCard({ label, isSelected, onPress, icon }: SelectionCardProps) {
+export function SelectionCard({
+  label,
+  isSelected,
+  onPress,
+  icon,
+}: SelectionCardProps) {
   return (
     <Pressable
       style={[styles.card, isSelected && styles.cardSelected]}
@@ -21,9 +27,15 @@ export function SelectionCard({ label, isSelected, onPress, icon }: SelectionCar
         {label}
       </Text>
       {icon ? (
-        <Text style={styles.icon}>{icon}</Text>
+        <Ionicons
+          name={icon as any}
+          size={20}
+          color={isSelected ? colors.accent : colors.textSecondary}
+        />
       ) : (
-        isSelected && <Text style={styles.checkIcon}>✓</Text>
+        isSelected && (
+          <Ionicons name="checkmark" size={18} color={colors.accentLight} />
+        )
       )}
     </Pressable>
   );
@@ -31,9 +43,9 @@ export function SelectionCard({ label, isSelected, onPress, icon }: SelectionCar
 
 const styles = StyleSheet.create({
   card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.lg,
     backgroundColor: colors.surface,

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import {
   View,
   Text,
@@ -9,15 +9,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 import {
   colors,
   spacing,
@@ -30,19 +30,20 @@ import {
   getLevelColor,
   getLevelDimColor,
   getLevelGlowColor,
-} from '../src/theme/tokens';
-import { saveProfile } from '../src/store/hobbyStore';
-import { useHobbies, getErrorMessage } from '../src/hooks/useHobbies';
-import type { GoalLevel } from '../src/types/models';
-import { LEVELS, LOADING_MESSAGES } from '../src/constants';
+} from "../src/theme/tokens";
+import { saveProfile } from "../src/store/hobbyStore";
+import { useHobbies, getErrorMessage } from "../src/hooks/useHobbies";
+import type { GoalLevel } from "../src/types/models";
+import { LEVELS, LOADING_MESSAGES } from "../src/constants";
+import { Ionicons } from "@expo/vector-icons";
 
 const SUGGESTED_HOBBIES = [
-  'Guitar',
-  'Chess',
-  'Watercolor',
-  'Bouldering',
-  'Sourdough Baking',
-  'Running',
+  "Guitar",
+  "Chess",
+  "Watercolor",
+  "Bouldering",
+  "Sourdough Baking",
+  "Running",
 ];
 
 export default function OnboardingScreen() {
@@ -51,7 +52,7 @@ export default function OnboardingScreen() {
   const { createHobby } = useHobbies();
 
   const [step, setStep] = useState(1); // 1 = Hobby, 2 = Level, 3 = Loading/Error
-  const [hobbyName, setHobbyName] = useState('');
+  const [hobbyName, setHobbyName] = useState("");
   const [selectedLevel, setSelectedLevel] = useState<GoalLevel | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +66,7 @@ export default function OnboardingScreen() {
       setLoadingMsgIndex(0);
       intervalRef.current = setInterval(() => {
         setLoadingMsgIndex((prev) =>
-          prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev
+          prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev,
         );
       }, 3000);
     } else {
@@ -118,8 +119,11 @@ export default function OnboardingScreen() {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setIsLoading(false);
 
-      // Redirect directly to the roadmap details!
-      router.replace(`/hobby/${hobby.id}`);
+      //pass isHobbyCreatedFromOnboarding flag to hobby screen so that it can trigger onboarding completion modal
+      router.replace({
+        pathname: `/hobby/${hobby.id}`,
+        params: { isHobbyCreatedFromOnboarding: "true" },
+      });
     } catch (err) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setError(getErrorMessage(err));
@@ -143,7 +147,8 @@ export default function OnboardingScreen() {
     <View style={styles.stepContent}>
       <Text style={styles.title}>What do you want to learn?</Text>
       <Text style={styles.subtitle}>
-        Enter any hobby, instrument, or skill. We'll generate a personalized active practice roadmap for you.
+        Enter any hobby, instrument, or skill. We'll generate a personalized
+        active practice roadmap for you.
       </Text>
 
       <TextInput
@@ -198,7 +203,12 @@ export default function OnboardingScreen() {
         onPress={handleNextFromHobby}
         disabled={!hobbyName.trim()}
       >
-        <Text style={[styles.continueButtonText, !hobbyName.trim() && styles.buttonTextDisabled]}>
+        <Text
+          style={[
+            styles.continueButtonText,
+            !hobbyName.trim() && styles.buttonTextDisabled,
+          ]}
+        >
           Continue
         </Text>
       </Pressable>
@@ -216,7 +226,8 @@ export default function OnboardingScreen() {
 
       <Text style={styles.title}>How good are you at {hobbyName}?</Text>
       <Text style={styles.subtitle}>
-        Select your current level. We will calibrate your roadmap and techniques accordingly.
+        Select your current level. We will calibrate your roadmap and techniques
+        accordingly.
       </Text>
 
       <View style={styles.levelGrid}>
@@ -238,13 +249,21 @@ export default function OnboardingScreen() {
               onPress={() => handleGenerateRoadmap(level.value)}
             >
               <View style={styles.levelCardHeader}>
-                <Text style={styles.levelIcon}>{level.icon}</Text>
-                <Text style={[styles.levelLabel, { color }]}>{level.label}</Text>
+                <Ionicons
+                  name={level.icon as any}
+                  style={[styles.levelIcon, { color }]}
+                />
+                <Text style={[styles.levelLabel, { color }]}>
+                  {level.label}
+                </Text>
               </View>
               <Text style={styles.levelSubtitle}>
-                {level.value === 'beginner' && 'Starting from scratch. Teach me the core foundations.'}
-                {level.value === 'intermediate' && 'I know the basics. Help me level up my skills.'}
-                {level.value === 'advanced' && 'I am already decent. Help me master advanced techniques.'}
+                {level.value === "beginner" &&
+                  "Starting from scratch. Teach me the core foundations."}
+                {level.value === "intermediate" &&
+                  "I know the basics. Help me level up my skills."}
+                {level.value === "advanced" &&
+                  "I am already decent. Help me master advanced techniques."}
               </Text>
             </Pressable>
           );
@@ -258,9 +277,15 @@ export default function OnboardingScreen() {
     <View style={[styles.stepContent, styles.centerContent]}>
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator color={colors.accent} size="large" style={styles.spinner} />
+          <ActivityIndicator
+            color={colors.accent}
+            size="large"
+            style={styles.spinner}
+          />
           <Text style={styles.loadingTitle}>Generating Roadmap</Text>
-          <Text style={styles.loadingSubtitle}>{LOADING_MESSAGES[loadingMsgIndex]}</Text>
+          <Text style={styles.loadingSubtitle}>
+            {LOADING_MESSAGES[loadingMsgIndex]}
+          </Text>
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
@@ -297,10 +322,15 @@ export default function OnboardingScreen() {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       {/* Progress Track */}
-      <View style={[styles.header, { paddingTop: Math.max(insets.top, spacing.base) }]}>
+      <View
+        style={[
+          styles.header,
+          { paddingTop: Math.max(insets.top, spacing.base) },
+        ]}
+      >
         <View style={styles.progressTrack}>
           <Animated.View style={[styles.progressBar, progressStyle]} />
         </View>
@@ -338,10 +368,10 @@ const styles = StyleSheet.create({
     height: 6,
     backgroundColor: colors.surfaceElevated,
     borderRadius: radii.full,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   progressBar: {
-    height: '100%',
+    height: "100%",
     backgroundColor: colors.accent,
     borderRadius: radii.full,
   },
@@ -357,7 +387,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    fontSize: fontSize['2xl'],
+    fontSize: fontSize["2xl"],
     fontWeight: fontWeight.heavy,
     color: colors.textPrimary,
     marginBottom: spacing.sm,
@@ -370,7 +400,7 @@ const styles = StyleSheet.create({
     lineHeight: lineHeight.base,
   },
   input: {
-    fontSize: fontSize.lg,
+    fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
     color: colors.textPrimary,
     paddingVertical: spacing.md,
@@ -386,13 +416,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     fontWeight: fontWeight.bold,
     color: colors.textTertiary,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: spacing.md,
   },
   suggestionsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: spacing.sm,
     marginBottom: spacing.xl,
   },
@@ -404,8 +434,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     minHeight: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   suggestionChipSelected: {
     borderColor: colors.accent,
@@ -426,8 +456,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderRadius: radii.pill,
     paddingVertical: spacing.base,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 56,
     ...shadows.card,
     marginTop: spacing.xl,
@@ -450,7 +480,7 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
   },
   backRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: spacing.lg,
   },
   backTextButton: {
@@ -471,8 +501,8 @@ const styles = StyleSheet.create({
     minHeight: 100,
   },
   levelCardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: spacing.xs,
     gap: spacing.sm,
   },
@@ -489,13 +519,13 @@ const styles = StyleSheet.create({
     lineHeight: lineHeight.sm,
   },
   centerContent: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: spacing['3xl'],
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: spacing["3xl"],
   },
   loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   spinner: {
     marginBottom: spacing.xl,
@@ -509,10 +539,10 @@ const styles = StyleSheet.create({
   loadingSubtitle: {
     fontSize: fontSize.base,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingHorizontal: spacing.md,
   },
   errorIcon: {
@@ -528,12 +558,12 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: fontSize.base,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: lineHeight.base,
     marginBottom: spacing.xl,
   },
   retryButton: {
-    width: '100%',
+    width: "100%",
     minWidth: 200,
   },
   backToStartButton: {

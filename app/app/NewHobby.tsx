@@ -29,6 +29,7 @@ import {
 import { LEVELS, LOADING_MESSAGES } from "../src/constants";
 import { CURATED_HOBBIES } from "../src/constants/curatedHobbies";
 import { CuratedHobbyCard } from "../src/components/CuratedHobbyCard";
+import Ionicons from "@expo/vector-icons/build/Ionicons";
 
 const SUGGESTED_HOBBIES = [
   "Guitar",
@@ -101,9 +102,7 @@ export default function NewHobbyScreen() {
     if (!selectedLevel) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setLevelValidationError(true);
-      setError(
-        "Please select your current level to build your learning path.",
-      );
+      setError("Please select your current level to build your learning path.");
       return;
     }
 
@@ -252,7 +251,7 @@ export default function NewHobbyScreen() {
                       shadowOpacity: 0.3,
                       shadowRadius: 12,
                       shadowOffset: { width: 0, height: 0 },
-                      elevation: 6,
+                      elevation: Platform.OS === "android" ? 0 : 6,
                     },
                   ]}
                   onPress={() => {
@@ -267,7 +266,10 @@ export default function NewHobbyScreen() {
                   accessibilityState={{ selected: isSelected }}
                   accessibilityLabel={`${level.label}: ${level.subtitle}`}
                 >
-                  <Text style={styles.levelIcon}>{level.icon}</Text>
+                  <Ionicons
+                    name={level.icon as any}
+                    style={[styles.levelIcon, { color }]}
+                  />
                   <Text
                     style={[
                       styles.levelLabel,
@@ -345,7 +347,12 @@ export default function NewHobbyScreen() {
               </Text>
             </View>
           ) : (
-            <Text style={[styles.submitText, !canSubmit && styles.submitTextDisabled]}>
+            <Text
+              style={[
+                styles.submitText,
+                !canSubmit && styles.submitTextDisabled,
+              ]}
+            >
               Generate Plan
             </Text>
           )}
