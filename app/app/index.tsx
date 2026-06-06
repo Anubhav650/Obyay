@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
 import {
   View,
   FlatList,
@@ -117,14 +117,41 @@ export default function HomeScreen() {
     ({ item }: { item: Hobby }) => (
       <HobbyCard
         hobby={item}
-        onPress={() => handleHobbyPress(item)}
-        onLongPress={() => handleHobbyLongPress(item)}
+        onPress={handleHobbyPress}
+        onLongPress={handleHobbyLongPress}
       />
     ),
     [handleHobbyPress, handleHobbyLongPress],
   );
 
+  const renderCuratedHobby = useCallback(
+    (curated: Hobby) => (
+      <CuratedHobbyCard
+        key={curated.id}
+        hobby={curated}
+        onPress={handleCuratedPress}
+      />
+    ),
+    [handleCuratedPress],
+  );
+
   const keyExtractor = useCallback((item: Hobby) => item.id, []);
+
+  const emptyScrollContentStyle = useMemo(
+    () => [
+      styles.emptyScrollContent,
+      { paddingBottom: insets.bottom + 100 },
+    ],
+    [insets.bottom],
+  );
+
+  const listStyle = useMemo(
+    () => [
+      styles.list,
+      { paddingBottom: insets.bottom + 80 },
+    ],
+    [insets.bottom],
+  );
 
   if (loading || checkingProfile) {
     return (
@@ -139,10 +166,7 @@ export default function HomeScreen() {
       {hobbies.length === 0 ? (
         <ScrollView
           style={styles.scroll}
-          contentContainerStyle={[
-            styles.emptyScrollContent,
-            { paddingBottom: insets.bottom + 100 },
-          ]}
+          contentContainerStyle={emptyScrollContentStyle}
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.emptyHeader}>
@@ -155,13 +179,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.curatedSection}>
             <Text style={styles.curatedTitle}>Curated Roadmaps</Text>
-            {CURATED_HOBBIES.map((curated) => (
-              <CuratedHobbyCard
-                key={curated.id}
-                hobby={curated}
-                onPress={() => handleCuratedPress(curated)}
-              />
-            ))}
+            {CURATED_HOBBIES.map(renderCuratedHobby)}
           </View>
         </ScrollView>
       ) : (
@@ -169,10 +187,7 @@ export default function HomeScreen() {
           data={hobbies}
           renderItem={renderItem}
           keyExtractor={keyExtractor}
-          contentContainerStyle={[
-            styles.list,
-            { paddingBottom: insets.bottom + 80 },
-          ]}
+          contentContainerStyle={listStyle}
           showsVerticalScrollIndicator={false}
           contentInsetAdjustmentBehavior="automatic"
         />

@@ -21,7 +21,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface CuratedHobbyCardProps {
   hobby: Hobby;
-  onPress: () => void;
+  onPress: (hobby: Hobby) => void;
 }
 
 function CuratedHobbyCardComponent({ hobby, onPress }: CuratedHobbyCardProps) {
@@ -30,6 +30,10 @@ function CuratedHobbyCardComponent({ hobby, onPress }: CuratedHobbyCardProps) {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+
+  const handlePress = useCallback(() => {
+    onPress(hobby);
+  }, [onPress, hobby]);
 
   const handlePressIn = useCallback(() => {
     scale.value = withSpring(0.97, animation.springSnappy);
@@ -42,7 +46,7 @@ function CuratedHobbyCardComponent({ hobby, onPress }: CuratedHobbyCardProps) {
   return (
     <AnimatedPressable
       style={[styles.card, animatedStyle]}
-      onPress={onPress}
+      onPress={handlePress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       accessibilityRole="button"

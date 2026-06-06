@@ -74,7 +74,7 @@ export function InteractiveChessBoard({
     setTargetSquare(`${file}${rank}`);
   }, []);
 
-  const startCoordinatesGame = () => {
+  const startCoordinatesGame = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setScore(0);
     setTotalTries(0);
@@ -82,15 +82,13 @@ export function InteractiveChessBoard({
     setIsPlayingCo(true);
     setHighlightSquare(null);
     nextTarget();
-  };
+  }, [nextTarget]);
 
   // --- Puzzle Board Setup ---
-  // Parse setup string (e.g. "White: Ke1, Qf3; Black: Ke8, Pa7")
   const parsedPieces = useMemo(() => {
     const grid: Record<string, string> = {};
     if (!config?.setup) return grid;
 
-    // A simple parser for "White: Ke1, Qf3; Black: Ke8, Pa7" or FEN-like layouts
     try {
       const parts = config.setup.split(";");
       parts.forEach((part) => {
@@ -121,67 +119,135 @@ export function InteractiveChessBoard({
   const [puzzleSolved, setPuzzleSolved] = useState(false);
   const solution = config?.solution || [];
 
-  const resetPuzzle = () => {
+  const resetPuzzle = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setPuzzleStep(0);
     setPuzzleSolved(false);
     setHighlightSquare(null);
-  };
+  }, []);
 
   // --- Board Square Tap Handler ---
-  const handleSquarePress = (file: string, rank: number) => {
-    const square = `${file}${rank}`;
+  const handleSquarePress = useCallback(
+    (file: string, rank: number) => {
+      const square = `${file}${rank}`;
 
-    if (mode === "coordinates") {
-      if (!isPlayingCo) return;
+      if (mode === "coordinates") {
+        if (!isPlayingCo) return;
 
-      setTotalTries((prev) => prev + 1);
-      setHighlightSquare(square);
+        setTotalTries((prev) => prev + 1);
+        setHighlightSquare(square);
 
-      if (square === targetSquare) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        setHighlightType("success");
-        setScore((prev) => prev + 1);
-        nextTarget();
-      } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setHighlightType("error");
-      }
-
-      // Fade out highlight quickly
-      setTimeout(() => {
-        setHighlightSquare(null);
-        setHighlightType(null);
-      }, 300);
-    } else {
-      // Puzzle mode
-      if (puzzleSolved) return;
-
-      const expectedSquare = solution[puzzleStep];
-      setHighlightSquare(square);
-
-      if (square === expectedSquare) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        setHighlightType("success");
-
-        if (puzzleStep + 1 < solution.length) {
-          setPuzzleStep((prev) => prev + 1);
+        if (square === targetSquare) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          setHighlightType("success");
+          setScore((prev) => prev + 1);
+          nextTarget();
         } else {
-          setPuzzleSolved(true);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          setHighlightType("error");
         }
-      } else {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-        setHighlightType("error");
-      }
 
-      // Fade out highlight
-      setTimeout(() => {
-        setHighlightSquare(null);
-        setHighlightType(null);
-      }, 500);
-    }
-  };
+        setTimeout(() => {
+          setHighlightSquare(null);
+          setHighlightType(null);
+        }, 300);
+      } else {
+        if (puzzleSolved) return;
+
+        const expectedSquare = solution[puzzleStep];
+        setHighlightSquare(square);
+
+        if (square === expectedSquare) {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+          setHighlightType("success");
+
+          if (puzzleStep + 1 < solution.length) {
+            setPuzzleStep((prev) => prev + 1);
+          } else {
+            setPuzzleSolved(true);
+            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          }
+        } else {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          setHighlightType("error");
+        }
+
+        setTimeout(() => {
+          setHighlightSquare(null);
+          setHighlightType(null);
+        }, 500);
+      }
+    },
+    [mode, isPlayingCo, targetSquare, puzzleSolved, solution, puzzleStep, nextTarget]
+  );
+
+  const handleCoordinatesModePress = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setMode("coordinates");
+    setIsPlayingCo(false);
+  }, []);
+
+  const handlePuzzleModePress = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setMode("puzzle");
+    setIsPlayingCo(false);
+    resetPuzzle();
+  }, [resetPuzzle]);
+
+  const renderBoardRow = useCallback(
+    (rank: number, rankIndex: number) => (
+      <View key={rank} style={styles.boardRow}>
+        {FILES.map((file, fileIndex) => {
+          const square = `${file}${rank}`;
+          const pieceCode = mode === "puzzle" ? parsedPieces[square] : null;
+          const pieceSymbol = pieceCode ? PIECE_SYMBOLS[pieceCode] : "";
+          return (
+            <BoardSquare
+              key={file}
+              file={file}
+              rank={rank}
+              rankIndex={rankIndex}
+              fileIndex={fileIndex}
+              highlightSquare={highlightSquare}
+              highlightType={highlightType}
+              pieceCode={pieceCode}
+              pieceSymbol={pieceSymbol}
+              onPress={handleSquarePress}
+            />
+          );
+        })}
+      </View>
+    ),
+    [mode, parsedPieces, highlightSquare, highlightType, handleSquarePress]
+  );
+
+  const renderGuideChar = useCallback(
+    (rank: number) => (
+      <Text key={rank} style={styles.guideChar}>
+        {rank}
+      </Text>
+    ),
+    []
+  );
+
+  const renderGuideCharHorizontal = useCallback(
+    (file: string) => (
+      <Text key={file} style={styles.guideCharHorizontal}>
+        {file.toUpperCase()}
+      </Text>
+    ),
+    []
+  );
+
+  const coordinatesTabIconColor = useMemo(
+    () => (mode === "coordinates" ? colors.intermediate : colors.textSecondary),
+    [mode]
+  );
+
+  const puzzleTabIconColor = useMemo(
+    () => (mode === "puzzle" ? colors.intermediate : colors.textSecondary),
+    [mode]
+  );
 
   return (
     <View style={styles.container}>
@@ -192,21 +258,13 @@ export function InteractiveChessBoard({
             styles.modeTab,
             mode === "coordinates" && styles.activeModeTab,
           ]}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setMode("coordinates");
-            setIsPlayingCo(false);
-          }}
+          onPress={handleCoordinatesModePress}
         >
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <View style={styles.rowLayout}>
             <MaterialCommunityIcons
               name="target"
               size={20}
-              color={
-                mode === "coordinates"
-                  ? colors.intermediate
-                  : colors.textSecondary
-              }
+              color={coordinatesTabIconColor}
             />
             <Text
               style={[
@@ -222,22 +280,13 @@ export function InteractiveChessBoard({
         {config?.setup && (
           <Pressable
             style={[styles.modeTab, mode === "puzzle" && styles.activeModeTab]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setMode("puzzle");
-              setIsPlayingCo(false);
-              resetPuzzle();
-            }}
+            onPress={handlePuzzleModePress}
           >
-            <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-            >
+            <View style={styles.rowLayout}>
               <MaterialCommunityIcons
                 name="puzzle"
                 size={14}
-                color={
-                  mode === "puzzle" ? colors.intermediate : colors.textSecondary
-                }
+                color={puzzleTabIconColor}
               />
               <Text
                 style={[
@@ -296,9 +345,7 @@ export function InteractiveChessBoard({
               {config?.puzzlePrompt || "Find the best move."}
             </Text>
             {puzzleSolved ? (
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
-              >
+              <View style={styles.rowLayout}>
                 <Ionicons name="trophy" size={16} color={colors.success} />
                 <Text style={styles.solvedText}>Correct! Puzzle Solved!</Text>
               </View>
@@ -320,69 +367,17 @@ export function InteractiveChessBoard({
       <View style={styles.boardContainer}>
         {/* Ranks vertical guide */}
         <View style={styles.ranksColumn}>
-          {RANKS.map((rank) => (
-            <Text key={rank} style={styles.guideChar}>
-              {rank}
-            </Text>
-          ))}
+          {RANKS.map(renderGuideChar)}
         </View>
 
         <View style={styles.boardLayout}>
           <View style={styles.boardBorder}>
-            {RANKS.map((rank, rankIndex) => (
-              <View key={rank} style={styles.boardRow}>
-                {FILES.map((file, fileIndex) => {
-                  const square = `${file}${rank}`;
-                  const isLight = (rankIndex + fileIndex) % 2 === 0;
-                  const isTargeting = highlightSquare === square;
-
-                  let squareBg: string = isLight ? "#f0ebe4" : "#d4cfc6";
-                  if (isTargeting) {
-                    squareBg =
-                      highlightType === "success"
-                        ? "rgba(13, 138, 110, 0.35)"
-                        : "rgba(200, 32, 20, 0.30)";
-                  }
-
-                  // Piece on this square (in puzzle mode)
-                  const pieceCode =
-                    mode === "puzzle" ? parsedPieces[square] : null;
-                  const pieceSymbol = pieceCode ? PIECE_SYMBOLS[pieceCode] : "";
-
-                  return (
-                    <Pressable
-                      key={file}
-                      style={[styles.square, { backgroundColor: squareBg }]}
-                      onPress={() => handleSquarePress(file, rank)}
-                    >
-                      {pieceSymbol ? (
-                        <Text
-                          style={[
-                            styles.piece,
-                            {
-                              color: pieceCode?.startsWith("w")
-                                ? colors.white
-                                : colors.black,
-                            },
-                          ]}
-                        >
-                          {pieceSymbol}
-                        </Text>
-                      ) : null}
-                    </Pressable>
-                  );
-                })}
-              </View>
-            ))}
+            {RANKS.map(renderBoardRow)}
           </View>
 
           {/* Files horizontal guide */}
           <View style={styles.filesRow}>
-            {FILES.map((file) => (
-              <Text key={file} style={styles.guideCharHorizontal}>
-                {file.toUpperCase()}
-              </Text>
-            ))}
+            {FILES.map(renderGuideCharHorizontal)}
           </View>
         </View>
       </View>
@@ -390,9 +385,82 @@ export function InteractiveChessBoard({
   );
 }
 
+interface BoardSquareProps {
+  file: string;
+  rank: number;
+  rankIndex: number;
+  fileIndex: number;
+  highlightSquare: string | null;
+  highlightType: "success" | "error" | null;
+  pieceCode: string | null;
+  pieceSymbol: string;
+  onPress: (file: string, rank: number) => void;
+}
+
+const BoardSquare = React.memo(({
+  file,
+  rank,
+  rankIndex,
+  fileIndex,
+  highlightSquare,
+  highlightType,
+  pieceCode,
+  pieceSymbol,
+  onPress,
+}: BoardSquareProps) => {
+  const square = `${file}${rank}`;
+  const isLight = (rankIndex + fileIndex) % 2 === 0;
+  const isTargeting = highlightSquare === square;
+
+  const handlePress = useCallback(() => {
+    onPress(file, rank);
+  }, [onPress, file, rank]);
+
+  const squareBg = useMemo(() => {
+    if (isTargeting) {
+      return highlightType === "success"
+        ? "rgba(13, 138, 110, 0.35)"
+        : "rgba(200, 32, 20, 0.30)";
+    }
+    return isLight ? "#f0ebe4" : "#d4cfc6";
+  }, [isLight, isTargeting, highlightType]);
+
+  const squareStyle = useMemo(() => [
+    styles.square,
+    { backgroundColor: squareBg }
+  ], [squareBg]);
+
+  const pieceStyle = useMemo(() => [
+    styles.piece,
+    {
+      color: pieceCode?.startsWith("w")
+        ? colors.white
+        : colors.black,
+    }
+  ], [pieceCode]);
+
+  return (
+    <Pressable
+      style={squareStyle}
+      onPress={handlePress}
+    >
+      {pieceSymbol ? (
+        <Text style={pieceStyle}>
+          {pieceSymbol}
+        </Text>
+      ) : null}
+    </Pressable>
+  );
+});
+
 const styles = StyleSheet.create({
   container: {
     paddingVertical: spacing.sm,
+  },
+  rowLayout: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   modeTabBar: {
     flexDirection: "row",

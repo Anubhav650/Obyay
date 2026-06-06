@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -83,64 +83,131 @@ export default function OnboardingScreen() {
   // Transition shared value
   const progressShared = useSharedValue(0.33);
 
-  const handleNextFromHobby = () => {
+  const handleNextFromHobby = useCallback(() => {
     if (!hobbyName.trim()) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setStep(2);
     progressShared.value = withSpring(0.66, animation.spring);
-  };
+  }, [hobbyName, progressShared]);
 
-  const handleBackToHobby = () => {
+  const handleBackToHobby = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setStep(1);
     progressShared.value = withSpring(0.33, animation.spring);
-  };
+  }, [progressShared]);
 
-  const handleGenerateRoadmap = async (level: GoalLevel) => {
-    setSelectedLevel(level);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setStep(3);
-    progressShared.value = withSpring(1.0, animation.spring);
-    setIsLoading(true);
-    setError(null);
+  const handleGenerateRoadmap = useCallback(
+    async (level: GoalLevel) => {
+      setSelectedLevel(level);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      setStep(3);
+      progressShared.value = withSpring(1.0, animation.spring);
+      setIsLoading(true);
+      setError(null);
 
-    try {
-      // Create profile first so check on home screen succeeds
-      await saveProfile({
-        roles: [],
-        goals: [],
-        interests: [hobbyName.trim()],
-        learningPreferences: [],
-      });
+      try {
+        // Create profile first so check on home screen succeeds
+        await saveProfile({
+          roles: [],
+          goals: [],
+          interests: [hobbyName.trim()],
+          learningPreferences: [],
+        });
 
-      // Fetch plan from Gemini and save
-      const hobby = await createHobby(hobbyName.trim(), level);
+        // Fetch plan from Gemini and save
+        const hobby = await createHobby(hobbyName.trim(), level);
 
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setIsLoading(false);
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        setIsLoading(false);
 
-      //pass isHobbyCreatedFromOnboarding flag to hobby screen so that it can trigger onboarding completion modal
-      router.replace({
-        pathname: `/hobby/${hobby.id}`,
-        params: { isHobbyCreatedFromOnboarding: "true" },
-      });
-    } catch (err) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      setError(getErrorMessage(err));
-      setIsLoading(false);
-    }
-  };
+        //pass isHobbyCreatedFromOnboarding flag to hobby screen so that it can trigger onboarding completion modal
+        router.replace({
+          pathname: `/hobby/${hobby.id}`,
+          params: { isHobbyCreatedFromOnboarding: "true" },
+        });
+      } catch (err) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+        setError(getErrorMessage(err));
+        setIsLoading(false);
+      }
+    },
+    [hobbyName, createHobby, progressShared, router]
+  );
 
-  const handleRetry = () => {
+  const handleRetry = useCallback(() => {
     if (selectedLevel) {
       handleGenerateRoadmap(selectedLevel);
     }
-  };
+  }, [selectedLevel, handleGenerateRoadmap]);
+
+  const handleBackToStart = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setStep(1);
+    progressShared.value = withSpring(0.33, animation.spring);
+  }, [progressShared]);
+
+  const handleSuggestionPress = useCallback((item: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setHobbyName(item);
+  }, []);
 
   // Progress line style
   const progressStyle = useAnimatedStyle(() => ({
     width: `${progressShared.value * 100}%`,
   }));
+
+  const renderSuggestionChip = useCallback(
+    (item: string) => {
+      const isSelected = hobbyName.toLowerCase() === item.toLowerCase();
+      return (
+        <SuggestionChip
+          key={item}
+          item={item}
+          isSelected={isSelected}
+          onPress={handleSuggestionPress}
+        />
+      );
+    },
+    [hobbyName, handleSuggestionPress]
+  );
+
+  const renderLevelCard = useCallback(
+    (level: typeof LEVELS[number]) => (
+      <LevelCard
+        key={level.value}
+        level={level}
+        onPress={handleGenerateRoadmap}
+      />
+    ),
+    [handleGenerateRoadmap]
+  );
+
+  const retryButtonStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.continueButton,
+      styles.retryButton,
+      pressed && styles.buttonPressed,
+    ],
+    []
+  );
+
+  const headerStyle = useMemo(
+    () => [styles.header, { paddingTop: Math.max(insets.top, spacing.base) }],
+    [insets.top]
+  );
+
+  const scrollContentStyle = useMemo(
+    () => [
+      styles.scrollContent,
+      { paddingBottom: Math.max(insets.bottom, spacing.base) + spacing.xl },
+    ],
+    [insets.bottom]
+  );
+
+  const continueButtonTextStyle = useMemo(
+    () => [styles.continueButtonText],
+    []
+  );
 
   // Render Hobby Input Step
   const renderHobbyStep = () => (
@@ -165,53 +232,16 @@ export default function OnboardingScreen() {
 
       <Text style={styles.sectionLabel}>Popular Topics</Text>
       <View style={styles.suggestionsContainer}>
-        {SUGGESTED_HOBBIES.map((item) => {
-          const isSelected = hobbyName.toLowerCase() === item.toLowerCase();
-          return (
-            <Pressable
-              key={item}
-              style={[
-                styles.suggestionChip,
-                isSelected && styles.suggestionChipSelected,
-              ]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                setHobbyName(item);
-              }}
-            >
-              <Text
-                style={[
-                  styles.suggestionText,
-                  isSelected && styles.suggestionTextSelected,
-                ]}
-              >
-                {item}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {SUGGESTED_HOBBIES.map(renderSuggestionChip)}
       </View>
 
       <View style={styles.pushBottom} />
 
-      <Pressable
-        style={({ pressed }) => [
-          styles.continueButton,
-          !hobbyName.trim() && styles.buttonDisabled,
-          pressed && hobbyName.trim() && styles.buttonPressed,
-        ]}
+      <ContinueButton
         onPress={handleNextFromHobby}
         disabled={!hobbyName.trim()}
-      >
-        <Text
-          style={[
-            styles.continueButtonText,
-            !hobbyName.trim() && styles.buttonTextDisabled,
-          ]}
-        >
-          Continue
-        </Text>
-      </Pressable>
+        label="Continue"
+      />
     </View>
   );
 
@@ -231,43 +261,7 @@ export default function OnboardingScreen() {
       </Text>
 
       <View style={styles.levelGrid}>
-        {LEVELS.map((level) => {
-          const color = getLevelColor(level.value);
-          const dimColor = getLevelDimColor(level.value);
-
-          return (
-            <Pressable
-              key={level.value}
-              style={({ pressed }) => [
-                styles.levelCard,
-                {
-                  borderColor: colors.borderSubtle,
-                  backgroundColor: colors.surface,
-                },
-                pressed && { borderColor: color, backgroundColor: dimColor },
-              ]}
-              onPress={() => handleGenerateRoadmap(level.value)}
-            >
-              <View style={styles.levelCardHeader}>
-                <Ionicons
-                  name={level.icon as any}
-                  style={[styles.levelIcon, { color }]}
-                />
-                <Text style={[styles.levelLabel, { color }]}>
-                  {level.label}
-                </Text>
-              </View>
-              <Text style={styles.levelSubtitle}>
-                {level.value === "beginner" &&
-                  "Starting from scratch. Teach me the core foundations."}
-                {level.value === "intermediate" &&
-                  "I know the basics. Help me level up my skills."}
-                {level.value === "advanced" &&
-                  "I am already decent. Help me master advanced techniques."}
-              </Text>
-            </Pressable>
-          );
-        })}
+        {LEVELS.map(renderLevelCard)}
       </View>
     </View>
   );
@@ -294,23 +288,15 @@ export default function OnboardingScreen() {
           <Text style={styles.errorText}>{error}</Text>
 
           <Pressable
-            style={({ pressed }) => [
-              styles.continueButton,
-              styles.retryButton,
-              pressed && styles.buttonPressed,
-            ]}
+            style={retryButtonStyle}
             onPress={handleRetry}
           >
-            <Text style={styles.continueButtonText}>Try Again</Text>
+            <Text style={continueButtonTextStyle}>Try Again</Text>
           </Pressable>
 
           <Pressable
             style={styles.backToStartButton}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setStep(1);
-              progressShared.value = withSpring(0.33, animation.spring);
-            }}
+            onPress={handleBackToStart}
           >
             <Text style={styles.backToStartText}>Change Hobby or Level</Text>
           </Pressable>
@@ -325,12 +311,7 @@ export default function OnboardingScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       {/* Progress Track */}
-      <View
-        style={[
-          styles.header,
-          { paddingTop: Math.max(insets.top, spacing.base) },
-        ]}
-      >
+      <View style={headerStyle}>
         <View style={styles.progressTrack}>
           <Animated.View style={[styles.progressBar, progressStyle]} />
         </View>
@@ -338,10 +319,7 @@ export default function OnboardingScreen() {
 
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: Math.max(insets.bottom, spacing.base) + spacing.xl },
-        ]}
+        contentContainerStyle={scrollContentStyle}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -352,6 +330,137 @@ export default function OnboardingScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+interface SuggestionChipProps {
+  item: string;
+  isSelected: boolean;
+  onPress: (item: string) => void;
+}
+
+const SuggestionChip = React.memo(({ item, isSelected, onPress }: SuggestionChipProps) => {
+  const handlePress = useCallback(() => {
+    onPress(item);
+  }, [onPress, item]);
+
+  return (
+    <Pressable
+      style={[
+        styles.suggestionChip,
+        isSelected && styles.suggestionChipSelected,
+      ]}
+      onPress={handlePress}
+    >
+      <Text
+        style={[
+          styles.suggestionText,
+          isSelected && styles.suggestionTextSelected,
+        ]}
+      >
+        {item}
+      </Text>
+    </Pressable>
+  );
+});
+
+interface LevelCardProps {
+  level: {
+    value: GoalLevel;
+    label: string;
+    icon: string;
+  };
+  onPress: (level: GoalLevel) => void;
+}
+
+const LevelCard = React.memo(({ level, onPress }: LevelCardProps) => {
+  const color = getLevelColor(level.value);
+  const dimColor = getLevelDimColor(level.value);
+
+  const handlePress = useCallback(() => {
+    onPress(level.value);
+  }, [onPress, level.value]);
+
+  const cardStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.levelCard,
+      styles.levelCardColors,
+      pressed && { borderColor: color, backgroundColor: dimColor },
+    ],
+    [color, dimColor]
+  );
+
+  const iconStyle = useMemo(() => [styles.levelIcon, { color }], [color]);
+  const labelStyle = useMemo(() => [styles.levelLabel, { color }], [color]);
+
+  const levelDescription = useMemo(() => {
+    switch (level.value) {
+      case "beginner":
+        return "Starting from scratch. Teach me the core foundations.";
+      case "intermediate":
+        return "I know the basics. Help me level up my skills.";
+      case "advanced":
+        return "I am already decent. Help me master advanced techniques.";
+      default:
+        return "";
+    }
+  }, [level.value]);
+
+  return (
+    <Pressable
+      style={cardStyle}
+      onPress={handlePress}
+    >
+      <View style={styles.levelCardHeader}>
+        <Ionicons
+          name={level.icon as any}
+          style={iconStyle}
+        />
+        <Text style={labelStyle}>
+          {level.label}
+        </Text>
+      </View>
+      <Text style={styles.levelSubtitle}>
+        {levelDescription}
+      </Text>
+    </Pressable>
+  );
+});
+
+interface ContinueButtonProps {
+  onPress: () => void;
+  disabled: boolean;
+  label: string;
+}
+
+const ContinueButton = React.memo(({ onPress, disabled, label }: ContinueButtonProps) => {
+  const getStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.continueButton,
+      disabled && styles.buttonDisabled,
+      pressed && !disabled && styles.buttonPressed,
+    ],
+    [disabled]
+  );
+
+  const textStyle = useMemo(
+    () => [
+      styles.continueButtonText,
+      disabled && styles.buttonTextDisabled,
+    ],
+    [disabled]
+  );
+
+  return (
+    <Pressable
+      style={getStyle}
+      onPress={onPress}
+      disabled={disabled}
+    >
+      <Text style={textStyle}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -499,6 +608,10 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     padding: spacing.lg,
     minHeight: 100,
+  },
+  levelCardColors: {
+    borderColor: colors.borderSubtle,
+    backgroundColor: colors.surface,
   },
   levelCardHeader: {
     flexDirection: "row",

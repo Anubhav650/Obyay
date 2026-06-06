@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -47,14 +47,16 @@ export default function NewHobbyScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
+  const handleCancelPress = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.dismiss();
+  }, [router]);
+
   useEffect(() => {
     navigation.setOptions({
       headerLeft: () => (
         <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            router.dismiss();
-          }}
+          onPress={handleCancelPress}
           style={styles.cancelButton}
           accessibilityRole="button"
           accessibilityLabel="Cancel and close modal"
@@ -63,7 +65,8 @@ export default function NewHobbyScreen() {
         </Pressable>
       ),
     });
-  }, [navigation, router]);
+  }, [navigation, handleCancelPress]);
+
   const { createHobby, importCuratedHobby } = useHobbies();
 
   const [hobbyName, setHobbyName] = useState("");
@@ -82,7 +85,7 @@ export default function NewHobbyScreen() {
       setLoadingMsgIndex(0);
       intervalRef.current = setInterval(() => {
         setLoadingMsgIndex((prev) =>
-          prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev,
+          prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev
         );
       }, 3000);
     } else {
@@ -141,7 +144,93 @@ export default function NewHobbyScreen() {
         setIsLoading(false);
       }
     },
-    [importCuratedHobby, router],
+    [importCuratedHobby, router]
+  );
+
+  const handleHobbyNameChange = useCallback((text: string) => {
+    setHobbyName(text);
+    setError(null);
+  }, []);
+
+  const handleSuggestionPress = useCallback((item: string) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setHobbyName(item);
+  }, []);
+
+  const handleLevelSelect = useCallback((levelValue: GoalLevel) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setSelectedLevel(levelValue);
+    setLevelValidationError(false);
+    setError(null);
+  }, []);
+
+  const handleCuratedCardPress = useCallback(
+    (curated: Hobby) => {
+      handleCuratedPress(curated);
+    },
+    [handleCuratedPress]
+  );
+
+  const renderSuggestionChip = useCallback(
+    (item: string) => {
+      const isSelected = hobbyName.toLowerCase() === item.toLowerCase();
+      return (
+        <SuggestionChip
+          key={item}
+          item={item}
+          isSelected={isSelected}
+          onPress={handleSuggestionPress}
+          disabled={isLoading}
+        />
+      );
+    },
+    [hobbyName, handleSuggestionPress, isLoading]
+  );
+
+  const renderLevelCard = useCallback(
+    (level: typeof LEVELS[number]) => {
+      const isSelected = selectedLevel === level.value;
+      return (
+        <LevelCard
+          key={level.value}
+          level={level}
+          isSelected={isSelected}
+          levelValidationError={levelValidationError}
+          isLoading={isLoading}
+          onPress={handleLevelSelect}
+        />
+      );
+    },
+    [selectedLevel, levelValidationError, isLoading, handleLevelSelect]
+  );
+
+  const renderCuratedHobby = useCallback(
+    (curated: Hobby) => (
+      <CuratedHobbyCard
+        key={curated.id}
+        hobby={curated}
+        onPress={handleCuratedCardPress}
+      />
+    ),
+    [handleCuratedCardPress]
+  );
+
+  const scrollContentStyle = useMemo(
+    () => [styles.scrollContent, { paddingBottom: insets.bottom + spacing.xl }],
+    [insets.bottom]
+  );
+
+  const sectionLabelStyle = useMemo(
+    () => [
+      styles.sectionLabel,
+      levelValidationError && styles.errorTextColored,
+    ],
+    [levelValidationError]
+  );
+
+  const footerStyle = useMemo(
+    () => [styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.base) }],
+    [insets.bottom]
   );
 
   return (
@@ -152,10 +241,7 @@ export default function NewHobbyScreen() {
     >
       <ScrollView
         style={styles.scroll}
-        contentContainerStyle={[
-          styles.scrollContent,
-          { paddingBottom: insets.bottom + spacing.xl },
-        ]}
+        contentContainerStyle={scrollContentStyle}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
@@ -166,10 +252,7 @@ export default function NewHobbyScreen() {
             placeholder="What do you want to learn?"
             placeholderTextColor={colors.textDisabled}
             value={hobbyName}
-            onChangeText={(text) => {
-              setHobbyName(text);
-              setError(null);
-            }}
+            onChangeText={handleHobbyNameChange}
             autoFocus
             autoCapitalize="words"
             autoCorrect={false}
@@ -184,104 +267,17 @@ export default function NewHobbyScreen() {
             contentContainerStyle={styles.suggestionsContainer}
             keyboardShouldPersistTaps="handled"
           >
-            {SUGGESTED_HOBBIES.map((item) => {
-              const isSelected = hobbyName.toLowerCase() === item.toLowerCase();
-              return (
-                <Pressable
-                  key={item}
-                  style={[
-                    styles.suggestionChip,
-                    isSelected && styles.suggestionChipSelected,
-                  ]}
-                  onPress={() => {
-                    if (!isLoading) {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setHobbyName(item);
-                    }
-                  }}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Select suggested hobby: ${item}`}
-                >
-                  <Text
-                    style={[
-                      styles.suggestionText,
-                      isSelected && styles.suggestionTextSelected,
-                    ]}
-                  >
-                    {item}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            {SUGGESTED_HOBBIES.map(renderSuggestionChip)}
           </ScrollView>
         </View>
 
         {/* Level Selector */}
         <View style={styles.section}>
-          <Text
-            style={[
-              styles.sectionLabel,
-              levelValidationError && { color: colors.error },
-            ]}
-          >
+          <Text style={sectionLabelStyle}>
             What is your current level?
           </Text>
           <View style={styles.levelGrid}>
-            {LEVELS.map((level) => {
-              const isSelected = selectedLevel === level.value;
-              const color = getLevelColor(level.value);
-              const dimColor = getLevelDimColor(level.value);
-              const glowColor = getLevelGlowColor(level.value);
-
-              return (
-                <Pressable
-                  key={level.value}
-                  style={[
-                    styles.levelCard,
-                    {
-                      backgroundColor: isSelected ? dimColor : colors.surface,
-                      borderColor: isSelected
-                        ? color
-                        : levelValidationError
-                          ? colors.error
-                          : colors.borderSubtle,
-                    },
-                    isSelected && {
-                      shadowColor: color,
-                      shadowOpacity: 0.3,
-                      shadowRadius: 12,
-                      shadowOffset: { width: 0, height: 0 },
-                      elevation: Platform.OS === "android" ? 0 : 6,
-                    },
-                  ]}
-                  onPress={() => {
-                    if (!isLoading) {
-                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      setSelectedLevel(level.value);
-                      setLevelValidationError(false);
-                      setError(null);
-                    }
-                  }}
-                  accessibilityRole="radio"
-                  accessibilityState={{ selected: isSelected }}
-                  accessibilityLabel={`${level.label}: ${level.subtitle}`}
-                >
-                  <Ionicons
-                    name={level.icon as any}
-                    style={[styles.levelIcon, { color }]}
-                  />
-                  <Text
-                    style={[
-                      styles.levelLabel,
-                      { color: isSelected ? color : colors.textPrimary },
-                    ]}
-                  >
-                    {level.label}
-                  </Text>
-                  <Text style={styles.levelSubtitle}>{level.subtitle}</Text>
-                </Pressable>
-              );
-            })}
+            {LEVELS.map(renderLevelCard)}
           </View>
           {levelValidationError && (
             <View style={styles.inlineErrorContainer}>
@@ -297,17 +293,7 @@ export default function NewHobbyScreen() {
           <Text style={styles.sectionLabel}>
             Or start with a curated roadmap
           </Text>
-          {CURATED_HOBBIES.map((curated) => (
-            <CuratedHobbyCard
-              key={curated.id}
-              hobby={curated}
-              onPress={() => {
-                if (!isLoading) {
-                  handleCuratedPress(curated);
-                }
-              }}
-            />
-          ))}
+          {CURATED_HOBBIES.map(renderCuratedHobby)}
         </View>
 
         {/* Error Message */}
@@ -322,45 +308,169 @@ export default function NewHobbyScreen() {
       </ScrollView>
 
       {/* Submit Button */}
-      <View
-        style={[
-          styles.footer,
-          { paddingBottom: Math.max(insets.bottom, spacing.base) },
-        ]}
-      >
-        <Pressable
-          style={({ pressed }) => [
-            styles.submitButton,
-            !canSubmit && !isLoading && styles.submitDisabled,
-            pressed && canSubmit && styles.submitPressed,
-          ]}
+      <View style={footerStyle}>
+        <SubmitButton
           onPress={handleSubmit}
           disabled={!canSubmit}
-          accessibilityRole="button"
-          accessibilityLabel="Generate Plan"
-        >
-          {isLoading ? (
-            <View style={styles.loadingContent}>
-              <ActivityIndicator color={colors.white} size="small" />
-              <Text style={styles.submitText}>
-                {LOADING_MESSAGES[loadingMsgIndex]}
-              </Text>
-            </View>
-          ) : (
-            <Text
-              style={[
-                styles.submitText,
-                !canSubmit && styles.submitTextDisabled,
-              ]}
-            >
-              Generate Plan
-            </Text>
-          )}
-        </Pressable>
+          isLoading={isLoading}
+          loadingMsgIndex={loadingMsgIndex}
+        />
       </View>
     </KeyboardAvoidingView>
   );
 }
+
+interface SuggestionChipProps {
+  item: string;
+  isSelected: boolean;
+  onPress: (item: string) => void;
+  disabled?: boolean;
+}
+
+const SuggestionChip = React.memo(({ item, isSelected, onPress, disabled }: SuggestionChipProps) => {
+  const handlePress = useCallback(() => {
+    if (!disabled) {
+      onPress(item);
+    }
+  }, [onPress, item, disabled]);
+
+  return (
+    <Pressable
+      style={[
+        styles.suggestionChip,
+        isSelected && styles.suggestionChipSelected,
+      ]}
+      onPress={handlePress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel={`Select suggested hobby: ${item}`}
+    >
+      <Text
+        style={[
+          styles.suggestionText,
+          isSelected && styles.suggestionTextSelected,
+        ]}
+      >
+        {item}
+      </Text>
+    </Pressable>
+  );
+});
+
+interface LevelCardProps {
+  level: typeof LEVELS[number];
+  isSelected: boolean;
+  levelValidationError: boolean;
+  isLoading: boolean;
+  onPress: (levelValue: GoalLevel) => void;
+}
+
+const getLevelCardShadow = (color: string) => ({
+  shadowColor: color,
+  shadowOpacity: 0.3,
+  shadowRadius: 12,
+  shadowOffset: { width: 0, height: 0 } as const,
+  elevation: Platform.OS === "android" ? 0 : 6,
+});
+
+const LevelCard = React.memo(({ level, isSelected, levelValidationError, isLoading, onPress }: LevelCardProps) => {
+  const color = getLevelColor(level.value);
+  const dimColor = getLevelDimColor(level.value);
+
+  const handlePress = useCallback(() => {
+    if (!isLoading) {
+      onPress(level.value);
+    }
+  }, [isLoading, onPress, level.value]);
+
+  const cardStyle = useMemo(() => [
+    styles.levelCard,
+    {
+      backgroundColor: isSelected ? dimColor : colors.surface,
+      borderColor: isSelected
+        ? color
+        : levelValidationError
+          ? colors.error
+          : colors.borderSubtle,
+    },
+    isSelected && getLevelCardShadow(color),
+  ], [isSelected, dimColor, color, levelValidationError]);
+
+  const accessibilityState = useMemo(() => ({ selected: isSelected }), [isSelected]);
+  const iconStyle = useMemo(() => [styles.levelIcon, { color }], [color]);
+  const labelStyle = useMemo(() => [
+    styles.levelLabel,
+    { color: isSelected ? color : colors.textPrimary }
+  ], [isSelected, color]);
+
+  return (
+    <Pressable
+      style={cardStyle}
+      onPress={handlePress}
+      accessibilityRole="radio"
+      accessibilityState={accessibilityState}
+      accessibilityLabel={`${level.label}: ${level.subtitle}`}
+    >
+      <Ionicons
+        name={level.icon as any}
+        style={iconStyle}
+      />
+      <Text style={labelStyle}>
+        {level.label}
+      </Text>
+      <Text style={styles.levelSubtitle}>{level.subtitle}</Text>
+    </Pressable>
+  );
+});
+
+interface SubmitButtonProps {
+  onPress: () => void;
+  disabled: boolean;
+  isLoading: boolean;
+  loadingMsgIndex: number;
+}
+
+const SubmitButton = React.memo(({ onPress, disabled, isLoading, loadingMsgIndex }: SubmitButtonProps) => {
+  const getStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.submitButton,
+      disabled && !isLoading && styles.submitDisabled,
+      pressed && !disabled && styles.submitPressed,
+    ],
+    [disabled, isLoading]
+  );
+
+  const textStyle = useMemo(
+    () => [
+      styles.submitText,
+      disabled && styles.submitTextDisabled,
+    ],
+    [disabled]
+  );
+
+  return (
+    <Pressable
+      style={getStyle}
+      onPress={onPress}
+      disabled={disabled}
+      accessibilityRole="button"
+      accessibilityLabel="Generate Plan"
+    >
+      {isLoading ? (
+        <View style={styles.loadingContent}>
+          <ActivityIndicator color={colors.white} size="small" />
+          <Text style={styles.submitText}>
+            {LOADING_MESSAGES[loadingMsgIndex]}
+          </Text>
+        </View>
+      ) : (
+        <Text style={textStyle}>
+          Generate Plan
+        </Text>
+      )}
+    </Pressable>
+  );
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -384,6 +494,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
     textTransform: "uppercase",
     letterSpacing: 0.5,
+  },
+  errorTextColored: {
+    color: colors.error,
   },
   input: {
     fontSize: fontSize["2xl"],

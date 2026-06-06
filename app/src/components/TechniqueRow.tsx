@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React, { memo, useCallback } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import type { Technique } from "../types/models";
 import { colors, spacing, radii, fontSize, fontWeight } from "../theme/tokens";
@@ -6,12 +6,16 @@ import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 
 interface TechniqueRowProps {
   technique: Technique;
-  onPress: () => void;
+  onPress: (technique: Technique) => void;
 }
 
 function TechniqueRowComponent({ technique, onPress }: TechniqueRowProps) {
   const isMastered = technique.status === "mastered";
   const isSkipped = technique.status === "skipped";
+
+  const handlePress = useCallback(() => {
+    onPress(technique);
+  }, [onPress, technique]);
 
   return (
     <Pressable
@@ -21,7 +25,7 @@ function TechniqueRowComponent({ technique, onPress }: TechniqueRowProps) {
         isSkipped && styles.skippedRow,
         pressed && styles.pressedRow,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       accessibilityRole="button"
       accessibilityLabel={`${technique.name}, ${technique.status}`}
     >

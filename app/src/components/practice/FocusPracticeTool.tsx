@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import {
   View,
   Text,
@@ -29,11 +35,16 @@ export function FocusPracticeTool({
   onCompletePractice?: () => void;
 }) {
   const focusTimeSeconds = config?.focusTime || 600; // default 10 minutes
-  const milestones = config?.milestones || [
-    "Isolate the core sub-skill and practice it slowly.",
-    "Identify mistakes and repeat to build correct muscle memory.",
-    "Gradually increase speed once form is flawless.",
-  ];
+  const milestones = useMemo(
+    () =>
+      config?.milestones || [
+        "Isolate the core sub-skill and practice it slowly.",
+        "Identify mistakes and repeat to build correct muscle memory.",
+        "Gradually increase speed once form is flawless.",
+      ],
+    [config?.milestones],
+  );
+
   const reflectionQuestions = config?.reflectionQuestions || [
     "What was the trickiest part of this session?",
     "What adjustments will you make next time?",
@@ -90,42 +101,91 @@ export function FocusPracticeTool({
     };
   }, [isTimerRunning]);
 
-  const toggleTimer = () => {
+  const toggleTimer = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsTimerRunning((prev) => !prev);
-  };
+  }, []);
 
-  const resetTimer = () => {
+  const resetTimer = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsTimerRunning(false);
     setTimeLeft(focusTimeSeconds);
-  };
+  }, [focusTimeSeconds]);
 
-  const handleMilestoneToggle = (idx: number) => {
+  const handleMilestonePress = useCallback((idx: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setCheckedMilestones((prev) => ({
       ...prev,
       [idx]: !prev[idx],
     }));
-  };
+  }, []);
 
-  const handleSubmitReflection = () => {
+  const handleSubmitReflection = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Keyboard.dismiss();
     if (onCompletePractice) {
       onCompletePractice();
     }
-  };
+  }, [onCompletePractice]);
 
-  const formatTime = (seconds: number) => {
+  const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, "0")}`;
-  };
+  }, []);
 
-  const allMilestonesChecked =
-    milestones.length > 0 &&
-    milestones.every((_, idx) => checkedMilestones[idx]);
+  const handleReflectionText1Change = useCallback((text: string) => {
+    setReflectionText1(text);
+  }, []);
+
+  const handleReflectionText2Change = useCallback((text: string) => {
+    setReflectionText2(text);
+  }, []);
+
+  const handleSkipToReflection = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setShowReflection(true);
+  }, []);
+
+  const handleBackToTimer = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowReflection(false);
+  }, []);
+
+  const renderMilestone = useCallback(
+    (item: string, idx: number) => (
+      <MilestoneRow
+        key={idx}
+        idx={idx}
+        item={item}
+        isChecked={!!checkedMilestones[idx]}
+        onPress={handleMilestonePress}
+      />
+    ),
+    [checkedMilestones, handleMilestonePress],
+  );
+
+  const timerButtonStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.timerBtn,
+      isTimerRunning ? styles.pauseBtn : styles.startBtn,
+      pressed && styles.btnPressed,
+    ],
+    [isTimerRunning],
+  );
+
+  const timerButtonTextStyle = useMemo(
+    () => [styles.timerBtnText, isTimerRunning && styles.pauseBtnText],
+    [isTimerRunning],
+  );
+
+  const submitButtonStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.submitBtn,
+      pressed && styles.btnPressed,
+    ],
+    [],
+  );
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
@@ -138,19 +198,8 @@ export function FocusPracticeTool({
             <Text style={styles.timerVal}>{formatTime(timeLeft)}</Text>
             <Text style={styles.timerSubtitle}>REMAINING FOCUS TIME</Text>
             <View style={styles.timerBtnRow}>
-              <Pressable
-                style={[
-                  styles.timerBtn,
-                  isTimerRunning ? styles.pauseBtn : styles.startBtn,
-                ]}
-                onPress={toggleTimer}
-              >
-                <Text
-                  style={[
-                    styles.timerBtnText,
-                    isTimerRunning && styles.pauseBtnText,
-                  ]}
-                >
+              <Pressable style={timerButtonStyle} onPress={toggleTimer}>
+                <Text style={timerButtonTextStyle}>
                   {isTimerRunning ? "Pause" : "Start Focus"}
                 </Text>
               </Pressable>
@@ -163,51 +212,13 @@ export function FocusPracticeTool({
           {/* Milestones Checklists */}
           <View style={styles.milestonesSection}>
             <Text style={styles.sectionTitle}>PRACTICE MILESTONES</Text>
-            {milestones.map((item, idx) => {
-              const isChecked = !!checkedMilestones[idx];
-              return (
-                <Pressable
-                  key={idx}
-                  style={[
-                    styles.milestoneRow,
-                    isChecked && styles.milestoneRowChecked,
-                  ]}
-                  onPress={() => handleMilestoneToggle(idx)}
-                >
-                  <View
-                    style={[
-                      styles.checkbox,
-                      isChecked && styles.checkboxChecked,
-                    ]}
-                  >
-                    {isChecked && (
-                      <Ionicons
-                        name="checkmark"
-                        size={12}
-                        color={colors.white}
-                      />
-                    )}
-                  </View>
-                  <Text
-                    style={[
-                      styles.milestoneText,
-                      isChecked && styles.milestoneTextChecked,
-                    ]}
-                  >
-                    {item}
-                  </Text>
-                </Pressable>
-              );
-            })}
+            {milestones.map(renderMilestone)}
           </View>
 
           {/* Quick unlock to skip timer for testing or fast logging */}
           <Pressable
             style={styles.reflectionUnlockLink}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-              setShowReflection(true);
-            }}
+            onPress={handleSkipToReflection}
           >
             <Text style={styles.reflectionUnlockText}>
               Skip directly to Reflection & Log →
@@ -216,15 +227,7 @@ export function FocusPracticeTool({
         </View>
       ) : (
         <View style={styles.practiceCard}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              justifyContent: "center",
-              marginBottom: spacing.lg,
-            }}
-          >
+          <View style={styles.reflectionHeader}>
             <Ionicons name="document-text" size={20} color={colors.success} />
             <Text
               style={[
@@ -251,7 +254,7 @@ export function FocusPracticeTool({
               placeholder="Type your notes here..."
               placeholderTextColor={colors.textDisabled}
               value={reflectionText1}
-              onChangeText={setReflectionText1}
+              onChangeText={handleReflectionText1Change}
               multiline
               blurOnSubmit
             />
@@ -267,31 +270,19 @@ export function FocusPracticeTool({
               placeholder="Type your notes here..."
               placeholderTextColor={colors.textDisabled}
               value={reflectionText2}
-              onChangeText={setReflectionText2}
+              onChangeText={handleReflectionText2Change}
               multiline
               blurOnSubmit
             />
           </View>
 
-          <Pressable
-            style={({ pressed }) => [
-              styles.submitBtn,
-              pressed && styles.btnPressed,
-            ]}
-            onPress={handleSubmitReflection}
-          >
+          <Pressable style={submitButtonStyle} onPress={handleSubmitReflection}>
             <Text style={styles.submitBtnText}>
               Complete & Save Practice Log
             </Text>
           </Pressable>
 
-          <Pressable
-            style={styles.backBtn}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setShowReflection(false);
-            }}
-          >
+          <Pressable style={styles.backBtn} onPress={handleBackToTimer}>
             <Text style={styles.backBtnText}>Back to Timer</Text>
           </Pressable>
         </View>
@@ -300,9 +291,57 @@ export function FocusPracticeTool({
   );
 }
 
+interface MilestoneRowProps {
+  idx: number;
+  item: string;
+  isChecked: boolean;
+  onPress: (idx: number) => void;
+}
+
+const MilestoneRow = React.memo(
+  ({ idx, item, isChecked, onPress }: MilestoneRowProps) => {
+    const handlePress = useCallback(() => {
+      onPress(idx);
+    }, [idx, onPress]);
+
+    const rowStyle = useMemo(
+      () => [styles.milestoneRow, isChecked && styles.milestoneRowChecked],
+      [isChecked],
+    );
+
+    const checkboxStyle = useMemo(
+      () => [styles.checkbox, isChecked && styles.checkboxChecked],
+      [isChecked],
+    );
+
+    const textStyle = useMemo(
+      () => [styles.milestoneText, isChecked && styles.milestoneTextChecked],
+      [isChecked],
+    );
+
+    return (
+      <Pressable style={rowStyle} onPress={handlePress}>
+        <View style={checkboxStyle}>
+          {isChecked && (
+            <Ionicons name="checkmark" size={12} color={colors.white} />
+          )}
+        </View>
+        <Text style={textStyle}>{item}</Text>
+      </Pressable>
+    );
+  },
+);
+
 const styles = StyleSheet.create({
   container: {
     paddingVertical: spacing.xs,
+  },
+  reflectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    justifyContent: "center",
+    marginBottom: spacing.lg,
   },
   practiceCard: {
     backgroundColor: colors.surface,

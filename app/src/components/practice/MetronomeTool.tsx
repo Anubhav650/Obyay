@@ -55,10 +55,10 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
   }, [config, beatScale]);
 
   // Handle Play / Stop
-  const togglePlay = () => {
+  const togglePlay = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsPlaying((prev) => !prev);
-  };
+  }, []);
 
   // Start / stop metronome timer loop
   useEffect(() => {
@@ -99,7 +99,7 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
   }, [isPlaying, bpm, tick, pendulumAngle, beatScale]);
 
   // Tap Tempo estimation
-  const handleTapTempo = () => {
+  const handleTapTempo = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const now = Date.now();
     const times = tapTimesRef.current;
@@ -120,12 +120,23 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
         setBpm(estimatedBpm);
       }
     }
-  };
+  }, []);
 
-  const adjustBpm = (amount: number) => {
+  const adjustBpm = useCallback((amount: number) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setBpm((prev) => Math.max(40, Math.min(240, prev + amount)));
-  };
+  }, []);
+
+  const handleBpmMinus10 = useCallback(() => adjustBpm(-10), [adjustBpm]);
+  const handleBpmMinus1 = useCallback(() => adjustBpm(-1), [adjustBpm]);
+  const handleBpmPlus1 = useCallback(() => adjustBpm(1), [adjustBpm]);
+  const handleBpmPlus10 = useCallback(() => adjustBpm(10), [adjustBpm]);
+
+  const renderChord = useCallback((chord: string, index: number) => (
+    <View key={index} style={styles.chordChip}>
+      <Text style={styles.chordText}>{chord}</Text>
+    </View>
+  ), []);
 
   return (
     <View style={styles.container}>
@@ -134,11 +145,7 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
         <View style={styles.chordSection}>
           <Text style={styles.guideTitle}>TARGET CHORDS</Text>
           <View style={styles.chordRow}>
-            {config.chords.map((chord, index) => (
-              <View key={index} style={styles.chordChip}>
-                <Text style={styles.chordText}>{chord}</Text>
-              </View>
-            ))}
+            {config.chords.map(renderChord)}
           </View>
         </View>
       )}
@@ -172,10 +179,10 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
 
         {/* BPM Selector */}
         <View style={styles.controlsRow}>
-          <Pressable style={styles.adjustBtn} onPress={() => adjustBpm(-10)}>
+          <Pressable style={styles.adjustBtn} onPress={handleBpmMinus10}>
             <Text style={styles.adjustBtnText}>-10</Text>
           </Pressable>
-          <Pressable style={styles.adjustBtn} onPress={() => adjustBpm(-1)}>
+          <Pressable style={styles.adjustBtn} onPress={handleBpmMinus1}>
             <Text style={styles.adjustBtnText}>-1</Text>
           </Pressable>
 
@@ -184,10 +191,10 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
             <Text style={styles.bpmLabel}>BPM</Text>
           </View>
 
-          <Pressable style={styles.adjustBtn} onPress={() => adjustBpm(1)}>
+          <Pressable style={styles.adjustBtn} onPress={handleBpmPlus1}>
             <Text style={styles.adjustBtnText}>+1</Text>
           </Pressable>
-          <Pressable style={styles.adjustBtn} onPress={() => adjustBpm(10)}>
+          <Pressable style={styles.adjustBtn} onPress={handleBpmPlus10}>
             <Text style={styles.adjustBtnText}>+10</Text>
           </Pressable>
         </View>

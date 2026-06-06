@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { StyleSheet, Text, Pressable, View } from "react-native";
 import Animated, {
   useSharedValue,
@@ -28,20 +28,20 @@ export function HoldToMasterButton({ onComplete }: HoldToMasterButtonProps) {
     };
   });
 
-  const handlePress = () => {
+  const handlePress = useCallback(() => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     scale.value = withSpring(1, animation.spring);
     onComplete();
-  };
+  }, [onComplete]);
 
-  const handlePressIn = () => {
+  const handlePressIn = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     scale.value = withSpring(0.95, animation.spring);
-  };
+  }, []);
 
-  const handlePressOut = () => {
+  const handlePressOut = useCallback(() => {
     scale.value = withSpring(1, animation.spring);
-  };
+  }, []);
 
   return (
     <Animated.View style={[styles.button, buttonStyle]}>
@@ -51,7 +51,7 @@ export function HoldToMasterButton({ onComplete }: HoldToMasterButtonProps) {
         onPressOut={handlePressOut}
         style={styles.pressable}
       >
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+        <View style={styles.contentRow}>
           <FontAwesome6 name="check-circle" size={20} color={colors.success} />
           <Text style={styles.text}>Master</Text>
         </View>
@@ -77,6 +77,11 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
+  },
+  contentRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   text: {
     color: colors.success,

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback, memo } from "react";
 import {
   StyleSheet,
   Text,
@@ -26,6 +26,68 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import type { QuizQuestion } from "../types/models";
 
+interface OptionButtonProps {
+  idx: number;
+  option: string;
+  isAnswered: boolean;
+  optionStyle: any;
+  textStyle: any;
+  isCorrectOption: boolean;
+  isSelected: boolean;
+  onPress: (idx: number) => void;
+}
+
+const OptionButton = memo(({
+  idx,
+  option,
+  isAnswered,
+  optionStyle,
+  textStyle,
+  isCorrectOption,
+  isSelected,
+  onPress,
+}: OptionButtonProps) => {
+  const handlePress = useCallback(() => {
+    onPress(idx);
+  }, [onPress, idx]);
+
+  return (
+    <Pressable
+      style={({ pressed }) => [
+        optionStyle,
+        pressed && !isAnswered && styles.optionPressed,
+      ]}
+      onPress={handlePress}
+      disabled={isAnswered}
+    >
+      <View style={styles.optionRow}>
+        <View
+          style={[
+            styles.badge,
+            isAnswered && isCorrectOption && styles.badgeCorrect,
+            isAnswered &&
+              isSelected &&
+              !isCorrectOption &&
+              styles.badgeIncorrect,
+          ]}
+        >
+          <Text
+            style={[
+              styles.badgeText,
+              isAnswered &&
+                (isCorrectOption || isSelected) &&
+                styles.badgeTextAnswered,
+            ]}
+          >
+            {String.fromCharCode(65 + idx)}
+          </Text>
+        </View>
+        <Text style={textStyle}>{option}</Text>
+      </View>
+    </Pressable>
+  );
+});
+
 interface QuizViewProps {
   quiz: QuizQuestion;
 }
@@ -45,7 +107,7 @@ export function QuizView({ quiz }: QuizViewProps) {
     );
   }
 
-  const handleSelectOption = (idx: number) => {
+  const handleSelectOption = useCallback((idx: number) => {
     if (isAnswered) return;
 
     setSelectedIdx(idx);
@@ -67,13 +129,13 @@ export function QuizView({ quiz }: QuizViewProps) {
         withTiming(0, { duration: 60 }),
       );
     }
-  };
+  }, [isAnswered, quiz?.correctIndex]);
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setSelectedIdx(null);
     setIsAnswered(false);
-  };
+  }, []);
 
   const containerAnimatedStyle = useAnimatedStyle(() => {
     return {
@@ -111,40 +173,17 @@ export function QuizView({ quiz }: QuizViewProps) {
           }
 
           return (
-            <Pressable
+            <OptionButton
               key={idx}
-              style={({ pressed }) => [
-                optionStyle,
-                pressed && !isAnswered && styles.optionPressed,
-              ]}
-              onPress={() => handleSelectOption(idx)}
-              disabled={isAnswered}
-            >
-              <View style={styles.optionRow}>
-                <View
-                  style={[
-                    styles.badge,
-                    isAnswered && isCorrectOption && styles.badgeCorrect,
-                    isAnswered &&
-                      isSelected &&
-                      !isCorrectOption &&
-                      styles.badgeIncorrect,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.badgeText,
-                      isAnswered &&
-                        (isCorrectOption || isSelected) &&
-                        styles.badgeTextAnswered,
-                    ]}
-                  >
-                    {String.fromCharCode(65 + idx)}
-                  </Text>
-                </View>
-                <Text style={textStyle}>{option}</Text>
-              </View>
-            </Pressable>
+              idx={idx}
+              option={option}
+              isAnswered={isAnswered}
+              optionStyle={optionStyle}
+              textStyle={textStyle}
+              isCorrectOption={isCorrectOption}
+              isSelected={isSelected}
+              onPress={handleSelectOption}
+            />
           );
         })}
       </View>
@@ -152,14 +191,7 @@ export function QuizView({ quiz }: QuizViewProps) {
       {/* Explanation Banner */}
       {isAnswered && (
         <Animated.View style={styles.explanationBox}>
-          <View
-            style={{
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8,
-              marginBottom: spacing.sm,
-            }}
-          >
+          <View style={styles.explanationHeader}>
             <Ionicons
               name={
                 selectedIdx === quiz.correctIndex
@@ -324,6 +356,12 @@ const styles = StyleSheet.create({
   buttonPressed: {
     transform: [{ scale: animation.buttonActiveScale }],
   } as ViewStyle,
+  explanationHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: spacing.sm,
+  },
   emptyContainer: {
     padding: spacing.xl,
     alignItems: "center",

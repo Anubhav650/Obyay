@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Pressable, Text, StyleSheet } from "react-native";
 import { colors, spacing, radii, fontSize, fontWeight } from "../theme/tokens";
 import { Ionicons } from "@expo/vector-icons";
@@ -16,12 +16,14 @@ export function SelectionCard({
   onPress,
   icon,
 }: SelectionCardProps) {
+  const accessibilityState = useMemo(() => ({ checked: isSelected }), [isSelected]);
+
   return (
     <Pressable
       style={[styles.card, isSelected && styles.cardSelected]}
       onPress={onPress}
       accessibilityRole="checkbox"
-      accessibilityState={{ checked: isSelected }}
+      accessibilityState={accessibilityState}
     >
       <Text style={[styles.text, isSelected && styles.textSelected]}>
         {label}

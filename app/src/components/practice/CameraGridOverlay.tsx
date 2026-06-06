@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import * as Haptics from "expo-haptics";
 import { CameraView, useCameraPermissions } from "expo-camera";
@@ -12,6 +12,9 @@ import {
   lineHeight,
 } from "../../theme/tokens";
 import type { PracticeToolConfig } from "../../types/models";
+
+const OPACITY_OPTIONS = [0.2, 0.5, 0.8];
+const COLOR_OPTIONS = ["grey", "teal", "red"] as const;
 
 export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
   const [permission, requestPermission] = useCameraPermissions();
@@ -62,18 +65,18 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
     };
   }, [isTimerRunning, defaultSeconds]);
 
-  const toggleTimer = () => {
+  const toggleTimer = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsTimerRunning((prev) => !prev);
-  };
+  }, []);
 
-  const resetTimer = () => {
+  const resetTimer = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setIsTimerRunning(false);
     setTimeLeft(defaultSeconds);
-  };
+  }, [defaultSeconds]);
 
-  const getLineHex = () => {
+  const lineHex = useMemo(() => {
     switch (lineColor) {
       case "teal":
         return colors.beginner;
@@ -83,7 +86,100 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
       default:
         return colors.grey;
     }
-  };
+  }, [lineColor]);
+
+  const permissionButtonStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.permissionBtn,
+      pressed && styles.permissionBtnPressed,
+    ],
+    []
+  );
+
+  const renderVerticalLine = useCallback(
+    (_: any, colIdx: number) => (
+      <View
+        key={`col-${colIdx}`}
+        style={[
+          styles.gridLineVertical,
+          {
+            left: `${((colIdx + 1) / columns) * 100}%`,
+            borderColor: lineHex,
+            opacity: opacity,
+          },
+        ]}
+      />
+    ),
+    [columns, lineHex, opacity]
+  );
+
+  const renderHorizontalLine = useCallback(
+    (_: any, rowIdx: number) => (
+      <View
+        key={`row-${rowIdx}`}
+        style={[
+          styles.gridLineHorizontal,
+          {
+            top: `${((rowIdx + 1) / rows) * 100}%`,
+            borderColor: lineHex,
+            opacity: opacity,
+          },
+        ]}
+      />
+    ),
+    [rows, lineHex, opacity]
+  );
+
+  const handleOpacityPress = useCallback((op: number) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setOpacity(op);
+  }, []);
+
+  const renderOpacityOption = useCallback(
+    (op: number) => (
+      <OpacityButton
+        key={op}
+        op={op}
+        isSelected={opacity === op}
+        onPress={handleOpacityPress}
+      />
+    ),
+    [opacity, handleOpacityPress]
+  );
+
+  const handleLineColorPress = useCallback((color: typeof lineColor) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setLineColor(color);
+  }, []);
+
+  const renderColorOption = useCallback(
+    (color: typeof COLOR_OPTIONS[number]) => (
+      <ColorOptionButton
+        key={color}
+        colorName={color}
+        isSelected={lineColor === color}
+        onPress={handleLineColorPress}
+      />
+    ),
+    [lineColor, handleLineColorPress]
+  );
+
+  const verticalLinesArray = useMemo(() => Array.from({ length: columns - 1 }), [columns]);
+  const horizontalLinesArray = useMemo(() => Array.from({ length: rows - 1 }), [rows]);
+
+  const timerButtonStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.timerBtn,
+      isTimerRunning ? styles.stopBtn : styles.startBtn,
+      pressed && styles.permissionBtnPressed,
+    ],
+    [isTimerRunning]
+  );
+
+  const timerBtnTextStyle = useMemo(
+    () => [styles.timerBtnText, isTimerRunning && styles.stopBtnText],
+    [isTimerRunning]
+  );
 
   return (
     <View style={styles.container}>
@@ -113,14 +209,11 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
         ) : !permission.granted ? (
           <View style={styles.canvasBackground}>
             <Text style={styles.canvasPlaceholderEmoji}>📷</Text>
-            <Text style={[styles.canvasPlaceholderText, { marginBottom: spacing.sm }]}>
+            <Text style={styles.canvasPlaceholderText}>
               Hobyay needs camera permission to align proportions
             </Text>
             <Pressable
-              style={({ pressed }) => [
-                styles.permissionBtn,
-                pressed && styles.permissionBtnPressed,
-              ]}
+              style={permissionButtonStyle}
               onPress={requestPermission}
             >
               <Text style={styles.permissionBtnText}>Enable Camera</Text>
@@ -132,35 +225,8 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
 
         {/* Overlay Grid */}
         <View style={[StyleSheet.absoluteFill, styles.gridOverlay]}>
-          {/* Vertical Grid Lines */}
-          {Array.from({ length: columns - 1 }).map((_, colIdx) => (
-            <View
-              key={`col-${colIdx}`}
-              style={[
-                styles.gridLineVertical,
-                {
-                  left: `${((colIdx + 1) / columns) * 100}%`,
-                  borderColor: getLineHex(),
-                  opacity: opacity,
-                },
-              ]}
-            />
-          ))}
-
-          {/* Horizontal Grid Lines */}
-          {Array.from({ length: rows - 1 }).map((_, rowIdx) => (
-            <View
-              key={`row-${rowIdx}`}
-              style={[
-                styles.gridLineHorizontal,
-                {
-                  top: `${((rowIdx + 1) / rows) * 100}%`,
-                  borderColor: getLineHex(),
-                  opacity: opacity,
-                },
-              ]}
-            />
-          ))}
+          {verticalLinesArray.map(renderVerticalLine)}
+          {horizontalLinesArray.map(renderHorizontalLine)}
         </View>
       </View>
 
@@ -171,54 +237,14 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
           <View style={styles.sliderControl}>
             <Text style={styles.controlLabel}>Opacity</Text>
             <View style={styles.opacityToggles}>
-              {[0.2, 0.5, 0.8].map((op) => (
-                <Pressable
-                  key={op}
-                  style={[styles.opBtn, opacity === op && styles.activeOpBtn]}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setOpacity(op);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.opBtnText,
-                      opacity === op && styles.activeOpBtnText,
-                    ]}
-                  >
-                    {op * 100}%
-                  </Text>
-                </Pressable>
-              ))}
+              {OPACITY_OPTIONS.map(renderOpacityOption)}
             </View>
           </View>
 
           <View style={styles.colorControl}>
             <Text style={styles.controlLabel}>Color</Text>
             <View style={styles.colorPalette}>
-              {(["grey", "teal", "red"] as const).map((color) => (
-                <Pressable
-                  key={color}
-                  style={[
-                    styles.colorOption,
-                    {
-                      backgroundColor:
-                        color === "grey"
-                          ? colors.grey
-                          : color === "teal"
-                            ? colors.beginner
-                            : colors.error,
-                      borderColor:
-                        lineColor === color ? colors.accent : "transparent",
-                      borderWidth: lineColor === color ? 2 : 0,
-                    },
-                  ]}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setLineColor(color);
-                  }}
-                />
-              ))}
+              {COLOR_OPTIONS.map(renderColorOption)}
             </View>
           </View>
         </View>
@@ -243,18 +269,10 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
 
         <View style={styles.timerControls}>
           <Pressable
-            style={[
-              styles.timerBtn,
-              isTimerRunning ? styles.stopBtn : styles.startBtn,
-            ]}
+            style={timerButtonStyle}
             onPress={toggleTimer}
           >
-            <Text
-              style={[
-                styles.timerBtnText,
-                isTimerRunning && styles.stopBtnText,
-              ]}
-            >
+            <Text style={timerBtnTextStyle}>
               {isTimerRunning ? "Pause" : "Start Timer"}
             </Text>
           </Pressable>
@@ -267,6 +285,72 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
     </View>
   );
 }
+
+interface OpacityButtonProps {
+  op: number;
+  isSelected: boolean;
+  onPress: (op: number) => void;
+}
+
+const OpacityButton = React.memo(({ op, isSelected, onPress }: OpacityButtonProps) => {
+  const handlePress = useCallback(() => {
+    onPress(op);
+  }, [onPress, op]);
+
+  const btnStyle = useMemo(() => [
+    styles.opBtn,
+    isSelected && styles.activeOpBtn
+  ], [isSelected]);
+
+  const textStyle = useMemo(() => [
+    styles.opBtnText,
+    isSelected && styles.activeOpBtnText
+  ], [isSelected]);
+
+  return (
+    <Pressable
+      style={btnStyle}
+      onPress={handlePress}
+    >
+      <Text style={textStyle}>
+        {op * 100}%
+      </Text>
+    </Pressable>
+  );
+});
+
+interface ColorOptionButtonProps {
+  colorName: "grey" | "teal" | "red";
+  isSelected: boolean;
+  onPress: (colorName: "grey" | "teal" | "red") => void;
+}
+
+const ColorOptionButton = React.memo(({ colorName, isSelected, onPress }: ColorOptionButtonProps) => {
+  const handlePress = useCallback(() => {
+    onPress(colorName);
+  }, [onPress, colorName]);
+
+  const btnStyle = useMemo(() => [
+    styles.colorOption,
+    {
+      backgroundColor:
+        colorName === "grey"
+          ? colors.grey
+          : colorName === "teal"
+            ? colors.beginner
+            : colors.error,
+      borderColor: isSelected ? colors.accent : "transparent",
+      borderWidth: isSelected ? 2 : 0,
+    },
+  ], [colorName, isSelected]);
+
+  return (
+    <Pressable
+      style={btnStyle}
+      onPress={handlePress}
+    />
+  );
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -332,6 +416,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     textAlign: "center",
     lineHeight: lineHeight.sm,
+    marginBottom: spacing.sm,
   },
   gridOverlay: {
     pointerEvents: "none",

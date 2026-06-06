@@ -54,6 +54,8 @@ import {
 
 // ─── Technique Sheet Content ─────────────────────────────────────────────────
 
+const SKELETONS = [1, 2, 3];
+
 function TechniqueSheetContent({
   technique,
   hobby,
@@ -78,28 +80,86 @@ function TechniqueSheetContent({
     setActiveTab("lesson");
   }, []);
 
-  const ScrollContainer = ScrollView;
-
   const hasCards = !!technique.flashcards && technique.flashcards.length > 0;
   const hasQuiz = !!technique.quiz;
 
+  const handleClose = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onClose();
+  }, [onClose]);
+
+  const handleTabPress = useCallback((tabId: typeof activeTab) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setActiveTab(tabId);
+  }, []);
+
+  const handleCompletePractice = useCallback(() => {
+    onUpdateStatus("mastered");
+  }, [onUpdateStatus]);
+
+  const handleManualSearch = useCallback(() => {
+    Linking.openURL(
+      `https://www.youtube.com/results?search_query=${encodeURIComponent(
+        technique.searchQuery
+      )}`
+    );
+  }, [technique.searchQuery]);
+
+  const handleSkipPress = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onUpdateStatus("skipped");
+  }, [onUpdateStatus]);
+
+  const handleUndoPress = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onUpdateStatus("pending");
+  }, [onUpdateStatus]);
+
+  const skipButtonStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      sheetStyles.actionButton,
+      sheetStyles.skipButton,
+      pressed && sheetStyles.actionPressed,
+    ],
+    []
+  );
+
+  const undoButtonStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      sheetStyles.actionButton,
+      sheetStyles.undoButton,
+      pressed && sheetStyles.actionPressed,
+    ],
+    []
+  );
+
+  const renderSkeletonCard = useCallback((i: number) => (
+    <View key={i} style={sheetStyles.videoSkeletonCard} />
+  ), []);
+
+  const renderVideoCard = useCallback(
+    (resource: any) => (
+      <VideoCard key={resource.videoId} resource={resource} />
+    ),
+    []
+  );
+
+  const scrollContentStyle = useMemo(
+    () => [sheetStyles.scrollContent, { paddingBottom: insets.bottom + 40 }],
+    [insets.bottom]
+  );
+
   return (
-    <ScrollContainer
+    <ScrollView
       style={sheetStyles.scroll}
-      contentContainerStyle={[
-        sheetStyles.scrollContent,
-        { paddingBottom: insets.bottom + 40 },
-      ]}
+      contentContainerStyle={scrollContentStyle}
       showsVerticalScrollIndicator={false}
     >
       <View style={sheetStyles.headerRow}>
         <Text style={sheetStyles.name}>{technique.name}</Text>
         <Pressable
           style={sheetStyles.closeButton}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            onClose();
-          }}
+          onPress={handleClose}
           accessibilityRole="button"
           accessibilityLabel="Close sheet"
         >
@@ -109,87 +169,35 @@ function TechniqueSheetContent({
 
       {/* Tab Filter Bar */}
       <View style={sheetStyles.tabBar}>
-        <Pressable
-          style={[
-            sheetStyles.tabButton,
-            activeTab === "lesson" && sheetStyles.activeTabButton,
-          ]}
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            setActiveTab("lesson");
-          }}
-        >
-          <Text
-            style={[
-              sheetStyles.tabButtonText,
-              activeTab === "lesson" && sheetStyles.activeTabButtonText,
-            ]}
-          >
-            📚 Lesson
-          </Text>
-        </Pressable>
+        <TabButton
+          id="lesson"
+          label="📚 Lesson"
+          activeTab={activeTab}
+          onPress={handleTabPress}
+        />
         {technique.practiceTool && (
-          <Pressable
-            style={[
-              sheetStyles.tabButton,
-              activeTab === "practice" && sheetStyles.activeTabButton,
-            ]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setActiveTab("practice");
-            }}
-          >
-            <Text
-              style={[
-                sheetStyles.tabButtonText,
-                activeTab === "practice" && sheetStyles.activeTabButtonText,
-              ]}
-            >
-              ⚡️ Practice
-            </Text>
-          </Pressable>
+          <TabButton
+            id="practice"
+            label="⚡️ Practice"
+            activeTab={activeTab}
+            onPress={handleTabPress}
+          />
         )}
         {hasCards && (
-          <Pressable
-            style={[
-              sheetStyles.tabButton,
-              activeTab === "cards" && sheetStyles.activeTabButton,
-            ]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setActiveTab("cards");
-            }}
-          >
-            <Text
-              style={[
-                sheetStyles.tabButtonText,
-                activeTab === "cards" && sheetStyles.activeTabButtonText,
-              ]}
-            >
-              🎴 Cards
-            </Text>
-          </Pressable>
+          <TabButton
+            id="cards"
+            label="🎴 Cards"
+            activeTab={activeTab}
+            onPress={handleTabPress}
+          />
         )}
         {hasQuiz && (
-          <Pressable
-            style={[
-              sheetStyles.tabButton,
-              activeTab === "quiz" && sheetStyles.activeTabButton,
-            ]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setActiveTab("quiz");
-            }}
-          >
-            <Text
-              style={[
-                sheetStyles.tabButtonText,
-                activeTab === "quiz" && sheetStyles.activeTabButtonText,
-              ]}
-            >
-              ❓ Quiz
-            </Text>
-          </Pressable>
+          <TabButton
+            id="quiz"
+            label="❓ Quiz"
+            activeTab={activeTab}
+            onPress={handleTabPress}
+          />
         )}
       </View>
 
@@ -214,9 +222,7 @@ function TechniqueSheetContent({
           {hobby.category === "general" && (
             <FocusPracticeTool
               config={technique.practiceTool}
-              onCompletePractice={() => {
-                onUpdateStatus("mastered");
-              }}
+              onCompletePractice={handleCompletePractice}
             />
           )}
         </View>
@@ -241,9 +247,7 @@ function TechniqueSheetContent({
             <Text style={sheetStyles.sectionLabel}>YOUTUBE VIDEOS</Text>
             {loading ? (
               <View style={sheetStyles.videoSkeleton}>
-                {[1, 2, 3].map((i) => (
-                  <View key={i} style={sheetStyles.videoSkeletonCard} />
-                ))}
+                {SKELETONS.map(renderSkeletonCard)}
               </View>
             ) : error ? (
               <Text style={sheetStyles.errorText}>{error}</Text>
@@ -253,22 +257,12 @@ function TechniqueSheetContent({
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={sheetStyles.videosContainer}
               >
-                {resources.map((resource) => (
-                  <VideoCard key={resource.videoId} resource={resource} />
-                ))}
+                {resources.map(renderVideoCard)}
               </ScrollView>
             ) : (
               <View style={sheetStyles.noVideos}>
                 <Text style={sheetStyles.noVideosText}>No videos found</Text>
-                <Pressable
-                  onPress={() =>
-                    Linking.openURL(
-                      `https://www.youtube.com/results?search_query=${encodeURIComponent(
-                        technique.searchQuery,
-                      )}`,
-                    )
-                  }
-                >
+                <Pressable onPress={handleManualSearch}>
                   <Text style={sheetStyles.searchLink}>
                     Search YouTube manually →
                   </Text>
@@ -291,17 +285,10 @@ function TechniqueSheetContent({
       <View style={sheetStyles.actions}>
         {technique.status === "pending" && (
           <>
-            <HoldToMasterButton onComplete={() => onUpdateStatus("mastered")} />
+            <HoldToMasterButton onComplete={handleCompletePractice} />
             <Pressable
-              style={({ pressed }) => [
-                sheetStyles.actionButton,
-                sheetStyles.skipButton,
-                pressed && sheetStyles.actionPressed,
-              ]}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                onUpdateStatus("skipped");
-              }}
+              style={skipButtonStyle}
+              onPress={handleSkipPress}
             >
               <Text style={sheetStyles.skipButtonText}>Skip This</Text>
             </Pressable>
@@ -310,21 +297,14 @@ function TechniqueSheetContent({
         {(technique.status === "mastered" ||
           technique.status === "skipped") && (
           <Pressable
-            style={({ pressed }) => [
-              sheetStyles.actionButton,
-              sheetStyles.undoButton,
-              pressed && sheetStyles.actionPressed,
-            ]}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              onUpdateStatus("pending");
-            }}
+            style={undoButtonStyle}
+            onPress={handleUndoPress}
           >
             <Text style={sheetStyles.undoButtonText}>↩ Undo</Text>
           </Pressable>
         )}
       </View>
-    </ScrollContainer>
+    </ScrollView>
   );
 }
 
@@ -493,6 +473,39 @@ const sheetStyles = StyleSheet.create({
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 
+interface TabButtonProps {
+  id: "lesson" | "practice" | "cards" | "quiz";
+  label: string;
+  activeTab: string;
+  onPress: (id: "lesson" | "practice" | "cards" | "quiz") => void;
+}
+
+const TabButton = React.memo(({ id, label, activeTab, onPress }: TabButtonProps) => {
+  const isActive = activeTab === id;
+  const handlePress = useCallback(() => {
+    onPress(id);
+  }, [id, onPress]);
+
+  const buttonStyle = useMemo(() => [
+    sheetStyles.tabButton,
+    isActive && sheetStyles.activeTabButton
+  ], [isActive]);
+
+  const textStyle = useMemo(() => [
+    sheetStyles.tabButtonText,
+    isActive && sheetStyles.activeTabButtonText
+  ], [isActive]);
+
+  return (
+    <Pressable
+      style={buttonStyle}
+      onPress={handlePress}
+    >
+      <Text style={textStyle}>{label}</Text>
+    </Pressable>
+  );
+});
+
 export default function HobbyDetailScreen() {
   const {
     hobbyId,
@@ -513,6 +526,11 @@ export default function HobbyDetailScreen() {
   );
   const [showConfetti, setShowConfetti] = useState(false);
 
+  const handleBackHome = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    router.push("/");
+  }, [router]);
+
   // Load hobby
   useEffect(() => {
     if (!hobbyId) return;
@@ -531,10 +549,7 @@ export default function HobbyDetailScreen() {
           headerLeft: () => (
             <Pressable
               style={styles.backButton}
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push("/");
-              }}
+              onPress={handleBackHome}
             >
               <Ionicons name="chevron-back" size={28} color={colors.accent} />
             </Pressable>
@@ -542,7 +557,7 @@ export default function HobbyDetailScreen() {
         });
       }
     })();
-  }, [hobbyId, navigation, router]);
+  }, [hobbyId, navigation, router, isHobbyCreatedFromOnboardingParam, handleBackHome]);
 
   const progress = useMemo(
     () =>
@@ -592,23 +607,46 @@ export default function HobbyDetailScreen() {
     [selectedTechnique, handleStatusChange],
   );
 
+  const handleSwipeRight = useCallback(
+    (id: string) => {
+      handleStatusChange(id, "mastered");
+    },
+    [handleStatusChange]
+  );
+
+  const handleSwipeLeft = useCallback(
+    (id: string) => {
+      handleStatusChange(id, "skipped");
+    },
+    [handleStatusChange]
+  );
+
   const renderTechniqueItem = useCallback(
     ({ item }: { item: Technique }) => (
       <SwipeableRow
+        techniqueId={item.id}
         status={item.status}
-        onSwipeRight={() => handleStatusChange(item.id, "mastered")}
-        onSwipeLeft={() => handleStatusChange(item.id, "skipped")}
+        onSwipeRight={handleSwipeRight}
+        onSwipeLeft={handleSwipeLeft}
       >
         <TechniqueRow
           technique={item}
-          onPress={() => handleTechniquePress(item)}
+          onPress={handleTechniquePress}
         />
       </SwipeableRow>
     ),
-    [handleStatusChange, handleTechniquePress],
+    [handleSwipeRight, handleSwipeLeft, handleTechniquePress],
   );
 
   const keyExtractor = useCallback((item: Technique) => item.id, []);
+
+  const listContentStyle = useMemo(
+    () => [
+      styles.list,
+      { paddingBottom: insets.bottom + spacing.xl },
+    ],
+    [insets.bottom]
+  );
 
   if (loading) {
     return (
@@ -653,10 +691,7 @@ export default function HobbyDetailScreen() {
             </View>
           </View>
         }
-        contentContainerStyle={[
-          styles.list,
-          { paddingBottom: insets.bottom + spacing.xl },
-        ]}
+        contentContainerStyle={listContentStyle}
         showsVerticalScrollIndicator={false}
       />
 

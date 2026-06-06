@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { View, Text, StyleSheet, Pressable } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { colors, spacing, radii, fontSize, fontWeight, shadows, lineHeight } from '../../theme/tokens';
@@ -12,11 +12,12 @@ interface IntervalStage {
 }
 
 export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
-  const defaultIntervals: IntervalStage[] = config?.intervals || [
+  const defaultIntervals: IntervalStage[] = useMemo(() => config?.intervals || [
     { name: 'Prepare', duration: 10 },
     { name: 'Work', duration: 40 },
     { name: 'Recover', duration: 20 }
-  ];
+  ], [config?.intervals]);
+  
   const maxCycles = config?.cycles || 4;
   const instruction = config?.instruction || 'Focus on correct posture and slow, deliberate movements.';
 
@@ -29,9 +30,31 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
   const [timeLeft, setTimeLeft] = useState(defaultIntervals[0].duration);
 
   const secondsTotal = defaultIntervals[currentIntervalIdx]?.duration || 10;
-  const progressRatio = timeLeft / secondsTotal;
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Stage transition management
+  const advanceStage = useCallback(() => {
+    const nextIdx = currentIntervalIdx + 1;
+
+    if (nextIdx < defaultIntervals.length) {
+      // Advance to next interval in the current round
+      setCurrentIntervalIdx(nextIdx);
+      setTimeLeft(defaultIntervals[nextIdx].duration);
+    } else {
+      // Completed all intervals in this round. Go to next round!
+      const nextCycle = currentCycle + 1;
+      if (nextCycle <= maxCycles) {
+        setCurrentCycle(nextCycle);
+        setCurrentIntervalIdx(0);
+        setTimeLeft(defaultIntervals[0].duration);
+      } else {
+        // Workout complete!
+        setWorkoutState('finished');
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      }
+    }
+  }, [currentIntervalIdx, currentCycle, defaultIntervals, maxCycles]);
 
   // Interval timer tick controller
   useEffect(() => {
@@ -62,67 +85,80 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [workoutState, currentIntervalIdx, currentCycle]);
+  }, [workoutState, currentIntervalIdx, currentCycle, advanceStage]);
 
-  // Stage transition management
-  const advanceStage = () => {
-    const nextIdx = currentIntervalIdx + 1;
-
-    if (nextIdx < defaultIntervals.length) {
-      // Advance to next interval in the current round
-      setCurrentIntervalIdx(nextIdx);
-      setTimeLeft(defaultIntervals[nextIdx].duration);
-    } else {
-      // Completed all intervals in this round. Go to next round!
-      const nextCycle = currentCycle + 1;
-      if (nextCycle <= maxCycles) {
-        setCurrentCycle(nextCycle);
-        setCurrentIntervalIdx(0);
-        setTimeLeft(defaultIntervals[0].duration);
-      } else {
-        // Workout complete!
-        setWorkoutState('finished');
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      }
-    }
-  };
-
-  const startWorkout = () => {
+  const startWorkout = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setCurrentCycle(1);
     setCurrentIntervalIdx(0);
     setTimeLeft(defaultIntervals[0].duration);
     setWorkoutState('running');
-  };
+  }, [defaultIntervals]);
 
-  const togglePause = () => {
+  const togglePause = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setWorkoutState((prev) => (prev === 'running' ? 'paused' : 'running'));
-  };
+  }, []);
 
-  const stopWorkout = () => {
+  const stopWorkout = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setWorkoutState('idle');
-  };
+  }, []);
 
-  // UI layout helper maps
-  const getPhaseName = () => {
+  const phaseName = useMemo(() => {
     return defaultIntervals[currentIntervalIdx]?.name || 'Prepare';
-  };
+  }, [currentIntervalIdx, defaultIntervals]);
 
-  const getPhaseColor = () => {
-    const name = getPhaseName().toLowerCase();
+  const phaseColor = useMemo(() => {
+    const name = phaseName.toLowerCase();
     if (name.includes('prep')) return colors.intermediate; // Amber
     if (name.includes('work') || name.includes('active')) return colors.success; // Green
     return colors.advanced; // Violet / Rest
-  };
+  }, [phaseName]);
 
-  const getPhaseDimColor = () => {
-    const name = getPhaseName().toLowerCase();
+  const phaseDimColor = useMemo(() => {
+    const name = phaseName.toLowerCase();
     if (name.includes('prep')) return colors.intermediateDim;
     if (name.includes('work') || name.includes('active')) return colors.successDim;
     return colors.advancedDim;
-  };
+  }, [phaseName]);
+
+  const ringStyle = useMemo(() => [
+    styles.countdownRing,
+    {
+      borderColor: phaseColor,
+      backgroundColor: phaseDimColor,
+    },
+  ], [phaseColor, phaseDimColor]);
+
+  const timeLabelStyle = useMemo(() => [
+    styles.timeLabel,
+    { color: phaseColor }
+  ], [phaseColor]);
+
+  const renderBreakdownRow = useCallback((stage: IntervalStage, idx: number) => (
+    <View key={idx} style={styles.breakdownRow}>
+      <Text style={styles.breakdownName}>🔹 {stage.name}</Text>
+      <Text style={styles.breakdownDur}>{stage.duration}s</Text>
+    </View>
+  ), []);
+
+  const activeTimerActionButtonStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.timerActionBtn,
+      workoutState === 'running' ? styles.pauseBtn : styles.resumeBtn,
+      pressed && styles.stopBtn, // simple fallback overlay
+    ],
+    [workoutState]
+  );
+
+  const activeTimerActionButtonTextStyle = useMemo(
+    () => [
+      styles.timerActionText,
+      workoutState === 'running' && styles.pauseBtnText,
+    ],
+    [workoutState]
+  );
 
   return (
     <View style={styles.container}>
@@ -142,12 +178,7 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
 
           {/* Setup breakdown list */}
           <View style={styles.intervalsBreakdown}>
-            {defaultIntervals.map((stage, idx) => (
-              <View key={idx} style={styles.breakdownRow}>
-                <Text style={styles.breakdownName}>🔹 {stage.name}</Text>
-                <Text style={styles.breakdownDur}>{stage.duration}s</Text>
-              </View>
-            ))}
+            {defaultIntervals.map(renderBreakdownRow)}
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownName}>🔄 Total Rounds</Text>
               <Text style={styles.breakdownDur}>{maxCycles} Cycles</Text>
@@ -182,16 +213,8 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
           </View>
 
           {/* Animated/Colored countdown wheel */}
-          <View
-            style={[
-              styles.countdownRing,
-              {
-                borderColor: getPhaseColor(),
-                backgroundColor: getPhaseDimColor(),
-              },
-            ]}
-          >
-            <Text style={[styles.timeLabel, { color: getPhaseColor() }]}>{getPhaseName().toUpperCase()}</Text>
+          <View style={ringStyle}>
+            <Text style={timeLabelStyle}>{phaseName.toUpperCase()}</Text>
             <Text style={styles.timeVal}>{timeLeft}</Text>
             <Text style={styles.timeTotal}>/ {secondsTotal}s</Text>
           </View>
@@ -204,13 +227,10 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
           {/* Running control row */}
           <View style={styles.controlsRow}>
             <Pressable
-              style={[
-                styles.timerActionBtn,
-                workoutState === 'running' ? styles.pauseBtn : styles.resumeBtn,
-              ]}
+              style={activeTimerActionButtonStyle}
               onPress={togglePause}
             >
-              <Text style={[styles.timerActionText, workoutState === 'running' && styles.pauseBtnText]}>
+              <Text style={activeTimerActionButtonTextStyle}>
                 {workoutState === 'running' ? 'Pause' : 'Resume'}
               </Text>
             </Pressable>

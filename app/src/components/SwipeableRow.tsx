@@ -8,13 +8,15 @@ import { colors, spacing, fontSize, fontWeight, radii } from "../theme/tokens";
 
 interface SwipeableRowProps {
   children: React.ReactNode;
-  onSwipeRight?: () => void;
-  onSwipeLeft?: () => void;
+  techniqueId: string;
+  onSwipeRight?: (id: string) => void;
+  onSwipeLeft?: (id: string) => void;
   status: TechniqueStatus;
 }
 
 function SwipeableRowComponent({
   children,
+  techniqueId,
   onSwipeRight,
   onSwipeLeft,
   status,
@@ -33,7 +35,7 @@ function SwipeableRowComponent({
           name="check-circle"
           size={20}
           color={colors.textPrimary}
-          style={{ marginBottom: 2, marginLeft: 4 }}
+          style={styles.iconLayout}
         />
         <Text style={styles.actionLabel}>Master</Text>
       </View>
@@ -48,7 +50,7 @@ function SwipeableRowComponent({
           name="close"
           size={24}
           color={colors.textPrimary}
-          style={{ marginBottom: 2, marginLeft: 4 }}
+          style={styles.iconLayout}
         />
         <Text style={styles.actionLabel}>Skip</Text>
       </View>
@@ -59,14 +61,14 @@ function SwipeableRowComponent({
     (direction: "left" | "right") => {
       if (direction === "left" && onSwipeRight) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-        onSwipeRight();
+        onSwipeRight(techniqueId);
       } else if (direction === "right" && onSwipeLeft) {
         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onSwipeLeft();
+        onSwipeLeft(techniqueId);
       }
       close();
     },
-    [onSwipeRight, onSwipeLeft, close],
+    [onSwipeRight, onSwipeLeft, close, techniqueId],
   );
 
   return (
@@ -128,6 +130,10 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xs,
     color: colors.textSecondary,
     fontWeight: fontWeight.medium,
+  },
+  iconLayout: {
+    marginBottom: 2,
+    marginLeft: 4,
   },
 });
 

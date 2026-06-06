@@ -23,8 +23,8 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 interface HobbyCardProps {
   hobby: Hobby;
-  onPress: () => void;
-  onLongPress: () => void;
+  onPress: (hobby: Hobby) => void;
+  onLongPress: (hobby: Hobby) => void;
 }
 
 function HobbyCardComponent({ hobby, onPress, onLongPress }: HobbyCardProps) {
@@ -34,6 +34,14 @@ function HobbyCardComponent({ hobby, onPress, onLongPress }: HobbyCardProps) {
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
+
+  const handlePress = useCallback(() => {
+    onPress(hobby);
+  }, [onPress, hobby]);
+
+  const handleLongPress = useCallback(() => {
+    onLongPress(hobby);
+  }, [onLongPress, hobby]);
 
   const handlePressIn = useCallback(() => {
     scale.value = withSpring(0.97, animation.springSnappy);
@@ -46,8 +54,8 @@ function HobbyCardComponent({ hobby, onPress, onLongPress }: HobbyCardProps) {
   return (
     <AnimatedPressable
       style={[styles.card, animatedStyle]}
-      onPress={onPress}
-      onLongPress={onLongPress}
+      onPress={handlePress}
+      onLongPress={handleLongPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
       accessibilityRole="button"
