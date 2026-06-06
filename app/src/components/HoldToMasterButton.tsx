@@ -6,7 +6,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
-import { Ionicons } from "@expo/vector-icons";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome5";
 import {
   colors,
   radii,
@@ -52,7 +52,7 @@ export function HoldToMasterButton({ onComplete }: HoldToMasterButtonProps) {
         style={styles.pressable}
       >
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <Ionicons name="checkmark" size={16} color={colors.success} />
+          <FontAwesome6 name="check-circle" size={20} color={colors.success} />
           <Text style={styles.text}>Master</Text>
         </View>
       </Pressable>

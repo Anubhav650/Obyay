@@ -2,7 +2,7 @@ import React, { memo, useCallback, useRef } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Swipeable } from "react-native-gesture-handler";
 import * as Haptics from "expo-haptics";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import type { TechniqueStatus } from "../types/models";
 import { colors, spacing, fontSize, fontWeight, radii } from "../theme/tokens";
 
@@ -29,9 +29,9 @@ function SwipeableRowComponent({
     if (status !== "pending") return null;
     return (
       <View style={[styles.actionContainer, styles.leftAction]}>
-        <Ionicons
-          name="checkmark"
-          size={24}
+        <FontAwesome6
+          name="check-circle"
+          size={20}
           color={colors.textPrimary}
           style={{ marginBottom: 2, marginLeft: 4 }}
         />

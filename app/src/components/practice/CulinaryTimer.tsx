@@ -10,7 +10,7 @@ import {
   shadows,
   lineHeight,
 } from "../../theme/tokens";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 import type { PracticeToolConfig } from "../../types/models";
 
 interface CulinaryStep {
@@ -162,9 +162,9 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
                   ]}
                 >
                   {isDone ? (
-                    <Ionicons
-                      name="checkmark"
-                      size={14}
+                    <FontAwesome6
+                      name="check-circle"
+                      size={12}
                       color={colors.success}
                     />
                   ) : (
@@ -215,7 +215,7 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
                 marginBottom: spacing.xs,
               }}
             >
-              <Ionicons name="brain" size={14} color={colors.intermediate} />
+              <Ionicons name="eye" size={14} color={colors.intermediate} />
               <Text style={styles.sensoryTitle}>
                 SENSORY CHECKLIST (FIRST PRINCIPLES)
               </Text>

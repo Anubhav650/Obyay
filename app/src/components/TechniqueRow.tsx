@@ -2,7 +2,7 @@ import React, { memo } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import type { Technique } from "../types/models";
 import { colors, spacing, radii, fontSize, fontWeight } from "../theme/tokens";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome6, Ionicons } from "@expo/vector-icons";
 
 interface TechniqueRowProps {
   technique: Technique;
@@ -46,7 +46,7 @@ function TechniqueRowComponent({ technique, onPress }: TechniqueRowProps) {
 
       <View style={styles.statusContainer}>
         {isMastered && (
-          <Ionicons name="checkmark" size={18} color={colors.success} />
+          <FontAwesome6 name="check-circle" size={18} color={colors.success} />
         )}
         {isSkipped && (
           <Ionicons name="close" size={18} color={colors.textDisabled} />

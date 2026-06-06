@@ -225,8 +225,14 @@ export function FocusPracticeTool({
               marginBottom: spacing.lg,
             }}
           >
-            <Ionicons name="document-text" size={16} color={colors.success} />
-            <Text style={[styles.cardHeading, { color: colors.success }]}>
+            <Ionicons name="document-text" size={20} color={colors.success} />
+            <Text
+              style={[
+                styles.cardHeading,
+                styles.marginBottom0,
+                { color: colors.success },
+              ]}
+            >
               LOG PRACTICE REFLECTION
             </Text>
           </View>
@@ -314,6 +320,9 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textAlign: "center",
     marginBottom: spacing.lg,
+  },
+  marginBottom0: {
+    marginBottom: 0,
   },
   timerContainer: {
     alignItems: "center",

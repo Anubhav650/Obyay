@@ -10,6 +10,7 @@ import {
   shadows,
 } from "../../theme/tokens";
 import { Ionicons } from "@expo/vector-icons";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import type { PracticeToolConfig } from "../../types/models";
 
 const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
@@ -198,9 +199,9 @@ export function InteractiveChessBoard({
           }}
         >
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            <Ionicons
+            <MaterialCommunityIcons
               name="target"
-              size={14}
+              size={20}
               color={
                 mode === "coordinates"
                   ? colors.intermediate
@@ -231,7 +232,7 @@ export function InteractiveChessBoard({
             <View
               style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
             >
-              <Ionicons
+              <MaterialCommunityIcons
                 name="puzzle"
                 size={14}
                 color={
