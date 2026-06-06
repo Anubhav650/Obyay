@@ -31,10 +31,11 @@ export default function RootLayout() {
           <Stack.Screen
             name="index"
             options={{
-              title: "Hobyay",
+              title: "Hob-Yay! 🙌🏻",
               headerLargeTitle: true,
+              headerLargeTitleShadowVisible: true,
               headerLargeTitleStyle: {
-                color: colors.textPrimary,
+                color: colors.accentDark,
                 fontWeight: "800",
               },
               headerBackVisible: false,
