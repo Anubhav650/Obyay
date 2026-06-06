@@ -5,7 +5,7 @@ import { GoalLevel } from "../types/models";
 
 export const colors = {
   // Primary Teal System (4-tier)
-  obyayTeal: "#0a6e5c", // Brand heading, section titles
+  hobyayTeal: "#0a6e5c", // Brand heading, section titles
   tealAccent: "#0d8a6e", // Primary CTA fill, FAB fill
   deepTeal: "#1a4035", // Feature bands, bottom nav, dark surfaces
   tealUplift: "#2e5e52", // Decorative accents, dark-gradient moments

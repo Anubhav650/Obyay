@@ -23,7 +23,7 @@ export class AIUnavailableError extends Error {
 
 // ── System prompt ──────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are Obyay's curriculum designer. Given a hobby and a learner's goal/proficiency level, produce a focused learning plan of 5 to 8 techniques.
+const SYSTEM_PROMPT = `You are Hobyay's curriculum designer. Given a hobby and a learner's goal/proficiency level, produce a focused learning plan of 5 to 8 techniques.
 
 First, categorize the hobby into one of these categories:
 - "music": playing musical instruments, singing, reading music.

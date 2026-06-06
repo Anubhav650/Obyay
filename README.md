@@ -1,4 +1,4 @@
-# Obyay
+# Hobyay
 
 Turn "I want to learn X" into a focused, trackable curriculum of 5–8 techniques, complete with AI-generated structures and lazy-loaded YouTube tutorial resources.
 
@@ -109,7 +109,7 @@ Unit tests are configured inside both packages:
 ## Known Limitations
 
 - **No Cloud Auth**: All data is saved inside native AsyncStorage. Uninstalling the app will clear your hobbies.
-- **YouTube API Quota limits**: Daily search quota is capped (10,000 units). The server uses a 24-hour LRU in-memory cache to conserve units. If the daily quota is exhausted, Obyay degrades gracefully by prompting search links to YouTube directly.
+- **YouTube API Quota limits**: Daily search quota is capped (10,000 units). The server uses a 24-hour LRU in-memory cache to conserve units. If the daily quota is exhausted, Hobyay degrades gracefully by prompting search links to YouTube directly.
 
 ## Design Credits & Attributions
 

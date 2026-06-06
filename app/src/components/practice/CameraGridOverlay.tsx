@@ -114,7 +114,7 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
           <View style={styles.canvasBackground}>
             <Text style={styles.canvasPlaceholderEmoji}>📷</Text>
             <Text style={[styles.canvasPlaceholderText, { marginBottom: spacing.sm }]}>
-              Obyay needs camera permission to align proportions
+              Hobyay needs camera permission to align proportions
             </Text>
             <Pressable
               style={({ pressed }) => [

@@ -14,7 +14,7 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const PARTICLE_COUNT = 60;
 const COLORS = [
   '#0d8a6e', // Teal Accent
-  '#0a6e5c', // Obyay Teal
+  '#0a6e5c', // Hobyay Teal
   '#c9963a', // Amber
   '#2e5e52', // Teal Uplift
   '#34D399', // Warm green

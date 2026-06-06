@@ -3,9 +3,9 @@ import type { Hobby, TechniqueStatus, Resource, Progress, UserProfile } from '..
 
 // ─── Storage Keys ────────────────────────────────────────────────────────────
 
-const HOBBY_IDS_KEY = 'obyay:hobbyIds';
-const PROFILE_KEY = 'obyay:profile';
-const hobbyKey = (id: string) => `obyay:hobby:${id}`;
+const HOBBY_IDS_KEY = 'hobyay:hobbyIds';
+const PROFILE_KEY = 'hobyay:profile';
+const hobbyKey = (id: string) => `hobyay:hobby:${id}`;
 
 // ─── Pure Functions ──────────────────────────────────────────────────────────
 

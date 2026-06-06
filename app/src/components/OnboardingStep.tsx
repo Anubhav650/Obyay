@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
   questionTitle: {
     fontSize: fontSize.xl,
     fontWeight: fontWeight.bold,
-    color: colors.obyayTeal,
+    color: colors.hobyayTeal,
     marginBottom: spacing.sm,
     letterSpacing: letterSpacing.tight,
   },

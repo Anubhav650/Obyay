@@ -43,7 +43,7 @@ app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
 // ── Start server ───────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
-  console.log(`Obyay server listening on port ${PORT}`);
+  console.log(`Hobyay server listening on port ${PORT}`);
 });
 
 export default app;
