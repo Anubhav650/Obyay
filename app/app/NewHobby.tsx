@@ -515,7 +515,7 @@ const styles = StyleSheet.create({
     color: colors.error,
   },
   input: {
-    fontSize: fontSize["2xl"],
+    fontSize: fontSize["xl"],
     fontWeight: fontWeight.semibold,
     color: colors.textPrimary,
     paddingVertical: spacing.base,
