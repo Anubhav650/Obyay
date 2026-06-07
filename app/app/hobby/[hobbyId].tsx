@@ -21,7 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Linking from "expo-linking";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
-import type { Hobby, Technique, TechniqueStatus } from "../../src/types/models";
+import type { Hobby, Technique, TechniqueStatus, PracticeLog } from "../../src/types/models";
 import { loadHobby, getProgress } from "../../src/store/hobbyStore";
 import { useHobbies } from "../../src/hooks/useHobbies";
 import { useTechniqueResources } from "../../src/hooks/useTechniqueResources";
@@ -60,11 +60,13 @@ const TechniqueSheetContent = ({
   technique,
   hobby,
   onUpdateStatus,
+  onSavePracticeLog,
   onClose,
 }: {
   technique: Technique;
   hobby: Hobby;
   onUpdateStatus: (status: TechniqueStatus) => void;
+  onSavePracticeLog: (log: Omit<PracticeLog, "id" | "timestamp">) => void;
   onClose: () => void;
 }) => {
   const { resources, loading, error } = useTechniqueResources(
@@ -220,8 +222,10 @@ const TechniqueSheetContent = ({
           )}
           {hobby.category === "general" && (
             <FocusPracticeTool
+              technique={technique}
               config={technique.practiceTool}
               onCompletePractice={handleCompletePractice}
+              onSavePracticeLog={onSavePracticeLog}
             />
           )}
         </View>
@@ -512,7 +516,7 @@ const HobbyDetailScreen = () => {
   const navigation = useNavigation();
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { updateTechniqueStatus } = useHobbies();
+  const { updateTechniqueStatus, addPracticeLog } = useHobbies();
 
   const [hobby, setHobby] = useState<Hobby | null>(null);
   const [loading, setLoading] = useState(true);
@@ -595,6 +599,30 @@ const HobbyDetailScreen = () => {
       }
     },
     [hobbyId, updateTechniqueStatus, selectedTechnique, progress.percent],
+  );
+
+  const handleAddPracticeLog = useCallback(
+    async (techniqueId: string, log: Omit<PracticeLog, "id" | "timestamp">) => {
+      if (!hobbyId) return;
+      const prevPercent = progress.percent;
+      const updated = await addPracticeLog(hobbyId, techniqueId, log);
+      if (updated) {
+        setHobby(updated);
+        const nextProgress = getProgress(updated);
+        if (nextProgress.percent === 100 && prevPercent < 100) {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          setShowConfetti(true);
+        }
+        // Update the selected technique if it's the one that changed
+        const updatedTechnique = updated.techniques.find(
+          (t) => t.id === techniqueId,
+        );
+        if (updatedTechnique && selectedTechnique?.id === techniqueId) {
+          setSelectedTechnique(updatedTechnique);
+        }
+      }
+    },
+    [hobbyId, addPracticeLog, selectedTechnique, progress.percent],
   );
 
   const handleSheetStatusChange = useCallback(
@@ -721,6 +749,7 @@ const HobbyDetailScreen = () => {
                 technique={selectedTechnique}
                 hobby={hobby}
                 onUpdateStatus={handleSheetStatusChange}
+                onSavePracticeLog={(log) => handleAddPracticeLog(selectedTechnique.id, log)}
                 onClose={handleCloseSheet}
               />
             )}

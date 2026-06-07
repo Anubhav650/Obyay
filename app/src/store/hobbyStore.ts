@@ -4,7 +4,9 @@ import type {
   TechniqueStatus,
   Resource,
   Progress,
+  PracticeLog,
 } from "../types/models";
+import { generateUUID } from "../utils/uuid";
 
 // ─── Storage Keys ────────────────────────────────────────────────────────────
 
@@ -143,4 +145,38 @@ export async function isOnboardingCompleted(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function addTechniquePracticeLog(
+  hobbyId: string,
+  techniqueId: string,
+  log: Omit<PracticeLog, "id" | "timestamp">,
+): Promise<Hobby> {
+  const hobby = await loadHobby(hobbyId);
+  if (!hobby) {
+    throw new Error(`Hobby not found: ${hobbyId}`);
+  }
+
+  const newLog: PracticeLog = {
+    ...log,
+    id: generateUUID(),
+    timestamp: new Date().toISOString(),
+  };
+
+  const updatedTechniques = hobby.techniques.map((t) => {
+    if (t.id === techniqueId) {
+      const logs = t.practiceLogs || [];
+      return {
+        ...t,
+        practiceLogs: [...logs, newLog],
+        status: "mastered" as TechniqueStatus,
+        statusUpdatedAt: new Date().toISOString(),
+      };
+    }
+    return t;
+  });
+
+  const updated: Hobby = { ...hobby, techniques: updatedTechniques };
+  await AsyncStorage.setItem(hobbyKey(hobbyId), JSON.stringify(updated));
+  return updated;
 }

@@ -53,6 +53,17 @@ export interface PracticeToolConfig {
   reflectionQuestions?: string[];
 }
 
+export interface PracticeLog {
+  id: string;
+  timestamp: string;
+  focusTimeSpent?: number;
+  checkedMilestones: string[];
+  reflections: Array<{
+    question: string;
+    answer: string;
+  }>;
+}
+
 export interface Technique {
   id: string;
   name: string;
@@ -66,6 +77,7 @@ export interface Technique {
   quiz?: QuizQuestion;
   flashcards?: Flashcard[];
   practiceTool?: PracticeToolConfig;
+  practiceLogs?: PracticeLog[];
 }
 
 export interface Hobby {

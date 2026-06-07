@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import type { Hobby, GoalLevel, TechniqueStatus } from "../types/models";
+import type { Hobby, GoalLevel, TechniqueStatus, PracticeLog } from "../types/models";
 import * as store from "../store/hobbyStore";
 import { generatePlan, getErrorMessage } from "../api/client";
 import { generateUUID } from "../utils/uuid";
@@ -16,6 +16,11 @@ interface UseHobbiesReturn {
     techniqueId: string,
     status: TechniqueStatus,
   ) => Promise<Hobby | null>;
+  addPracticeLog: (
+    hobbyId: string,
+    techniqueId: string,
+    log: Omit<PracticeLog, "id" | "timestamp">,
+  ) => Promise<Hobby>;
   refreshHobbies: () => Promise<void>;
 }
 
@@ -145,6 +150,32 @@ export const useHobbies = (): UseHobbiesReturn => {
     [],
   );
 
+  const addPracticeLog = useCallback(
+    async (
+      hobbyId: string,
+      techniqueId: string,
+      log: Omit<PracticeLog, "id" | "timestamp">,
+    ): Promise<Hobby> => {
+      setLoading(true);
+      try {
+        const updated = await store.addTechniquePracticeLog(
+          hobbyId,
+          techniqueId,
+          log,
+        );
+        if (mountedRef.current) {
+          setHobbies((prev) =>
+            prev.map((h) => (h.id === hobbyId ? updated : h)),
+          );
+        }
+        return updated;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [],
+  );
+
   const refreshHobbies = useCallback(async () => {
     await loadAll(false);
   }, [loadAll]);
@@ -157,6 +188,7 @@ export const useHobbies = (): UseHobbiesReturn => {
     importCuratedHobby,
     deleteHobby,
     updateTechniqueStatus,
+    addPracticeLog,
     refreshHobbies,
   };
 };

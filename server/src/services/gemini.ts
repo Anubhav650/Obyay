@@ -104,7 +104,6 @@ function getModel(modelName: string) {
   });
 }
 
-
 /**
  * Generate a learning plan for the given hobby and goal level.
  * Returns a validated GeminiOutput (either a plan or NOT_A_HOBBY error).
@@ -118,7 +117,9 @@ export async function generatePlan(
   const modelsToTry = [
     "gemini-flash-latest",
     "gemini-3.5-flash",
+    "gemini-3.1-flash-lite",
     "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
     "gemini-2.0-flash",
   ];
 

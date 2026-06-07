@@ -25,14 +25,22 @@ import {
   lineHeight,
 } from "../../theme/tokens";
 import { Ionicons } from "@expo/vector-icons";
-import type { PracticeToolConfig } from "../../types/models";
+import type {
+  PracticeToolConfig,
+  Technique,
+  PracticeLog,
+} from "../../types/models";
 
 export const FocusPracticeTool = ({
+  technique,
   config,
   onCompletePractice,
+  onSavePracticeLog,
 }: {
+  technique?: Technique;
   config?: PracticeToolConfig;
   onCompletePractice?: () => void;
+  onSavePracticeLog?: (log: Omit<PracticeLog, "id" | "timestamp">) => void;
 }) => {
   const focusTimeSeconds = config?.focusTime || 600; // default 10 minutes
   const milestones = useMemo(
@@ -64,6 +72,10 @@ export const FocusPracticeTool = ({
   const [showReflection, setShowReflection] = useState(false);
   const [reflectionText1, setReflectionText1] = useState("");
   const [reflectionText2, setReflectionText2] = useState("");
+
+  const isSubmitDisabled = useMemo(() => {
+    return !reflectionText1.trim() && !reflectionText2.trim();
+  }, [reflectionText1, reflectionText2]);
 
   // Reset timer on config change
   useEffect(() => {
@@ -121,12 +133,47 @@ export const FocusPracticeTool = ({
   }, []);
 
   const handleSubmitReflection = useCallback(() => {
+    if (isSubmitDisabled) return;
+
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     Keyboard.dismiss();
-    if (onCompletePractice) {
+
+    const elapsedSeconds = focusTimeSeconds - timeLeft;
+    const checked = milestones.filter((_, idx) => !!checkedMilestones[idx]);
+    const reflections = [
+      { question: reflectionQuestions[0] || "What was the trickiest part of this session?", answer: reflectionText1 },
+      { question: reflectionQuestions[1] || "What adjustments will you make next time?", answer: reflectionText2 }
+    ];
+
+    if (onSavePracticeLog) {
+      onSavePracticeLog({
+        focusTimeSpent: elapsedSeconds,
+        checkedMilestones: checked,
+        reflections: reflections.filter(r => r.answer.trim().length > 0)
+      });
+    } else if (onCompletePractice) {
       onCompletePractice();
     }
-  }, [onCompletePractice]);
+
+    // Go back to timer and reset state
+    setShowReflection(false);
+    setReflectionText1("");
+    setReflectionText2("");
+    setCheckedMilestones({});
+    setTimeLeft(focusTimeSeconds);
+    setIsTimerRunning(false);
+  }, [
+    isSubmitDisabled,
+    focusTimeSeconds,
+    timeLeft,
+    milestones,
+    checkedMilestones,
+    reflectionQuestions,
+    reflectionText1,
+    reflectionText2,
+    onSavePracticeLog,
+    onCompletePractice
+  ]);
 
   const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -182,10 +229,18 @@ export const FocusPracticeTool = ({
   const submitButtonStyle = useCallback(
     ({ pressed }: { pressed: boolean }) => [
       styles.submitBtn,
-      pressed && styles.btnPressed,
+      isSubmitDisabled && styles.submitBtnDisabled,
+      pressed && !isSubmitDisabled && styles.btnPressed,
     ],
-    [],
+    [isSubmitDisabled],
   );
+
+  const areAllMilestonesChecked = useMemo(() => {
+    return (
+      milestones.length > 0 &&
+      milestones.every((_, idx) => checkedMilestones[idx])
+    );
+  }, [milestones, checkedMilestones]);
 
   return (
     <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
@@ -221,9 +276,78 @@ export const FocusPracticeTool = ({
             onPress={handleSkipToReflection}
           >
             <Text style={styles.reflectionUnlockText}>
-              Skip directly to Reflection & Log →
+              {areAllMilestonesChecked
+                ? "Log practice reflection"
+                : "Skip directly to Reflection & Log →"}
             </Text>
           </Pressable>
+
+          {/* Practice History Section */}
+          {technique?.practiceLogs && technique.practiceLogs.length > 0 && (
+            <View style={styles.historySection}>
+              <Text style={styles.sectionTitle}>
+                PRACTICE HISTORY ({technique.practiceLogs.length})
+              </Text>
+              {technique.practiceLogs
+                .slice()
+                .reverse()
+                .map((log) => (
+                  <View key={log.id} style={styles.historyCard}>
+                    <View style={styles.historyHeader}>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={12}
+                        color={colors.textTertiary}
+                      />
+                      <Text style={styles.historyDate}>
+                        {new Date(log.timestamp).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Text>
+                      {log.focusTimeSpent !== undefined && (
+                        <Text style={styles.historyTime}>
+                          ⏱️ {Math.floor(log.focusTimeSpent / 60)}m{" "}
+                          {log.focusTimeSpent % 60}s
+                        </Text>
+                      )}
+                    </View>
+
+                    {log.checkedMilestones.length > 0 && (
+                      <View style={styles.historyMilestones}>
+                        <Text style={styles.historySubLabel}>
+                          Milestones Achieved:
+                        </Text>
+                        {log.checkedMilestones.map((m, mIdx) => (
+                          <Text key={mIdx} style={styles.historyMilestoneItem}>
+                            ✓ {m}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
+
+                    {log.reflections.length > 0 && (
+                      <View style={styles.historyReflections}>
+                        <Text style={styles.historySubLabel}>Reflections:</Text>
+                        {log.reflections.map((r, rIdx) => (
+                          <View key={rIdx} style={styles.historyReflectionItem}>
+                            <Text style={styles.historyQuestion}>
+                              {r.question}
+                            </Text>
+                            <Text style={styles.historyAnswer}>
+                              "{r.answer}"
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                ))}
+            </View>
+          )}
         </View>
       ) : (
         <View style={styles.practiceCard}>
@@ -276,8 +400,12 @@ export const FocusPracticeTool = ({
             />
           </View>
 
-          <Pressable style={submitButtonStyle} onPress={handleSubmitReflection}>
-            <Text style={styles.submitBtnText}>
+          <Pressable
+            style={submitButtonStyle}
+            onPress={handleSubmitReflection}
+            disabled={isSubmitDisabled}
+          >
+            <Text style={[styles.submitBtnText, isSubmitDisabled && styles.submitBtnTextDisabled]}>
               Complete & Save Practice Log
             </Text>
           </Pressable>
@@ -527,10 +655,18 @@ const styles = StyleSheet.create({
     ...shadows.card,
     marginTop: spacing.md,
   },
+  submitBtnDisabled: {
+    backgroundColor: colors.borderSubtle,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
   submitBtnText: {
     color: colors.white,
     fontWeight: fontWeight.bold,
     fontSize: fontSize.base,
+  },
+  submitBtnTextDisabled: {
+    color: colors.textDisabled,
   },
   backBtn: {
     alignSelf: "center",
@@ -544,5 +680,78 @@ const styles = StyleSheet.create({
   },
   btnPressed: {
     opacity: 0.8,
+  },
+  historySection: {
+    marginTop: spacing.xl,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSubtle,
+    paddingTop: spacing.lg,
+    gap: spacing.md,
+  },
+  historyCard: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    gap: spacing.sm,
+  },
+  historyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
+    paddingBottom: spacing.xs,
+    marginBottom: 2,
+  },
+  historyDate: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  historyTime: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    color: colors.accent,
+  },
+  historySubLabel: {
+    fontSize: 10,
+    fontWeight: fontWeight.bold,
+    color: colors.textTertiary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  historyMilestones: {
+    gap: 2,
+  },
+  historyMilestoneItem: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+    paddingLeft: spacing.xs,
+  },
+  historyReflections: {
+    gap: spacing.xs,
+    marginTop: 2,
+  },
+  historyReflectionItem: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.sm,
+    padding: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+  },
+  historyQuestion: {
+    fontSize: 10,
+    fontWeight: fontWeight.bold,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  historyAnswer: {
+    fontSize: fontSize.xs,
+    color: colors.textPrimary,
+    fontStyle: "italic",
   },
 });
