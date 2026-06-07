@@ -7,7 +7,10 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "test": "jest"
+    "test": "jest",
+    "build:android:apk": "eas build --platform android --profile preview",
+    "build:local:apk": "cd android && ./gradlew assembleRelease",
+    "build:local:ios": "npx expo run:ios --configuration Release"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",

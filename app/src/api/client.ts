@@ -2,7 +2,7 @@ import type { GoalLevel, Hobby, Resource, Technique, UserProfile, HobbyCategory,
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://hobyay-server.onrender.com';
 
 // ─── Error Types ─────────────────────────────────────────────────────────────
 
