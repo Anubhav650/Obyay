@@ -8,11 +8,30 @@ import type {
   Flashcard,
   PracticeToolConfig,
 } from "../types/models";
+import Constants from "expo-constants";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const API_URL =
-  process.env.EXPO_PUBLIC_API_URL || "https://hobyay-server.onrender.com";
+let defaultApiUrl = "https://hobyay-server.onrender.com";
+
+if (__DEV__) {
+  const hostUri = Constants.expoConfig?.hostUri;
+  if (hostUri) {
+    const hostIp = hostUri.split(":")[0];
+    defaultApiUrl = `http://${hostIp}:3000`;
+  } else {
+    defaultApiUrl = "http://localhost:3000";
+  }
+}
+
+let API_URL = process.env.EXPO_PUBLIC_API_URL || defaultApiUrl;
+
+// In local dev mode, override the Render default if loaded from .env
+if (__DEV__ && API_URL.includes("onrender.com")) {
+  API_URL = defaultApiUrl;
+}
+
+console.log("[API Client] Configured API_URL:", API_URL);
 
 // ─── Error Types ─────────────────────────────────────────────────────────────
 
@@ -189,18 +208,18 @@ export const getErrorMessage = (error: unknown): string => {
   if (error instanceof ApiError) {
     switch (error.code) {
       case "NOT_A_HOBBY":
-        return "That doesn't look like a hobby — try something like 'ukulele' or 'watercolor painting'";
+        return "That doesn't look like a hobby - try something like 'ukulele' or 'watercolor painting'";
       case "AI_INVALID_OUTPUT":
-        return "Couldn't build a plan for that — try rewording your hobby";
+        return "Couldn't build a plan for that - try rewording your hobby";
       case "NETWORK_ERROR":
-        return "Can't reach the server — check your connection";
+        return "Can't reach the server - check your connection";
       case "TIMEOUT":
-        return "The request took too long — try again";
+        return "The request took too long - try again";
       case "SERVER_ERROR":
-        return "Something went wrong on our end — try again in a moment";
+        return "Something went wrong on our end - try again in a moment";
       default:
-        return "Something went wrong — please try again";
+        return "Something went wrong - please try again";
     }
   }
-  return "Something went wrong — please try again";
+  return "Something went wrong - please try again";
 };

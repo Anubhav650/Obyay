@@ -38,8 +38,7 @@ function ProgressRingComponent({ progress, size = 48 }: ProgressRingProps) {
     };
   });
 
-  const textSize =
-    size < 40 ? fontSize.xs : size < 56 ? fontSize.sm : fontSize.base;
+  const textSize = size < 56 ? fontSize.xs : fontSize.base;
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
