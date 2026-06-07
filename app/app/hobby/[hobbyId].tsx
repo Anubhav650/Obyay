@@ -56,7 +56,7 @@ import {
 
 const SKELETONS = [1, 2, 3];
 
-function TechniqueSheetContent({
+const TechniqueSheetContent = ({
   technique,
   hobby,
   onUpdateStatus,
@@ -66,7 +66,7 @@ function TechniqueSheetContent({
   hobby: Hobby;
   onUpdateStatus: (status: TechniqueStatus) => void;
   onClose: () => void;
-}) {
+}) => {
   const { resources, loading, error } = useTechniqueResources(
     hobby.id,
     technique,
@@ -100,8 +100,8 @@ function TechniqueSheetContent({
   const handleManualSearch = useCallback(() => {
     Linking.openURL(
       `https://www.youtube.com/results?search_query=${encodeURIComponent(
-        technique.searchQuery
-      )}`
+        technique.searchQuery,
+      )}`,
     );
   }, [technique.searchQuery]);
 
@@ -121,7 +121,7 @@ function TechniqueSheetContent({
       sheetStyles.skipButton,
       pressed && sheetStyles.actionPressed,
     ],
-    []
+    [],
   );
 
   const undoButtonStyle = useCallback(
@@ -130,23 +130,22 @@ function TechniqueSheetContent({
       sheetStyles.undoButton,
       pressed && sheetStyles.actionPressed,
     ],
-    []
+    [],
   );
 
-  const renderSkeletonCard = useCallback((i: number) => (
-    <View key={i} style={sheetStyles.videoSkeletonCard} />
-  ), []);
+  const renderSkeletonCard = useCallback(
+    (i: number) => <View key={i} style={sheetStyles.videoSkeletonCard} />,
+    [],
+  );
 
   const renderVideoCard = useCallback(
-    (resource: any) => (
-      <VideoCard key={resource.videoId} resource={resource} />
-    ),
-    []
+    (resource: any) => <VideoCard key={resource.videoId} resource={resource} />,
+    [],
   );
 
   const scrollContentStyle = useMemo(
     () => [sheetStyles.scrollContent, { paddingBottom: insets.bottom + 40 }],
-    [insets.bottom]
+    [insets.bottom],
   );
 
   return (
@@ -286,27 +285,21 @@ function TechniqueSheetContent({
         {technique.status === "pending" && (
           <>
             <HoldToMasterButton onComplete={handleCompletePractice} />
-            <Pressable
-              style={skipButtonStyle}
-              onPress={handleSkipPress}
-            >
+            <Pressable style={skipButtonStyle} onPress={handleSkipPress}>
               <Text style={sheetStyles.skipButtonText}>Skip This</Text>
             </Pressable>
           </>
         )}
         {(technique.status === "mastered" ||
           technique.status === "skipped") && (
-          <Pressable
-            style={undoButtonStyle}
-            onPress={handleUndoPress}
-          >
+          <Pressable style={undoButtonStyle} onPress={handleUndoPress}>
             <Text style={sheetStyles.undoButtonText}>↩ Undo</Text>
           </Pressable>
         )}
       </View>
     </ScrollView>
   );
-}
+};
 
 const sheetStyles = StyleSheet.create({
   scroll: {
@@ -480,33 +473,35 @@ interface TabButtonProps {
   onPress: (id: "lesson" | "practice" | "cards" | "quiz") => void;
 }
 
-const TabButton = React.memo(({ id, label, activeTab, onPress }: TabButtonProps) => {
-  const isActive = activeTab === id;
-  const handlePress = useCallback(() => {
-    onPress(id);
-  }, [id, onPress]);
+const TabButton = React.memo(
+  ({ id, label, activeTab, onPress }: TabButtonProps) => {
+    const isActive = activeTab === id;
+    const handlePress = useCallback(() => {
+      onPress(id);
+    }, [id, onPress]);
 
-  const buttonStyle = useMemo(() => [
-    sheetStyles.tabButton,
-    isActive && sheetStyles.activeTabButton
-  ], [isActive]);
+    const buttonStyle = useMemo(
+      () => [sheetStyles.tabButton, isActive && sheetStyles.activeTabButton],
+      [isActive],
+    );
 
-  const textStyle = useMemo(() => [
-    sheetStyles.tabButtonText,
-    isActive && sheetStyles.activeTabButtonText
-  ], [isActive]);
+    const textStyle = useMemo(
+      () => [
+        sheetStyles.tabButtonText,
+        isActive && sheetStyles.activeTabButtonText,
+      ],
+      [isActive],
+    );
 
-  return (
-    <Pressable
-      style={buttonStyle}
-      onPress={handlePress}
-    >
-      <Text style={textStyle}>{label}</Text>
-    </Pressable>
-  );
-});
+    return (
+      <Pressable style={buttonStyle} onPress={handlePress}>
+        <Text style={textStyle}>{label}</Text>
+      </Pressable>
+    );
+  },
+);
 
-export default function HobbyDetailScreen() {
+const HobbyDetailScreen = () => {
   const {
     hobbyId,
     isHobbyCreatedFromOnboarding: isHobbyCreatedFromOnboardingParam,
@@ -547,17 +542,20 @@ export default function HobbyDetailScreen() {
         navigation.setOptions({
           title: "Home",
           headerLeft: () => (
-            <Pressable
-              style={styles.backButton}
-              onPress={handleBackHome}
-            >
+            <Pressable style={styles.backButton} onPress={handleBackHome}>
               <Ionicons name="chevron-back" size={28} color={colors.accent} />
             </Pressable>
           ),
         });
       }
     })();
-  }, [hobbyId, navigation, router, isHobbyCreatedFromOnboardingParam, handleBackHome]);
+  }, [
+    hobbyId,
+    navigation,
+    router,
+    isHobbyCreatedFromOnboardingParam,
+    handleBackHome,
+  ]);
 
   const progress = useMemo(
     () =>
@@ -611,14 +609,14 @@ export default function HobbyDetailScreen() {
     (id: string) => {
       handleStatusChange(id, "mastered");
     },
-    [handleStatusChange]
+    [handleStatusChange],
   );
 
   const handleSwipeLeft = useCallback(
     (id: string) => {
       handleStatusChange(id, "skipped");
     },
-    [handleStatusChange]
+    [handleStatusChange],
   );
 
   const renderTechniqueItem = useCallback(
@@ -629,10 +627,7 @@ export default function HobbyDetailScreen() {
         onSwipeRight={handleSwipeRight}
         onSwipeLeft={handleSwipeLeft}
       >
-        <TechniqueRow
-          technique={item}
-          onPress={handleTechniquePress}
-        />
+        <TechniqueRow technique={item} onPress={handleTechniquePress} />
       </SwipeableRow>
     ),
     [handleSwipeRight, handleSwipeLeft, handleTechniquePress],
@@ -641,11 +636,8 @@ export default function HobbyDetailScreen() {
   const keyExtractor = useCallback((item: Technique) => item.id, []);
 
   const listContentStyle = useMemo(
-    () => [
-      styles.list,
-      { paddingBottom: insets.bottom + spacing.xl },
-    ],
-    [insets.bottom]
+    () => [styles.list, { paddingBottom: insets.bottom + spacing.xl }],
+    [insets.bottom],
   );
 
   if (loading) {
@@ -743,7 +735,7 @@ export default function HobbyDetailScreen() {
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -853,3 +845,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
+
+export default HobbyDetailScreen;

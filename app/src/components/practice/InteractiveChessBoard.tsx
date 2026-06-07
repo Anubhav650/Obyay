@@ -32,11 +32,11 @@ const PIECE_SYMBOLS: Record<string, string> = {
   bp: "♟",
 };
 
-export function InteractiveChessBoard({
+export const InteractiveChessBoard = ({
   config,
 }: {
   config?: PracticeToolConfig;
-}) {
+}) => {
   const isChess = config?.boardType === "chess" || true;
 
   // Mode: 'coordinates' (Speed drill) or 'puzzle'
@@ -178,7 +178,15 @@ export function InteractiveChessBoard({
         }, 500);
       }
     },
-    [mode, isPlayingCo, targetSquare, puzzleSolved, solution, puzzleStep, nextTarget]
+    [
+      mode,
+      isPlayingCo,
+      targetSquare,
+      puzzleSolved,
+      solution,
+      puzzleStep,
+      nextTarget,
+    ],
   );
 
   const handleCoordinatesModePress = useCallback(() => {
@@ -218,7 +226,7 @@ export function InteractiveChessBoard({
         })}
       </View>
     ),
-    [mode, parsedPieces, highlightSquare, highlightType, handleSquarePress]
+    [mode, parsedPieces, highlightSquare, highlightType, handleSquarePress],
   );
 
   const renderGuideChar = useCallback(
@@ -227,7 +235,7 @@ export function InteractiveChessBoard({
         {rank}
       </Text>
     ),
-    []
+    [],
   );
 
   const renderGuideCharHorizontal = useCallback(
@@ -236,17 +244,17 @@ export function InteractiveChessBoard({
         {file.toUpperCase()}
       </Text>
     ),
-    []
+    [],
   );
 
   const coordinatesTabIconColor = useMemo(
     () => (mode === "coordinates" ? colors.intermediate : colors.textSecondary),
-    [mode]
+    [mode],
   );
 
   const puzzleTabIconColor = useMemo(
     () => (mode === "puzzle" ? colors.intermediate : colors.textSecondary),
-    [mode]
+    [mode],
   );
 
   return (
@@ -366,14 +374,10 @@ export function InteractiveChessBoard({
       {/* Chess Board */}
       <View style={styles.boardContainer}>
         {/* Ranks vertical guide */}
-        <View style={styles.ranksColumn}>
-          {RANKS.map(renderGuideChar)}
-        </View>
+        <View style={styles.ranksColumn}>{RANKS.map(renderGuideChar)}</View>
 
         <View style={styles.boardLayout}>
-          <View style={styles.boardBorder}>
-            {RANKS.map(renderBoardRow)}
-          </View>
+          <View style={styles.boardBorder}>{RANKS.map(renderBoardRow)}</View>
 
           {/* Files horizontal guide */}
           <View style={styles.filesRow}>
@@ -383,7 +387,7 @@ export function InteractiveChessBoard({
       </View>
     </View>
   );
-}
+};
 
 interface BoardSquareProps {
   file: string;
@@ -397,61 +401,57 @@ interface BoardSquareProps {
   onPress: (file: string, rank: number) => void;
 }
 
-const BoardSquare = React.memo(({
-  file,
-  rank,
-  rankIndex,
-  fileIndex,
-  highlightSquare,
-  highlightType,
-  pieceCode,
-  pieceSymbol,
-  onPress,
-}: BoardSquareProps) => {
-  const square = `${file}${rank}`;
-  const isLight = (rankIndex + fileIndex) % 2 === 0;
-  const isTargeting = highlightSquare === square;
+const BoardSquare = React.memo(
+  ({
+    file,
+    rank,
+    rankIndex,
+    fileIndex,
+    highlightSquare,
+    highlightType,
+    pieceCode,
+    pieceSymbol,
+    onPress,
+  }: BoardSquareProps) => {
+    const square = `${file}${rank}`;
+    const isLight = (rankIndex + fileIndex) % 2 === 0;
+    const isTargeting = highlightSquare === square;
 
-  const handlePress = useCallback(() => {
-    onPress(file, rank);
-  }, [onPress, file, rank]);
+    const handlePress = useCallback(() => {
+      onPress(file, rank);
+    }, [onPress, file, rank]);
 
-  const squareBg = useMemo(() => {
-    if (isTargeting) {
-      return highlightType === "success"
-        ? "rgba(13, 138, 110, 0.35)"
-        : "rgba(200, 32, 20, 0.30)";
-    }
-    return isLight ? "#f0ebe4" : "#d4cfc6";
-  }, [isLight, isTargeting, highlightType]);
+    const squareBg = useMemo(() => {
+      if (isTargeting) {
+        return highlightType === "success"
+          ? "rgba(13, 138, 110, 0.35)"
+          : "rgba(200, 32, 20, 0.30)";
+      }
+      return isLight ? "#f0ebe4" : "#d4cfc6";
+    }, [isLight, isTargeting, highlightType]);
 
-  const squareStyle = useMemo(() => [
-    styles.square,
-    { backgroundColor: squareBg }
-  ], [squareBg]);
+    const squareStyle = useMemo(
+      () => [styles.square, { backgroundColor: squareBg }],
+      [squareBg],
+    );
 
-  const pieceStyle = useMemo(() => [
-    styles.piece,
-    {
-      color: pieceCode?.startsWith("w")
-        ? colors.white
-        : colors.black,
-    }
-  ], [pieceCode]);
+    const pieceStyle = useMemo(
+      () => [
+        styles.piece,
+        {
+          color: pieceCode?.startsWith("w") ? colors.white : colors.black,
+        },
+      ],
+      [pieceCode],
+    );
 
-  return (
-    <Pressable
-      style={squareStyle}
-      onPress={handlePress}
-    >
-      {pieceSymbol ? (
-        <Text style={pieceStyle}>
-          {pieceSymbol}
-        </Text>
-      ) : null}
-    </Pressable>
-  );
-});
+    return (
+      <Pressable style={squareStyle} onPress={handlePress}>
+        {pieceSymbol ? <Text style={pieceStyle}>{pieceSymbol}</Text> : null}
+      </Pressable>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {

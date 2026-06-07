@@ -1,15 +1,21 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { Hobby, TechniqueStatus, Resource, Progress, UserProfile } from '../types/models';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import type {
+  Hobby,
+  TechniqueStatus,
+  Resource,
+  Progress,
+  UserProfile,
+} from "../types/models";
 
 // ─── Storage Keys ────────────────────────────────────────────────────────────
 
-const HOBBY_IDS_KEY = 'hobyay:hobbyIds';
-const PROFILE_KEY = 'hobyay:profile';
+const HOBBY_IDS_KEY = "hobyay:hobbyIds";
+const PROFILE_KEY = "hobyay:profile";
 const hobbyKey = (id: string) => `hobyay:hobby:${id}`;
 
 // ─── Pure Functions ──────────────────────────────────────────────────────────
 
-export { getProgress } from '../utils/progress';
+export { getProgress } from "../utils/progress";
 
 // ─── Index Management ────────────────────────────────────────────────────────
 
@@ -50,7 +56,8 @@ export async function loadHobbies(): Promise<Hobby[]> {
 
     // Sort by creation date, newest first
     hobbies.sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
 
     return hobbies;
@@ -88,7 +95,7 @@ export async function loadHobby(id: string): Promise<Hobby | null> {
 export async function updateTechniqueStatus(
   hobbyId: string,
   techniqueId: string,
-  status: TechniqueStatus
+  status: TechniqueStatus,
 ): Promise<Hobby> {
   const hobby = await loadHobby(hobbyId);
   if (!hobby) {
@@ -98,7 +105,7 @@ export async function updateTechniqueStatus(
   const updatedTechniques = hobby.techniques.map((t) =>
     t.id === techniqueId
       ? { ...t, status, statusUpdatedAt: new Date().toISOString() }
-      : t
+      : t,
   );
 
   const updated: Hobby = { ...hobby, techniques: updatedTechniques };
@@ -109,13 +116,13 @@ export async function updateTechniqueStatus(
 export async function updateTechniqueResources(
   hobbyId: string,
   techniqueId: string,
-  resources: Resource[]
+  resources: Resource[],
 ): Promise<void> {
   const hobby = await loadHobby(hobbyId);
   if (!hobby) return;
 
   const updatedTechniques = hobby.techniques.map((t) =>
-    t.id === techniqueId ? { ...t, resources } : t
+    t.id === techniqueId ? { ...t, resources } : t,
   );
 
   const updated: Hobby = { ...hobby, techniques: updatedTechniques };

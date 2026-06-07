@@ -77,7 +77,7 @@ export const colors = {
 
 // ─── Level Color Mapping ─────────────────────────────────────────────────────
 
-export function getLevelColor(level: GoalLevel): string {
+export const getLevelColor = (level: GoalLevel): string => {
   switch (level) {
     case "beginner":
       return colors.beginner;
@@ -86,9 +86,9 @@ export function getLevelColor(level: GoalLevel): string {
     case "advanced":
       return colors.advanced;
   }
-}
+};
 
-export function getLevelDimColor(level: GoalLevel): string {
+export const getLevelDimColor = (level: GoalLevel): string => {
   switch (level) {
     case "beginner":
       return colors.beginnerDim;
@@ -97,9 +97,9 @@ export function getLevelDimColor(level: GoalLevel): string {
     case "advanced":
       return colors.advancedDim;
   }
-}
+};
 
-export function getLevelGlowColor(level: GoalLevel): string {
+export const getLevelGlowColor = (level: GoalLevel): string => {
   switch (level) {
     case "beginner":
       return colors.beginnerGlow;
@@ -108,7 +108,7 @@ export function getLevelGlowColor(level: GoalLevel): string {
     case "advanced":
       return colors.advancedGlow;
   }
-}
+};
 
 // ─── Spacing ─────────────────────────────────────────────────────────────────
 // DESIGN-obyay.md rem-based scale (1rem = 10px → native px)

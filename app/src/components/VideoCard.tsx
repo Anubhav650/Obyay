@@ -1,14 +1,8 @@
-import React, { memo, useCallback } from 'react';
-import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
-import * as Linking from 'expo-linking';
-import type { Resource } from '../types/models';
-import {
-  colors,
-  spacing,
-  radii,
-  fontSize,
-  fontWeight,
-} from '../theme/tokens';
+import React, { memo, useCallback } from "react";
+import { View, Text, Image, Pressable, StyleSheet } from "react-native";
+import * as Linking from "expo-linking";
+import type { Resource } from "../types/models";
+import { colors, spacing, radii, fontSize, fontWeight } from "../theme/tokens";
 
 interface VideoCardProps {
   resource: Resource;
@@ -17,7 +11,7 @@ interface VideoCardProps {
 function formatDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
-  return `${mins}:${secs.toString().padStart(2, '0')}`;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
 function VideoCardComponent({ resource }: VideoCardProps) {
@@ -27,10 +21,7 @@ function VideoCardComponent({ resource }: VideoCardProps) {
 
   return (
     <Pressable
-      style={({ pressed }) => [
-        styles.container,
-        pressed && styles.pressed,
-      ]}
+      style={({ pressed }) => [styles.container, pressed && styles.pressed]}
       onPress={handlePress}
       accessibilityRole="link"
       accessibilityLabel={`Watch ${resource.title} by ${resource.channelTitle}`}
@@ -69,18 +60,18 @@ const styles = StyleSheet.create({
     width: 160,
     height: 120,
     borderRadius: radii.sm,
-    overflow: 'hidden',
+    overflow: "hidden",
     backgroundColor: colors.surfaceElevated,
   },
   thumbnail: {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   },
   durationChip: {
-    position: 'absolute',
+    position: "absolute",
     bottom: spacing.xs,
     right: spacing.xs,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
     paddingHorizontal: spacing.xs + 2,
     paddingVertical: 2,
     borderRadius: radii.sm / 2,

@@ -1,6 +1,13 @@
-import React, { useMemo } from 'react';
-import { Pressable, Text, StyleSheet } from 'react-native';
-import { colors, spacing, radii, fontSize, fontWeight, shadows } from '../theme/tokens';
+import React, { useMemo } from "react";
+import { Pressable, Text, StyleSheet } from "react-native";
+import {
+  colors,
+  spacing,
+  radii,
+  fontSize,
+  fontWeight,
+  shadows,
+} from "../theme/tokens";
 
 interface BubbleProps {
   label: string;
@@ -8,8 +15,11 @@ interface BubbleProps {
   onPress: () => void;
 }
 
-export function Bubble({ label, isSelected, onPress }: BubbleProps) {
-  const accessibilityState = useMemo(() => ({ checked: isSelected }), [isSelected]);
+export const Bubble = ({ label, isSelected, onPress }: BubbleProps) => {
+  const accessibilityState = useMemo(
+    () => ({ checked: isSelected }),
+    [isSelected],
+  );
 
   return (
     <Pressable
@@ -18,12 +28,14 @@ export function Bubble({ label, isSelected, onPress }: BubbleProps) {
       accessibilityRole="checkbox"
       accessibilityState={accessibilityState}
     >
-      <Text style={[styles.bubbleText, isSelected && styles.bubbleTextSelected]}>
+      <Text
+        style={[styles.bubbleText, isSelected && styles.bubbleTextSelected]}
+      >
         {label}
       </Text>
     </Pressable>
   );
-}
+};
 
 const styles = StyleSheet.create({
   bubble: {

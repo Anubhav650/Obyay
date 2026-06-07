@@ -28,10 +28,8 @@ const cache = new LRUCache<string, SearchResult>({
 /**
  * Parses ISO 8601 duration strings (e.g. PT4M13S, PT1H2M3S, PT45S) → seconds.
  */
-export function parseISO8601Duration(duration: string): number {
-  const match = duration.match(
-    /^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/
-  );
+export const parseISO8601Duration = (duration: string): number => {
+  const match = duration.match(/^PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/);
   if (!match) return 0;
 
   const hours = parseInt(match[1] || "0", 10);
@@ -39,19 +37,19 @@ export function parseISO8601Duration(duration: string): number {
   const seconds = parseInt(match[3] || "0", 10);
 
   return hours * 3600 + minutes * 60 + seconds;
-}
+};
 
 // ── YouTube API helpers ────────────────────────────────────────────────────
 
 const YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3";
 
-function getApiKey(): string {
+const getApiKey = (): string => {
   const key = process.env.YOUTUBE_API_KEY;
   if (!key) {
     throw new Error("YOUTUBE_API_KEY is not configured");
   }
   return key;
-}
+};
 
 interface SearchListItem {
   id: { videoId: string };
@@ -77,10 +75,10 @@ interface VideoListItem {
  * Uses an LRU cache (500 entries, 24h TTL) keyed by search query.
  * On quota exhaustion, returns { resources: [], degraded: true }.
  */
-export async function searchVideos(
+export const searchVideos = async (
   query: string,
-  max: number = 3
-): Promise<SearchResult> {
+  max: number = 3,
+): Promise<SearchResult> => {
   const clampedMax = Math.min(Math.max(max, 1), 5);
   const cacheKey = `${query}|${clampedMax}`;
 
@@ -103,7 +101,7 @@ export async function searchVideos(
     });
 
     const searchResponse = await fetch(
-      `${YOUTUBE_API_BASE}/search?${searchParams.toString()}`
+      `${YOUTUBE_API_BASE}/search?${searchParams.toString()}`,
     );
 
     if (searchResponse.status === 403) {
@@ -117,7 +115,7 @@ export async function searchVideos(
 
     if (!searchResponse.ok) {
       throw new Error(
-        `YouTube search API returned ${searchResponse.status}: ${searchResponse.statusText}`
+        `YouTube search API returned ${searchResponse.status}: ${searchResponse.statusText}`,
       );
     }
 
@@ -141,7 +139,7 @@ export async function searchVideos(
     });
 
     const videoResponse = await fetch(
-      `${YOUTUBE_API_BASE}/videos?${videoParams.toString()}`
+      `${YOUTUBE_API_BASE}/videos?${videoParams.toString()}`,
     );
 
     if (videoResponse.status === 403) {
@@ -154,7 +152,7 @@ export async function searchVideos(
 
     if (!videoResponse.ok) {
       throw new Error(
-        `YouTube videos API returned ${videoResponse.status}: ${videoResponse.statusText}`
+        `YouTube videos API returned ${videoResponse.status}: ${videoResponse.statusText}`,
       );
     }
 
@@ -184,12 +182,9 @@ export async function searchVideos(
     return result;
   } catch (err) {
     // Check if it's a quota/403 error we missed
-    if (
-      err instanceof Error &&
-      err.message.includes("403")
-    ) {
+    if (err instanceof Error && err.message.includes("403")) {
       return { resources: [], degraded: true };
     }
     throw err;
   }
-}
+};

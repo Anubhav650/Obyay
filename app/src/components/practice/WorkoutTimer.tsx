@@ -25,7 +25,7 @@ interface IntervalStage {
   duration: number;
 }
 
-export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
+export const WorkoutTimer = ({ config }: { config?: PracticeToolConfig }) => {
   const defaultIntervals: IntervalStage[] = useMemo(
     () =>
       config?.intervals || [
@@ -273,7 +273,7 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
       )}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

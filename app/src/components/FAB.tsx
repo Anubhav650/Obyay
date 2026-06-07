@@ -1,13 +1,13 @@
-import React, { memo, useCallback } from 'react';
-import { StyleSheet, Pressable, Text } from 'react-native';
+import React, { memo, useCallback } from "react";
+import { StyleSheet, Pressable, Text } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-} from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import * as Haptics from 'expo-haptics';
-import { colors, radii, shadows, animation, spacing } from '../theme/tokens';
+} from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
+import { colors, radii, shadows, animation, spacing } from "../theme/tokens";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -24,7 +24,10 @@ function FABComponent({ onPress }: FABProps) {
   }));
 
   const handlePressIn = useCallback(() => {
-    scale.value = withSpring(animation.buttonActiveScale, animation.springSnappy);
+    scale.value = withSpring(
+      animation.buttonActiveScale,
+      animation.springSnappy,
+    );
   }, []);
 
   const handlePressOut = useCallback(() => {
@@ -59,19 +62,19 @@ function FABComponent({ onPress }: FABProps) {
 
 const styles = StyleSheet.create({
   fab: {
-    position: 'absolute',
+    position: "absolute",
     width: 56,
     height: 56,
     borderRadius: radii.full,
     backgroundColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     ...shadows.fabBase,
   },
   icon: {
     color: colors.white,
     fontSize: 32,
-    fontWeight: '300',
+    fontWeight: "300",
     lineHeight: 34,
     marginTop: -1,
   },

@@ -1,12 +1,12 @@
-import React, { memo, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { memo, useCallback } from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-} from 'react-native-reanimated';
-import type { Hobby } from '../types/models';
-import { LevelBadge } from './LevelBadge';
+} from "react-native-reanimated";
+import type { Hobby } from "../types/models";
+import { LevelBadge } from "./LevelBadge";
 import {
   colors,
   spacing,
@@ -15,7 +15,7 @@ import {
   fontWeight,
   lineHeight,
   animation,
-} from '../theme/tokens';
+} from "../theme/tokens";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -77,15 +77,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     marginBottom: spacing.md,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   content: {
     padding: spacing.base,
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: spacing.sm,
   },
   name: {
@@ -100,9 +100,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   footer: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
   },
   actionText: {
     fontSize: fontSize.sm,

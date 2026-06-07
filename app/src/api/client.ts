@@ -1,18 +1,29 @@
-import type { GoalLevel, Hobby, Resource, Technique, UserProfile, HobbyCategory, QuizQuestion, Flashcard, PracticeToolConfig } from '../types/models';
+import type {
+  GoalLevel,
+  Hobby,
+  Resource,
+  Technique,
+  UserProfile,
+  HobbyCategory,
+  QuizQuestion,
+  Flashcard,
+  PracticeToolConfig,
+} from "../types/models";
 
 // ─── Config ──────────────────────────────────────────────────────────────────
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://hobyay-server.onrender.com';
+const API_URL =
+  process.env.EXPO_PUBLIC_API_URL || "https://hobyay-server.onrender.com";
 
 // ─── Error Types ─────────────────────────────────────────────────────────────
 
 export type ApiErrorCode =
-  | 'NOT_A_HOBBY'
-  | 'AI_INVALID_OUTPUT'
-  | 'NETWORK_ERROR'
-  | 'TIMEOUT'
-  | 'SERVER_ERROR'
-  | 'UNKNOWN';
+  | "NOT_A_HOBBY"
+  | "AI_INVALID_OUTPUT"
+  | "NETWORK_ERROR"
+  | "TIMEOUT"
+  | "SERVER_ERROR"
+  | "UNKNOWN";
 
 export class ApiError extends Error {
   code: ApiErrorCode;
@@ -20,7 +31,7 @@ export class ApiError extends Error {
 
   constructor(code: ApiErrorCode, message: string, statusCode?: number) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
     this.code = code;
     this.statusCode = statusCode;
   }
@@ -52,15 +63,15 @@ export interface ResourcesResponse {
 
 // ─── Fetch Helper ────────────────────────────────────────────────────────────
 
-async function apiFetch<T>(
+const apiFetch = async <T>(
   path: string,
   options: {
     method?: string;
     body?: unknown;
     timeoutMs?: number;
-  } = {}
-): Promise<T> {
-  const { method = 'GET', body, timeoutMs = 10000 } = options;
+  } = {},
+): Promise<T> => {
+  const { method = "GET", body, timeoutMs = 10000 } = options;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -69,8 +80,8 @@ async function apiFetch<T>(
     const response = await fetch(`${API_URL}${path}`, {
       method,
       headers: {
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
+        "Content-Type": "application/json",
+        Accept: "application/json",
       },
       body: body ? JSON.stringify(body) : undefined,
       signal: controller.signal,
@@ -86,11 +97,14 @@ async function apiFetch<T>(
         // Response body not JSON
       }
 
-      const code = mapErrorCode(errorData.code || errorData.error, response.status);
+      const code = mapErrorCode(
+        errorData.code || errorData.error,
+        response.status,
+      );
       throw new ApiError(
         code,
         errorData.error || `Server error: ${response.status}`,
-        response.status
+        response.status,
       );
     }
 
@@ -102,32 +116,35 @@ async function apiFetch<T>(
       throw error;
     }
 
-    if (error instanceof DOMException && error.name === 'AbortError') {
-      throw new ApiError('TIMEOUT', 'Request timed out');
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new ApiError("TIMEOUT", "Request timed out");
     }
 
     if (error instanceof TypeError) {
-      throw new ApiError('NETWORK_ERROR', 'Network request failed');
+      throw new ApiError("NETWORK_ERROR", "Network request failed");
     }
 
-    throw new ApiError('UNKNOWN', 'An unexpected error occurred');
+    throw new ApiError("UNKNOWN", "An unexpected error occurred");
   }
-}
+};
 
-function mapErrorCode(code: string | undefined, status: number): ApiErrorCode {
-  if (code === 'NOT_A_HOBBY') return 'NOT_A_HOBBY';
-  if (code === 'AI_INVALID_OUTPUT') return 'AI_INVALID_OUTPUT';
-  if (status >= 500) return 'SERVER_ERROR';
-  return 'UNKNOWN';
-}
+const mapErrorCode = (
+  code: string | undefined,
+  status: number,
+): ApiErrorCode => {
+  if (code === "NOT_A_HOBBY") return "NOT_A_HOBBY";
+  if (code === "AI_INVALID_OUTPUT") return "AI_INVALID_OUTPUT";
+  if (status >= 500) return "SERVER_ERROR";
+  return "UNKNOWN";
+};
 
 // ─── API Functions ───────────────────────────────────────────────────────────
 
-export async function generatePlan(
+export const generatePlan = async (
   hobby: string,
   level: GoalLevel,
-  profile?: UserProfile | null
-): Promise<PlanResponse> {
+  profile?: UserProfile | null,
+): Promise<PlanResponse> => {
   interface ServerResponse {
     plan: {
       hobby: string;
@@ -147,8 +164,8 @@ export async function generatePlan(
     };
   }
 
-  const response = await apiFetch<ServerResponse>('/api/plan', {
-    method: 'POST',
+  const response = await apiFetch<ServerResponse>("/api/plan", {
+    method: "POST",
     body: { hobby, level, profile },
     timeoutMs: 30000, // Plan generation can take longer
   });
@@ -157,35 +174,35 @@ export async function generatePlan(
     ...response.plan,
     level,
   };
-}
+};
 
-export async function fetchResources(
-  query: string
-): Promise<ResourcesResponse> {
+export const fetchResources = async (
+  query: string,
+): Promise<ResourcesResponse> => {
   const encoded = encodeURIComponent(query);
   return apiFetch<ResourcesResponse>(`/api/resources?q=${encoded}`, {
     timeoutMs: 10000,
   });
-}
+};
 
 // ─── Error Message Helper ────────────────────────────────────────────────────
 
-export function getErrorMessage(error: unknown): string {
+export const getErrorMessage = (error: unknown): string => {
   if (error instanceof ApiError) {
     switch (error.code) {
-      case 'NOT_A_HOBBY':
+      case "NOT_A_HOBBY":
         return "That doesn't look like a hobby — try something like 'ukulele' or 'watercolor painting'";
-      case 'AI_INVALID_OUTPUT':
+      case "AI_INVALID_OUTPUT":
         return "Couldn't build a plan for that — try rewording your hobby";
-      case 'NETWORK_ERROR':
+      case "NETWORK_ERROR":
         return "Can't reach the server — check your connection";
-      case 'TIMEOUT':
-        return 'The request took too long — try again';
-      case 'SERVER_ERROR':
-        return 'Something went wrong on our end — try again in a moment';
+      case "TIMEOUT":
+        return "The request took too long — try again";
+      case "SERVER_ERROR":
+        return "Something went wrong on our end — try again in a moment";
       default:
-        return 'Something went wrong — please try again';
+        return "Something went wrong — please try again";
     }
   }
-  return 'Something went wrong — please try again';
-}
+  return "Something went wrong — please try again";
+};

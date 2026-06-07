@@ -1,7 +1,14 @@
-import React, { memo } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import type { GoalLevel } from '../types/models';
-import { getLevelColor, getLevelDimColor, fontSize, fontWeight, radii, spacing } from '../theme/tokens';
+import React, { memo } from "react";
+import { View, Text, StyleSheet } from "react-native";
+import type { GoalLevel } from "../types/models";
+import {
+  getLevelColor,
+  getLevelDimColor,
+  fontSize,
+  fontWeight,
+  radii,
+  spacing,
+} from "../theme/tokens";
 
 interface LevelBadgeProps {
   level: GoalLevel;
@@ -13,9 +20,7 @@ function LevelBadgeComponent({ level }: LevelBadgeProps) {
 
   return (
     <View style={[styles.badge, { backgroundColor: bgColor }]}>
-      <Text style={[styles.text, { color }]}>
-        {level.toUpperCase()}
-      </Text>
+      <Text style={[styles.text, { color }]}>{level.toUpperCase()}</Text>
     </View>
   );
 }
@@ -25,7 +30,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.xs,
     borderRadius: radii.pill,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
   },
   text: {
     fontSize: fontSize.xs,

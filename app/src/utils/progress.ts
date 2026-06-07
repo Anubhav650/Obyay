@@ -1,15 +1,18 @@
-import type { Hobby, Progress } from '../types/models';
+import type { Hobby, Progress } from "../types/models";
 
 /**
  * Calculates learning progress stats for a given hobby.
  */
-export function getProgress(hobby: Hobby): Progress {
+export const getProgress = (hobby: Hobby): Progress => {
   const total = hobby.techniques.length;
-  const mastered = hobby.techniques.filter((t) => t.status === 'mastered').length;
-  const skipped = hobby.techniques.filter((t) => t.status === 'skipped').length;
+  const mastered = hobby.techniques.filter(
+    (t) => t.status === "mastered",
+  ).length;
+  const skipped = hobby.techniques.filter((t) => t.status === "skipped").length;
   const remaining = total - mastered - skipped;
   const denominator = total - skipped;
-  const percent = denominator > 0 ? Math.round((mastered / denominator) * 100) : 0;
+  const percent =
+    denominator > 0 ? Math.round((mastered / denominator) * 100) : 0;
 
   return { total, mastered, skipped, remaining, percent };
-}
+};

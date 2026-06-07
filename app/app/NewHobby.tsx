@@ -48,7 +48,7 @@ const SUGGESTED_HOBBIES = [
   "Gardening",
 ];
 
-export default function NewHobbyScreen() {
+const NewHobbyScreen = () => {
   const router = useRouter();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
@@ -323,7 +323,7 @@ export default function NewHobbyScreen() {
       </View>
     </KeyboardAvoidingView>
   );
-}
+};
 
 interface SuggestionChipProps {
   item: string;
@@ -665,3 +665,5 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
   },
 });
+
+export default NewHobbyScreen;

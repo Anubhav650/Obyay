@@ -29,7 +29,7 @@ interface FlashcardViewProps {
   flashcards: Flashcard[];
 }
 
-export function FlashcardView({ flashcards }: FlashcardViewProps) {
+export const FlashcardView = ({ flashcards }: FlashcardViewProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const isFlipped = useSharedValue(0); // 0 = front, 1 = back
   const [cardSide, setCardSide] = useState<"front" | "back">("front");
@@ -133,7 +133,7 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

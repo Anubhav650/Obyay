@@ -37,62 +37,64 @@ interface OptionButtonProps {
   onPress: (idx: number) => void;
 }
 
-const OptionButton = memo(({
-  idx,
-  option,
-  isAnswered,
-  optionStyle,
-  textStyle,
-  isCorrectOption,
-  isSelected,
-  onPress,
-}: OptionButtonProps) => {
-  const handlePress = useCallback(() => {
-    onPress(idx);
-  }, [onPress, idx]);
+const OptionButton = memo(
+  ({
+    idx,
+    option,
+    isAnswered,
+    optionStyle,
+    textStyle,
+    isCorrectOption,
+    isSelected,
+    onPress,
+  }: OptionButtonProps) => {
+    const handlePress = useCallback(() => {
+      onPress(idx);
+    }, [onPress, idx]);
 
-  return (
-    <Pressable
-      style={({ pressed }) => [
-        optionStyle,
-        pressed && !isAnswered && styles.optionPressed,
-      ]}
-      onPress={handlePress}
-      disabled={isAnswered}
-    >
-      <View style={styles.optionRow}>
-        <View
-          style={[
-            styles.badge,
-            isAnswered && isCorrectOption && styles.badgeCorrect,
-            isAnswered &&
-              isSelected &&
-              !isCorrectOption &&
-              styles.badgeIncorrect,
-          ]}
-        >
-          <Text
+    return (
+      <Pressable
+        style={({ pressed }) => [
+          optionStyle,
+          pressed && !isAnswered && styles.optionPressed,
+        ]}
+        onPress={handlePress}
+        disabled={isAnswered}
+      >
+        <View style={styles.optionRow}>
+          <View
             style={[
-              styles.badgeText,
+              styles.badge,
+              isAnswered && isCorrectOption && styles.badgeCorrect,
               isAnswered &&
-                (isCorrectOption || isSelected) &&
-                styles.badgeTextAnswered,
+                isSelected &&
+                !isCorrectOption &&
+                styles.badgeIncorrect,
             ]}
           >
-            {String.fromCharCode(65 + idx)}
-          </Text>
+            <Text
+              style={[
+                styles.badgeText,
+                isAnswered &&
+                  (isCorrectOption || isSelected) &&
+                  styles.badgeTextAnswered,
+              ]}
+            >
+              {String.fromCharCode(65 + idx)}
+            </Text>
+          </View>
+          <Text style={textStyle}>{option}</Text>
         </View>
-        <Text style={textStyle}>{option}</Text>
-      </View>
-    </Pressable>
-  );
-});
+      </Pressable>
+    );
+  },
+);
 
 interface QuizViewProps {
   quiz: QuizQuestion;
 }
 
-export function QuizView({ quiz }: QuizViewProps) {
+export const QuizView = ({ quiz }: QuizViewProps) => {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const shakeOffset = useSharedValue(0);
@@ -107,29 +109,32 @@ export function QuizView({ quiz }: QuizViewProps) {
     );
   }
 
-  const handleSelectOption = useCallback((idx: number) => {
-    if (isAnswered) return;
+  const handleSelectOption = useCallback(
+    (idx: number) => {
+      if (isAnswered) return;
 
-    setSelectedIdx(idx);
-    setIsAnswered(true);
+      setSelectedIdx(idx);
+      setIsAnswered(true);
 
-    if (idx === quiz.correctIndex) {
-      // Correct!
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    } else {
-      // Incorrect!
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      if (idx === quiz.correctIndex) {
+        // Correct!
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        // Incorrect!
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
 
-      // Shake animation
-      shakeOffset.value = withSequence(
-        withTiming(-10, { duration: 60 }),
-        withTiming(10, { duration: 60 }),
-        withTiming(-10, { duration: 60 }),
-        withTiming(10, { duration: 60 }),
-        withTiming(0, { duration: 60 }),
-      );
-    }
-  }, [isAnswered, quiz?.correctIndex]);
+        // Shake animation
+        shakeOffset.value = withSequence(
+          withTiming(-10, { duration: 60 }),
+          withTiming(10, { duration: 60 }),
+          withTiming(-10, { duration: 60 }),
+          withTiming(10, { duration: 60 }),
+          withTiming(0, { duration: 60 }),
+        );
+      }
+    },
+    [isAnswered, quiz?.correctIndex],
+  );
 
   const handleReset = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -224,7 +229,7 @@ export function QuizView({ quiz }: QuizViewProps) {
       )}
     </Animated.View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {

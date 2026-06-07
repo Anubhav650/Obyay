@@ -27,13 +27,13 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import type { PracticeToolConfig } from "../../types/models";
 
-export function FocusPracticeTool({
+export const FocusPracticeTool = ({
   config,
   onCompletePractice,
 }: {
   config?: PracticeToolConfig;
   onCompletePractice?: () => void;
-}) {
+}) => {
   const focusTimeSeconds = config?.focusTime || 600; // default 10 minutes
   const milestones = useMemo(
     () =>
@@ -289,7 +289,7 @@ export function FocusPracticeTool({
       )}
     </ScrollView>
   );
-}
+};
 
 interface MilestoneRowProps {
   idx: number;

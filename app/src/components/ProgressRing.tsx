@@ -1,13 +1,13 @@
-import React, { memo, useEffect } from 'react';
-import { View, StyleSheet } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
+import React, { memo, useEffect } from "react";
+import { View, StyleSheet } from "react-native";
+import Svg, { Circle } from "react-native-svg";
 import Animated, {
   useSharedValue,
   useAnimatedProps,
   withSpring,
-} from 'react-native-reanimated';
-import type { Progress } from '../types/models';
-import { colors, fontSize, fontWeight, animation } from '../theme/tokens';
+} from "react-native-reanimated";
+import type { Progress } from "../types/models";
+import { colors, fontSize, fontWeight, animation } from "../theme/tokens";
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -32,14 +32,14 @@ function ProgressRingComponent({ progress, size = 48 }: ProgressRingProps) {
   }, [progress.percent]);
 
   const animatedProps = useAnimatedProps(() => {
-    const strokeDashoffset =
-      circumference * (1 - animatedProgress.value);
+    const strokeDashoffset = circumference * (1 - animatedProgress.value);
     return {
       strokeDashoffset,
     };
   });
 
-  const textSize = size < 40 ? fontSize.xs : size < 56 ? fontSize.sm : fontSize.base;
+  const textSize =
+    size < 40 ? fontSize.xs : size < 56 ? fontSize.sm : fontSize.base;
 
   return (
     <View style={[styles.container, { width: size, height: size }]}>
@@ -69,12 +69,7 @@ function ProgressRingComponent({ progress, size = 48 }: ProgressRingProps) {
         />
       </Svg>
       <View style={styles.labelContainer}>
-        <Animated.Text
-          style={[
-            styles.label,
-            { fontSize: textSize },
-          ]}
-        >
+        <Animated.Text style={[styles.label, { fontSize: textSize }]}>
           {progress.percent}%
         </Animated.Text>
       </View>
@@ -84,13 +79,13 @@ function ProgressRingComponent({ progress, size = 48 }: ProgressRingProps) {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   labelContainer: {
     ...StyleSheet.absoluteFillObject,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   label: {
     color: colors.textPrimary,

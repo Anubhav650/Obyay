@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Technique, Resource } from '../types/models';
-import { fetchResources } from '../api/client';
-import { updateTechniqueResources } from '../store/hobbyStore';
+import { useState, useEffect, useCallback, useRef } from "react";
+import type { Technique, Resource } from "../types/models";
+import { fetchResources } from "../api/client";
+import { updateTechniqueResources } from "../store/hobbyStore";
 
 interface UseTechniqueResourcesReturn {
   resources: Resource[] | null;
@@ -10,12 +10,12 @@ interface UseTechniqueResourcesReturn {
   refetch: () => void;
 }
 
-export function useTechniqueResources(
+export const useTechniqueResources = (
   hobbyId: string,
-  technique: Technique
-): UseTechniqueResourcesReturn {
+  technique: Technique,
+): UseTechniqueResourcesReturn => {
   const [resources, setResources] = useState<Resource[] | null>(
-    technique.resources
+    technique.resources,
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +47,7 @@ export function useTechniqueResources(
       }
     } catch (err) {
       if (mountedRef.current) {
-        setError('Failed to load videos');
+        setError("Failed to load videos");
       }
     } finally {
       if (mountedRef.current) {
@@ -75,4 +75,4 @@ export function useTechniqueResources(
   }, [doFetch]);
 
   return { resources, loading, error, refetch };
-}
+};

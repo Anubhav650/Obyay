@@ -9,9 +9,17 @@ import { generatePlan } from "./services/gemini";
 async function run() {
   const profile = {
     roles: ["Developer/Engineer"],
-    goals: ["Make better use of my time", "Build new skills", "Boost my career"],
+    goals: [
+      "Make better use of my time",
+      "Build new skills",
+      "Boost my career",
+    ],
     interests: ["AI", "Design", "Software Engineering"],
-    learningPreferences: ["Bite-sized lessons", "Visual explanations", "Real-world examples"]
+    learningPreferences: [
+      "Bite-sized lessons",
+      "Visual explanations",
+      "Real-world examples",
+    ],
   };
 
   console.log("Calling generatePlan...");

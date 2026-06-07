@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
 import * as Haptics from "expo-haptics";
 import {
@@ -19,28 +25,32 @@ interface CulinaryStep {
   sensoryCheck: string;
 }
 
-export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
-  const steps: CulinaryStep[] = useMemo(() => config?.steps || [
-    {
-      name: "Autolyse",
-      duration: 1800,
-      sensoryCheck:
-        "Flour is fully hydrated, no dry pockets remain. Gluten is starting to relax.",
-    },
-    {
-      name: "Bulk Fermentation",
-      duration: 7200,
-      sensoryCheck:
-        "Dough has risen by 50%, shows bubbles on the surface, and feels light/aerated.",
-    },
-    {
-      name: "Baking",
-      duration: 2400,
-      sensoryCheck:
-        "Crust is dark mahogany brown, bread sounds hollow when tapped on the bottom.",
-    },
-  ], [config?.steps]);
-  
+export const CulinaryTimer = ({ config }: { config?: PracticeToolConfig }) => {
+  const steps: CulinaryStep[] = useMemo(
+    () =>
+      config?.steps || [
+        {
+          name: "Autolyse",
+          duration: 1800,
+          sensoryCheck:
+            "Flour is fully hydrated, no dry pockets remain. Gluten is starting to relax.",
+        },
+        {
+          name: "Bulk Fermentation",
+          duration: 7200,
+          sensoryCheck:
+            "Dough has risen by 50%, shows bubbles on the surface, and feels light/aerated.",
+        },
+        {
+          name: "Baking",
+          duration: 2400,
+          sensoryCheck:
+            "Crust is dark mahogany brown, bread sounds hollow when tapped on the bottom.",
+        },
+      ],
+    [config?.steps],
+  );
+
   const targetTemp = config?.targetTemperature;
 
   const [activeStepIdx, setActiveStepIdx] = useState(0);
@@ -126,7 +136,7 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
         onPress={handleTimelinePress}
       />
     ),
-    [activeStepIdx, handleTimelinePress]
+    [activeStepIdx, handleTimelinePress],
   );
 
   const playPauseButtonStyle = useCallback(
@@ -135,12 +145,12 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
       isTimerRunning ? styles.pauseColor : styles.playColor,
       pressed && styles.btnPressed,
     ],
-    [isTimerRunning]
+    [isTimerRunning],
   );
 
   const playPauseTextStyle = useMemo(
     () => [styles.playPauseText, isTimerRunning && styles.pauseText],
-    [isTimerRunning]
+    [isTimerRunning],
   );
 
   const nextStepButtonStyle = useCallback(
@@ -149,17 +159,23 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
       !checklistChecked && styles.nextDisabled,
       pressed && checklistChecked && styles.btnPressed,
     ],
-    [checklistChecked]
+    [checklistChecked],
   );
 
   const nextStepButtonTextStyle = useMemo(
-    () => [styles.nextStepBtnText, !checklistChecked && styles.nextBtnTextDisabled],
-    [checklistChecked]
+    () => [
+      styles.nextStepBtnText,
+      !checklistChecked && styles.nextBtnTextDisabled,
+    ],
+    [checklistChecked],
   );
 
   const nextStepIconName = useMemo(
-    () => (activeStepIdx + 1 < steps.length ? "arrow-forward" as const : "trophy" as const),
-    [activeStepIdx, steps.length]
+    () =>
+      activeStepIdx + 1 < steps.length
+        ? ("arrow-forward" as const)
+        : ("trophy" as const),
+    [activeStepIdx, steps.length],
   );
 
   return (
@@ -195,10 +211,7 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
           {/* Active Timer Display */}
           <View style={styles.timerDisplay}>
             <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-            <Pressable
-              style={playPauseButtonStyle}
-              onPress={toggleTimer}
-            >
+            <Pressable style={playPauseButtonStyle} onPress={toggleTimer}>
               <Text style={playPauseTextStyle}>
                 {isTimerRunning ? "Pause" : "Start Timer"}
               </Text>
@@ -268,7 +281,7 @@ export function CulinaryTimer({ config }: { config?: PracticeToolConfig }) {
       )}
     </View>
   );
-}
+};
 
 interface TimelineNodeProps {
   idx: number;
@@ -278,43 +291,48 @@ interface TimelineNodeProps {
   onPress: (idx: number) => void;
 }
 
-const TimelineNode = React.memo(({ idx, name, isActive, isDone, onPress }: TimelineNodeProps) => {
-  const handlePress = useCallback(() => {
-    onPress(idx);
-  }, [idx, onPress]);
+const TimelineNode = React.memo(
+  ({ idx, name, isActive, isDone, onPress }: TimelineNodeProps) => {
+    const handlePress = useCallback(() => {
+      onPress(idx);
+    }, [idx, onPress]);
 
-  const nodeStyle = useMemo(() => [
-    styles.timelineNode,
-    isActive && styles.activeNode,
-    isDone && styles.doneNode,
-  ], [isActive, isDone]);
+    const nodeStyle = useMemo(
+      () => [
+        styles.timelineNode,
+        isActive && styles.activeNode,
+        isDone && styles.doneNode,
+      ],
+      [isActive, isDone],
+    );
 
-  const textStyle = useMemo(() => [
-    styles.nodeText,
-    isActive && styles.activeNodeText,
-    isDone && styles.doneNodeText,
-  ], [isActive, isDone]);
+    const textStyle = useMemo(
+      () => [
+        styles.nodeText,
+        isActive && styles.activeNodeText,
+        isDone && styles.doneNodeText,
+      ],
+      [isActive, isDone],
+    );
 
-  return (
-    <Pressable
-      style={nodeStyle}
-      onPress={handlePress}
-    >
-      <Text style={textStyle}>
-        {isDone ? (
-          <FontAwesome6
-            name="check-circle"
-            size={12}
-            color={colors.success}
-          />
-        ) : (
-          `${idx + 1}.`
-        )}{" "}
-        {name}
-      </Text>
-    </Pressable>
-  );
-});
+    return (
+      <Pressable style={nodeStyle} onPress={handlePress}>
+        <Text style={textStyle}>
+          {isDone ? (
+            <FontAwesome6
+              name="check-circle"
+              size={12}
+              color={colors.success}
+            />
+          ) : (
+            `${idx + 1}.`
+          )}{" "}
+          {name}
+        </Text>
+      </Pressable>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {

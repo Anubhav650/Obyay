@@ -49,33 +49,24 @@ const ONBOARDING_SCREEN_OPTIONS = {
   gestureEnabled: false,
 };
 
-export default function RootLayout() {
+const RootLayout = () => {
   return (
     <GestureHandlerRootView style={styles.root}>
       <StatusBar style="dark" />
       <BottomSheetModalProvider>
         <Stack screenOptions={SCREEN_OPTIONS}>
-          <Stack.Screen
-            name="index"
-            options={INDEX_SCREEN_OPTIONS}
-          />
-          <Stack.Screen
-            name="NewHobby"
-            options={NEW_HOBBY_SCREEN_OPTIONS}
-          />
+          <Stack.Screen name="index" options={INDEX_SCREEN_OPTIONS} />
+          <Stack.Screen name="NewHobby" options={NEW_HOBBY_SCREEN_OPTIONS} />
           <Stack.Screen
             name="hobby/[hobbyId]"
             options={HOBBY_DETAIL_SCREEN_OPTIONS}
           />
-          <Stack.Screen
-            name="onboarding"
-            options={ONBOARDING_SCREEN_OPTIONS}
-          />
+          <Stack.Screen name="onboarding" options={ONBOARDING_SCREEN_OPTIONS} />
         </Stack>
       </BottomSheetModalProvider>
     </GestureHandlerRootView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   root: {
@@ -83,3 +74,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
 });
+
+export default RootLayout;

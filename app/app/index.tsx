@@ -28,7 +28,7 @@ import {
 } from "../src/theme/tokens";
 import { CURATED_HOBBIES } from "../src/constants/curatedHobbies";
 
-export default function HomeScreen() {
+const HomeScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { hobbies, loading, deleteHobby, importCuratedHobby, refreshHobbies } =
@@ -138,18 +138,12 @@ export default function HomeScreen() {
   const keyExtractor = useCallback((item: Hobby) => item.id, []);
 
   const emptyScrollContentStyle = useMemo(
-    () => [
-      styles.emptyScrollContent,
-      { paddingBottom: insets.bottom + 100 },
-    ],
+    () => [styles.emptyScrollContent, { paddingBottom: insets.bottom + 100 }],
     [insets.bottom],
   );
 
   const listStyle = useMemo(
-    () => [
-      styles.list,
-      { paddingBottom: insets.bottom + 80 },
-    ],
+    () => [styles.list, { paddingBottom: insets.bottom + 80 }],
     [insets.bottom],
   );
 
@@ -195,7 +189,7 @@ export default function HomeScreen() {
       <FAB onPress={handleAddPress} />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -249,3 +243,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
 });
+
+export default HomeScreen;

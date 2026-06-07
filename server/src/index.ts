@@ -18,8 +18,8 @@ app.use(express.json());
 // Request logger middleware
 app.use((req: Request, _res: Response, next: NextFunction) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  if (req.method === 'POST') {
-    console.log('Body:', JSON.stringify(req.body, null, 2));
+  if (req.method === "POST") {
+    console.log("Body:", JSON.stringify(req.body, null, 2));
   }
   next();
 });

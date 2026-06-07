@@ -10,13 +10,16 @@ interface SelectionCardProps {
   icon?: string;
 }
 
-export function SelectionCard({
+export const SelectionCard = ({
   label,
   isSelected,
   onPress,
   icon,
-}: SelectionCardProps) {
-  const accessibilityState = useMemo(() => ({ checked: isSelected }), [isSelected]);
+}: SelectionCardProps) => {
+  const accessibilityState = useMemo(
+    () => ({ checked: isSelected }),
+    [isSelected],
+  );
 
   return (
     <Pressable
@@ -41,7 +44,7 @@ export function SelectionCard({
       )}
     </Pressable>
   );
-}
+};
 
 const styles = StyleSheet.create({
   card: {

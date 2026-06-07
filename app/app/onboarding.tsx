@@ -54,7 +54,7 @@ const SUGGESTED_HOBBIES = [
 
 const paddingTopBase = Platform.OS === "ios" ? 0 : 30;
 
-export default function OnboardingScreen() {
+const OnboardingScreen = () => {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { createHobby } = useHobbies();
@@ -335,7 +335,7 @@ export default function OnboardingScreen() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
-}
+};
 
 interface SuggestionChipProps {
   item: string;
@@ -680,3 +680,5 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.semibold,
   },
 });
+
+export default OnboardingScreen;

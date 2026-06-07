@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import type { Hobby, GoalLevel, TechniqueStatus } from '../types/models';
-import * as store from '../store/hobbyStore';
-import { generatePlan, getErrorMessage } from '../api/client';
-import { generateUUID } from '../utils/uuid';
+import { useState, useEffect, useCallback, useRef } from "react";
+import type { Hobby, GoalLevel, TechniqueStatus } from "../types/models";
+import * as store from "../store/hobbyStore";
+import { generatePlan, getErrorMessage } from "../api/client";
+import { generateUUID } from "../utils/uuid";
 
 interface UseHobbiesReturn {
   hobbies: Hobby[];
@@ -14,12 +14,12 @@ interface UseHobbiesReturn {
   updateTechniqueStatus: (
     hobbyId: string,
     techniqueId: string,
-    status: TechniqueStatus
+    status: TechniqueStatus,
   ) => Promise<Hobby | null>;
   refreshHobbies: () => Promise<void>;
 }
 
-export function useHobbies(): UseHobbiesReturn {
+export const useHobbies = (): UseHobbiesReturn => {
   const [hobbies, setHobbies] = useState<Hobby[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +45,7 @@ export function useHobbies(): UseHobbiesReturn {
       }
     } catch (err) {
       if (mountedRef.current) {
-        setError('Failed to load hobbies');
+        setError("Failed to load hobbies");
       }
     } finally {
       if (showLoading && mountedRef.current) {
@@ -68,7 +68,7 @@ export function useHobbies(): UseHobbiesReturn {
         techniques: plan.techniques.map((t) => ({
           ...t,
           id: t.id || generateUUID(),
-          status: 'pending' as TechniqueStatus,
+          status: "pending" as TechniqueStatus,
           statusUpdatedAt: null,
           resources: null,
         })),
@@ -83,7 +83,7 @@ export function useHobbies(): UseHobbiesReturn {
 
       return hobby;
     },
-    []
+    [],
   );
 
   const importCuratedHobby = useCallback(
@@ -95,7 +95,7 @@ export function useHobbies(): UseHobbiesReturn {
         techniques: curatedHobby.techniques.map((t) => ({
           ...t,
           id: generateUUID(),
-          status: 'pending' as TechniqueStatus,
+          status: "pending" as TechniqueStatus,
           statusUpdatedAt: null,
           resources: null,
         })),
@@ -109,7 +109,7 @@ export function useHobbies(): UseHobbiesReturn {
 
       return hobby;
     },
-    []
+    [],
   );
 
   const deleteHobby = useCallback(async (id: string) => {
@@ -123,18 +123,18 @@ export function useHobbies(): UseHobbiesReturn {
     async (
       hobbyId: string,
       techniqueId: string,
-      status: TechniqueStatus
+      status: TechniqueStatus,
     ): Promise<Hobby | null> => {
       try {
         const updated = await store.updateTechniqueStatus(
           hobbyId,
           techniqueId,
-          status
+          status,
         );
 
         if (mountedRef.current) {
           setHobbies((prev) =>
-            prev.map((h) => (h.id === hobbyId ? updated : h))
+            prev.map((h) => (h.id === hobbyId ? updated : h)),
           );
         }
 
@@ -143,7 +143,7 @@ export function useHobbies(): UseHobbiesReturn {
         return null;
       }
     },
-    []
+    [],
   );
 
   const refreshHobbies = useCallback(async () => {
@@ -160,7 +160,7 @@ export function useHobbies(): UseHobbiesReturn {
     updateTechniqueStatus,
     refreshHobbies,
   };
-}
+};
 
 // ─── Error message re-export ─────────────────────────────────────────────────
 export { getErrorMessage };

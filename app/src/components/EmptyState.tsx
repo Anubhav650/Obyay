@@ -1,5 +1,5 @@
-import React, { memo } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { memo } from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import {
   colors,
   spacing,
@@ -7,7 +7,7 @@ import {
   fontSize,
   fontWeight,
   lineHeight,
-} from '../theme/tokens';
+} from "../theme/tokens";
 
 interface EmptyStateProps {
   emoji: string;
@@ -31,10 +31,7 @@ function EmptyStateComponent({
       <Text style={styles.subtitle}>{subtitle}</Text>
       {ctaLabel && onCta && (
         <Pressable
-          style={({ pressed }) => [
-            styles.cta,
-            pressed && styles.ctaPressed,
-          ]}
+          style={({ pressed }) => [styles.cta, pressed && styles.ctaPressed]}
           onPress={onCta}
           accessibilityRole="button"
         >
@@ -48,27 +45,27 @@ function EmptyStateComponent({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing['2xl'],
-    paddingBottom: spacing['4xl'],
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: spacing["2xl"],
+    paddingBottom: spacing["4xl"],
   },
   emoji: {
     fontSize: 56,
     marginBottom: spacing.xl,
   },
   title: {
-    fontSize: fontSize['2xl'],
+    fontSize: fontSize["2xl"],
     fontWeight: fontWeight.bold,
     color: colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.sm,
   },
   subtitle: {
     fontSize: fontSize.base,
     fontWeight: fontWeight.regular,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: lineHeight.base,
     maxWidth: 280,
   },
@@ -79,7 +76,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderRadius: radii.full,
     minHeight: 56,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   ctaPressed: {
     backgroundColor: colors.accentDark,
@@ -88,7 +85,7 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
 

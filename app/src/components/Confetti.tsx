@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
-import { StyleSheet, Dimensions, View } from 'react-native';
+import React, { useEffect, useMemo } from "react";
+import { StyleSheet, Dimensions, View } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,19 +7,19 @@ import Animated, {
   runOnJS,
   Easing,
   SharedValue,
-} from 'react-native-reanimated';
+} from "react-native-reanimated";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const PARTICLE_COUNT = 60;
 const COLORS = [
-  '#0d8a6e', // Teal Accent
-  '#0a6e5c', // Hobyay Teal
-  '#c9963a', // Amber
-  '#2e5e52', // Teal Uplift
-  '#34D399', // Warm green
-  '#ddb97a', // Amber light
-  '#1a4035', // Deep Teal
+  "#0d8a6e", // Teal Accent
+  "#0a6e5c", // Hobyay Teal
+  "#c9963a", // Amber
+  "#2e5e52", // Teal Uplift
+  "#34D399", // Warm green
+  "#ddb97a", // Amber light
+  "#1a4035", // Deep Teal
 ];
 
 interface ConfettiProps {
@@ -44,11 +44,13 @@ interface ConfettiParticleProps {
   progress: SharedValue<number>;
 }
 
-function ConfettiParticle({ particle, progress }: ConfettiParticleProps) {
+const ConfettiParticle = ({ particle, progress }: ConfettiParticleProps) => {
   const style = useAnimatedStyle(() => {
     const val = progress.value;
-    const y = particle.startY + val * (SCREEN_HEIGHT + 150) * particle.fallSpeed;
-    const x = particle.startX + Math.sin(val * particle.swingFreq) * particle.swingAmp;
+    const y =
+      particle.startY + val * (SCREEN_HEIGHT + 150) * particle.fallSpeed;
+    const x =
+      particle.startX + Math.sin(val * particle.swingFreq) * particle.swingAmp;
     const rotate = val * particle.rotationSpeed;
 
     return {
@@ -84,9 +86,9 @@ function ConfettiParticle({ particle, progress }: ConfettiParticleProps) {
       ]}
     />
   );
-}
+};
 
-export function Confetti({ active, onAnimationEnd }: ConfettiProps) {
+export const Confetti = ({ active, onAnimationEnd }: ConfettiProps) => {
   const animationProgress = useSharedValue(0);
 
   const particles = useMemo(() => {
@@ -120,7 +122,7 @@ export function Confetti({ active, onAnimationEnd }: ConfettiProps) {
           if (finished && onAnimationEnd) {
             runOnJS(onAnimationEnd)();
           }
-        }
+        },
       );
     }
   }, [active, onAnimationEnd]);
@@ -130,15 +132,19 @@ export function Confetti({ active, onAnimationEnd }: ConfettiProps) {
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="none">
       {particles.map((p) => (
-        <ConfettiParticle key={p.id} particle={p} progress={animationProgress} />
+        <ConfettiParticle
+          key={p.id}
+          particle={p}
+          progress={animationProgress}
+        />
       ))}
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   particle: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
   },

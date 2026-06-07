@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import * as Haptics from "expo-haptics";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -9,11 +9,19 @@ import Animated, {
   withSequence,
   Easing,
   cancelAnimation,
-} from 'react-native-reanimated';
-import { colors, spacing, radii, fontSize, fontWeight, shadows, lineHeight } from '../../theme/tokens';
-import type { PracticeToolConfig } from '../../types/models';
+} from "react-native-reanimated";
+import {
+  colors,
+  spacing,
+  radii,
+  fontSize,
+  fontWeight,
+  shadows,
+  lineHeight,
+} from "../../theme/tokens";
+import type { PracticeToolConfig } from "../../types/models";
 
-export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
+export const MetronomeTool = ({ config }: { config?: PracticeToolConfig }) => {
   const defaultBpm = config?.bpm || 80;
   const [bpm, setBpm] = useState(defaultBpm);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -28,9 +36,7 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
 
   // Pendulum animation style
   const pendulumStyle = useAnimatedStyle(() => ({
-    transform: [
-      { rotate: `${pendulumAngle.value}deg` },
-    ],
+    transform: [{ rotate: `${pendulumAngle.value}deg` }],
   }));
 
   // Visual pulse style
@@ -48,8 +54,8 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
     beatScale.value = withTiming(1, { duration: 150 });
 
     setCurrentBeat((prev) => {
-      const timeSig = config?.timeSignature || '4/4';
-      const maxBeats = parseInt(timeSig.split('/')[0]) || 4;
+      const timeSig = config?.timeSignature || "4/4";
+      const maxBeats = parseInt(timeSig.split("/")[0]) || 4;
       return prev < maxBeats ? prev + 1 : 1;
     });
   }, [config, beatScale]);
@@ -71,11 +77,17 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
       pendulumAngle.value = -30;
       pendulumAngle.value = withRepeat(
         withSequence(
-          withTiming(30, { duration: swingDuration, easing: Easing.inOut(Easing.quad) }),
-          withTiming(-30, { duration: swingDuration, easing: Easing.inOut(Easing.quad) })
+          withTiming(30, {
+            duration: swingDuration,
+            easing: Easing.inOut(Easing.quad),
+          }),
+          withTiming(-30, {
+            duration: swingDuration,
+            easing: Easing.inOut(Easing.quad),
+          }),
         ),
         -1, // Infinite loops
-        true // Reverse
+        true, // Reverse
       );
 
       // Start javascript timer for haptic beats
@@ -132,11 +144,14 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
   const handleBpmPlus1 = useCallback(() => adjustBpm(1), [adjustBpm]);
   const handleBpmPlus10 = useCallback(() => adjustBpm(10), [adjustBpm]);
 
-  const renderChord = useCallback((chord: string, index: number) => (
-    <View key={index} style={styles.chordChip}>
-      <Text style={styles.chordText}>{chord}</Text>
-    </View>
-  ), []);
+  const renderChord = useCallback(
+    (chord: string, index: number) => (
+      <View key={index} style={styles.chordChip}>
+        <Text style={styles.chordText}>{chord}</Text>
+      </View>
+    ),
+    [],
+  );
 
   return (
     <View style={styles.container}>
@@ -144,9 +159,7 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
       {config?.chords && config.chords.length > 0 && (
         <View style={styles.chordSection}>
           <Text style={styles.guideTitle}>TARGET CHORDS</Text>
-          <View style={styles.chordRow}>
-            {config.chords.map(renderChord)}
-          </View>
+          <View style={styles.chordRow}>{config.chords.map(renderChord)}</View>
         </View>
       )}
 
@@ -171,9 +184,15 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
 
         {/* Pulse Beats Indicator */}
         <View style={styles.pulseArea}>
-          <Animated.View style={[styles.pulseCircle, pulseStyle, isPlaying && styles.pulseActive]} />
+          <Animated.View
+            style={[
+              styles.pulseCircle,
+              pulseStyle,
+              isPlaying && styles.pulseActive,
+            ]}
+          />
           <Text style={styles.beatCounter}>
-            {isPlaying ? `Beat ${currentBeat}` : 'Ready'}
+            {isPlaying ? `Beat ${currentBeat}` : "Ready"}
           </Text>
         </View>
 
@@ -202,11 +221,14 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
         {/* Main Controls */}
         <View style={styles.actionButtons}>
           <Pressable
-            style={[styles.mainBtn, isPlaying ? styles.stopBtn : styles.startBtn]}
+            style={[
+              styles.mainBtn,
+              isPlaying ? styles.stopBtn : styles.startBtn,
+            ]}
             onPress={togglePlay}
           >
             <Text style={[styles.mainBtnText, isPlaying && styles.stopBtnText]}>
-              {isPlaying ? 'Pause' : 'Start Beat'}
+              {isPlaying ? "Pause" : "Start Beat"}
             </Text>
           </Pressable>
 
@@ -217,7 +239,7 @@ export function MetronomeTool({ config }: { config?: PracticeToolConfig }) {
       </View>
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -234,9 +256,9 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   chordRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.sm,
-    flexWrap: 'wrap',
+    flexWrap: "wrap",
   },
   chordChip: {
     backgroundColor: colors.surfaceElevated,
@@ -246,8 +268,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     minHeight: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   chordText: {
     color: colors.beginner,
@@ -268,11 +290,11 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
-    textAlign: 'center',
+    textAlign: "center",
     letterSpacing: 0.5,
   },
   metronomeLayout: {
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: spacing.xl,
@@ -283,26 +305,26 @@ const styles = StyleSheet.create({
   pendulumFrame: {
     width: 200,
     height: 120,
-    alignItems: 'center',
-    overflow: 'hidden',
-    position: 'relative',
+    alignItems: "center",
+    overflow: "hidden",
+    position: "relative",
     marginBottom: spacing.md,
   },
   pendulumArm: {
     width: 3,
     height: 100,
     backgroundColor: colors.border,
-    transformOrigin: 'top center',
-    position: 'absolute',
+    transformOrigin: "top center",
+    position: "absolute",
     top: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   pendulumWeight: {
     width: 16,
     height: 16,
     borderRadius: radii.full,
     backgroundColor: colors.beginner,
-    position: 'absolute',
+    position: "absolute",
     bottom: 0,
     ...shadows.card,
   },
@@ -312,22 +334,22 @@ const styles = StyleSheet.create({
     borderRadius: radii.full,
     backgroundColor: colors.textSecondary,
     top: 6,
-    position: 'absolute',
+    position: "absolute",
   },
   pulseArea: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     height: 80,
     width: 80,
     marginBottom: spacing.lg,
-    position: 'relative',
+    position: "relative",
   },
   pulseCircle: {
-    position: 'absolute',
+    position: "absolute",
     width: 60,
     height: 60,
     borderRadius: radii.full,
-    backgroundColor: 'rgba(13, 138, 110, 0.06)',
+    backgroundColor: "rgba(13, 138, 110, 0.06)",
   },
   pulseActive: {
     backgroundColor: colors.beginnerGlow,
@@ -340,10 +362,10 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
   },
   controlsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
     marginBottom: spacing.xl,
     gap: spacing.xs,
   },
@@ -352,8 +374,8 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: radii.md,
     backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: colors.borderSubtle,
   },
@@ -363,13 +385,13 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
   },
   bpmDisplayContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minWidth: 80,
   },
   bpmVal: {
     color: colors.textPrimary,
-    fontSize: fontSize['3xl'],
+    fontSize: fontSize["3xl"],
     fontWeight: fontWeight.heavy,
   },
   bpmLabel: {
@@ -379,16 +401,16 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   actionButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.md,
-    width: '100%',
+    width: "100%",
   },
   mainBtn: {
     flex: 2,
     borderRadius: radii.pill,
     minHeight: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     ...shadows.card,
   },
   startBtn: {
@@ -411,8 +433,8 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: radii.pill,
     backgroundColor: colors.surfaceElevated,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
     borderColor: colors.borderSubtle,
     minHeight: 56,

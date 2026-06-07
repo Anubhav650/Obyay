@@ -1,5 +1,17 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ActivityIndicator,
+} from "react-native";
 import * as Haptics from "expo-haptics";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import {
@@ -16,7 +28,11 @@ import type { PracticeToolConfig } from "../../types/models";
 const OPACITY_OPTIONS = [0.2, 0.5, 0.8];
 const COLOR_OPTIONS = ["grey", "teal", "red"] as const;
 
-export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
+export const CameraGridOverlay = ({
+  config,
+}: {
+  config?: PracticeToolConfig;
+}) => {
   const [permission, requestPermission] = useCameraPermissions();
   const gridSize = config?.gridSize || "3x3";
   const columns = parseInt(gridSize.split("x")[0]) || 3;
@@ -93,7 +109,7 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
       styles.permissionBtn,
       pressed && styles.permissionBtnPressed,
     ],
-    []
+    [],
   );
 
   const renderVerticalLine = useCallback(
@@ -110,7 +126,7 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
         ]}
       />
     ),
-    [columns, lineHex, opacity]
+    [columns, lineHex, opacity],
   );
 
   const renderHorizontalLine = useCallback(
@@ -127,7 +143,7 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
         ]}
       />
     ),
-    [rows, lineHex, opacity]
+    [rows, lineHex, opacity],
   );
 
   const handleOpacityPress = useCallback((op: number) => {
@@ -144,7 +160,7 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
         onPress={handleOpacityPress}
       />
     ),
-    [opacity, handleOpacityPress]
+    [opacity, handleOpacityPress],
   );
 
   const handleLineColorPress = useCallback((color: typeof lineColor) => {
@@ -153,7 +169,7 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
   }, []);
 
   const renderColorOption = useCallback(
-    (color: typeof COLOR_OPTIONS[number]) => (
+    (color: (typeof COLOR_OPTIONS)[number]) => (
       <ColorOptionButton
         key={color}
         colorName={color}
@@ -161,11 +177,17 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
         onPress={handleLineColorPress}
       />
     ),
-    [lineColor, handleLineColorPress]
+    [lineColor, handleLineColorPress],
   );
 
-  const verticalLinesArray = useMemo(() => Array.from({ length: columns - 1 }), [columns]);
-  const horizontalLinesArray = useMemo(() => Array.from({ length: rows - 1 }), [rows]);
+  const verticalLinesArray = useMemo(
+    () => Array.from({ length: columns - 1 }),
+    [columns],
+  );
+  const horizontalLinesArray = useMemo(
+    () => Array.from({ length: rows - 1 }),
+    [rows],
+  );
 
   const timerButtonStyle = useCallback(
     ({ pressed }: { pressed: boolean }) => [
@@ -173,12 +195,12 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
       isTimerRunning ? styles.stopBtn : styles.startBtn,
       pressed && styles.permissionBtnPressed,
     ],
-    [isTimerRunning]
+    [isTimerRunning],
   );
 
   const timerBtnTextStyle = useMemo(
     () => [styles.timerBtnText, isTimerRunning && styles.stopBtnText],
-    [isTimerRunning]
+    [isTimerRunning],
   );
 
   return (
@@ -268,10 +290,7 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
         </View>
 
         <View style={styles.timerControls}>
-          <Pressable
-            style={timerButtonStyle}
-            onPress={toggleTimer}
-          >
+          <Pressable style={timerButtonStyle} onPress={toggleTimer}>
             <Text style={timerBtnTextStyle}>
               {isTimerRunning ? "Pause" : "Start Timer"}
             </Text>
@@ -284,7 +303,7 @@ export function CameraGridOverlay({ config }: { config?: PracticeToolConfig }) {
       </View>
     </View>
   );
-}
+};
 
 interface OpacityButtonProps {
   op: number;
@@ -292,32 +311,29 @@ interface OpacityButtonProps {
   onPress: (op: number) => void;
 }
 
-const OpacityButton = React.memo(({ op, isSelected, onPress }: OpacityButtonProps) => {
-  const handlePress = useCallback(() => {
-    onPress(op);
-  }, [onPress, op]);
+const OpacityButton = React.memo(
+  ({ op, isSelected, onPress }: OpacityButtonProps) => {
+    const handlePress = useCallback(() => {
+      onPress(op);
+    }, [onPress, op]);
 
-  const btnStyle = useMemo(() => [
-    styles.opBtn,
-    isSelected && styles.activeOpBtn
-  ], [isSelected]);
+    const btnStyle = useMemo(
+      () => [styles.opBtn, isSelected && styles.activeOpBtn],
+      [isSelected],
+    );
 
-  const textStyle = useMemo(() => [
-    styles.opBtnText,
-    isSelected && styles.activeOpBtnText
-  ], [isSelected]);
+    const textStyle = useMemo(
+      () => [styles.opBtnText, isSelected && styles.activeOpBtnText],
+      [isSelected],
+    );
 
-  return (
-    <Pressable
-      style={btnStyle}
-      onPress={handlePress}
-    >
-      <Text style={textStyle}>
-        {op * 100}%
-      </Text>
-    </Pressable>
-  );
-});
+    return (
+      <Pressable style={btnStyle} onPress={handlePress}>
+        <Text style={textStyle}>{op * 100}%</Text>
+      </Pressable>
+    );
+  },
+);
 
 interface ColorOptionButtonProps {
   colorName: "grey" | "teal" | "red";
@@ -325,32 +341,32 @@ interface ColorOptionButtonProps {
   onPress: (colorName: "grey" | "teal" | "red") => void;
 }
 
-const ColorOptionButton = React.memo(({ colorName, isSelected, onPress }: ColorOptionButtonProps) => {
-  const handlePress = useCallback(() => {
-    onPress(colorName);
-  }, [onPress, colorName]);
+const ColorOptionButton = React.memo(
+  ({ colorName, isSelected, onPress }: ColorOptionButtonProps) => {
+    const handlePress = useCallback(() => {
+      onPress(colorName);
+    }, [onPress, colorName]);
 
-  const btnStyle = useMemo(() => [
-    styles.colorOption,
-    {
-      backgroundColor:
-        colorName === "grey"
-          ? colors.grey
-          : colorName === "teal"
-            ? colors.beginner
-            : colors.error,
-      borderColor: isSelected ? colors.accent : "transparent",
-      borderWidth: isSelected ? 2 : 0,
-    },
-  ], [colorName, isSelected]);
+    const btnStyle = useMemo(
+      () => [
+        styles.colorOption,
+        {
+          backgroundColor:
+            colorName === "grey"
+              ? colors.grey
+              : colorName === "teal"
+                ? colors.beginner
+                : colors.error,
+          borderColor: isSelected ? colors.accent : "transparent",
+          borderWidth: isSelected ? 2 : 0,
+        },
+      ],
+      [colorName, isSelected],
+    );
 
-  return (
-    <Pressable
-      style={btnStyle}
-      onPress={handlePress}
-    />
-  );
-});
+    return <Pressable style={btnStyle} onPress={handlePress} />;
+  },
+);
 
 const styles = StyleSheet.create({
   container: {

@@ -1,6 +1,12 @@
-export type GoalLevel = 'beginner' | 'intermediate' | 'advanced';
-export type TechniqueStatus = 'pending' | 'mastered' | 'skipped';
-export type HobbyCategory = 'music' | 'strategy' | 'arts' | 'fitness' | 'culinary' | 'general';
+export type GoalLevel = "beginner" | "intermediate" | "advanced";
+export type TechniqueStatus = "pending" | "mastered" | "skipped";
+export type HobbyCategory =
+  | "music"
+  | "strategy"
+  | "arts"
+  | "fitness"
+  | "culinary"
+  | "general";
 
 export interface Resource {
   videoId: string;

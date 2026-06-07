@@ -1,14 +1,14 @@
-import React, { memo, useCallback } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import React, { memo, useCallback } from "react";
+import { View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withSpring,
-} from 'react-native-reanimated';
-import type { Hobby } from '../types/models';
-import { getProgress } from '../store/hobbyStore';
-import { ProgressRing } from './ProgressRing';
-import { LevelBadge } from './LevelBadge';
+} from "react-native-reanimated";
+import type { Hobby } from "../types/models";
+import { getProgress } from "../store/hobbyStore";
+import { ProgressRing } from "./ProgressRing";
+import { LevelBadge } from "./LevelBadge";
 import {
   colors,
   spacing,
@@ -17,7 +17,7 @@ import {
   fontWeight,
   shadows,
   animation,
-} from '../theme/tokens';
+} from "../theme/tokens";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -87,12 +87,12 @@ const styles = StyleSheet.create({
     borderColor: colors.borderSubtle,
     marginHorizontal: spacing.base,
     marginBottom: spacing.md,
-    overflow: 'hidden',
+    overflow: "hidden",
     ...shadows.card,
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: spacing.base,
     minHeight: 80,
   },
@@ -107,8 +107,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   meta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: spacing.sm,
   },
   progressText: {

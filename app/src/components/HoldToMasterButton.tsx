@@ -19,7 +19,7 @@ interface HoldToMasterButtonProps {
   onComplete: () => void;
 }
 
-export function HoldToMasterButton({ onComplete }: HoldToMasterButtonProps) {
+export const HoldToMasterButton = ({ onComplete }: HoldToMasterButtonProps) => {
   const scale = useSharedValue(1);
 
   const buttonStyle = useAnimatedStyle(() => {
@@ -58,7 +58,7 @@ export function HoldToMasterButton({ onComplete }: HoldToMasterButtonProps) {
       </Pressable>
     </Animated.View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   button: {
