@@ -198,9 +198,14 @@ export const CulinaryTimer = ({
   }, []);
 
   const formatTime = useCallback((seconds: number) => {
-    const mins = Math.floor(seconds / 60);
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, "0")}`;
+
+    if (hrs > 0) {
+      return `${hrs}h ${mins.toString().padStart(2, "0")}m ${secs.toString().padStart(2, "0")}s`;
+    }
+    return `${mins}m ${secs.toString().padStart(2, "0")}s`;
   }, []);
 
   const currentStep = steps[activeStepIdx];
@@ -680,7 +685,7 @@ const styles = StyleSheet.create({
   },
   timerText: {
     color: colors.textPrimary,
-    fontSize: 48,
+    fontSize: 40,
     fontWeight: fontWeight.heavy,
     marginBottom: spacing.md,
   },
