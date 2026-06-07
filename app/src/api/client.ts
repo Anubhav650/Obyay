@@ -15,21 +15,10 @@ import Constants from "expo-constants";
 let defaultApiUrl = "https://hobyay-server.onrender.com";
 
 if (__DEV__) {
-  const hostUri = Constants.expoConfig?.hostUri;
-  if (hostUri) {
-    const hostIp = hostUri.split(":")[0];
-    defaultApiUrl = `http://${hostIp}:3000`;
-  } else {
-    defaultApiUrl = "http://localhost:3000";
-  }
+  defaultApiUrl = "http://localhost:3000";
 }
 
-let API_URL = process.env.EXPO_PUBLIC_API_URL || defaultApiUrl;
-
-// In local dev mode, override the Render default if loaded from .env
-if (__DEV__ && API_URL.includes("onrender.com")) {
-  API_URL = defaultApiUrl;
-}
+const API_URL = defaultApiUrl;
 
 console.log("[API Client] Configured API_URL:", API_URL);
 
