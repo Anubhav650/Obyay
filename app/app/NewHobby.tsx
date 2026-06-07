@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import {
   View,
   Text,
@@ -85,7 +91,7 @@ export default function NewHobbyScreen() {
       setLoadingMsgIndex(0);
       intervalRef.current = setInterval(() => {
         setLoadingMsgIndex((prev) =>
-          prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev
+          prev < LOADING_MESSAGES.length - 1 ? prev + 1 : prev,
         );
       }, 3000);
     } else {
@@ -144,7 +150,7 @@ export default function NewHobbyScreen() {
         setIsLoading(false);
       }
     },
-    [importCuratedHobby, router]
+    [importCuratedHobby, router],
   );
 
   const handleHobbyNameChange = useCallback((text: string) => {
@@ -168,7 +174,7 @@ export default function NewHobbyScreen() {
     (curated: Hobby) => {
       handleCuratedPress(curated);
     },
-    [handleCuratedPress]
+    [handleCuratedPress],
   );
 
   const renderSuggestionChip = useCallback(
@@ -184,11 +190,11 @@ export default function NewHobbyScreen() {
         />
       );
     },
-    [hobbyName, handleSuggestionPress, isLoading]
+    [hobbyName, handleSuggestionPress, isLoading],
   );
 
   const renderLevelCard = useCallback(
-    (level: typeof LEVELS[number]) => {
+    (level: (typeof LEVELS)[number]) => {
       const isSelected = selectedLevel === level.value;
       return (
         <LevelCard
@@ -201,7 +207,7 @@ export default function NewHobbyScreen() {
         />
       );
     },
-    [selectedLevel, levelValidationError, isLoading, handleLevelSelect]
+    [selectedLevel, levelValidationError, isLoading, handleLevelSelect],
   );
 
   const renderCuratedHobby = useCallback(
@@ -212,12 +218,12 @@ export default function NewHobbyScreen() {
         onPress={handleCuratedCardPress}
       />
     ),
-    [handleCuratedCardPress]
+    [handleCuratedCardPress],
   );
 
   const scrollContentStyle = useMemo(
     () => [styles.scrollContent, { paddingBottom: insets.bottom + spacing.xl }],
-    [insets.bottom]
+    [insets.bottom],
   );
 
   const sectionLabelStyle = useMemo(
@@ -225,12 +231,15 @@ export default function NewHobbyScreen() {
       styles.sectionLabel,
       levelValidationError && styles.errorTextColored,
     ],
-    [levelValidationError]
+    [levelValidationError],
   );
 
   const footerStyle = useMemo(
-    () => [styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.base) }],
-    [insets.bottom]
+    () => [
+      styles.footer,
+      { paddingBottom: Math.max(insets.bottom, spacing.base) },
+    ],
+    [insets.bottom],
   );
 
   return (
@@ -273,12 +282,8 @@ export default function NewHobbyScreen() {
 
         {/* Level Selector */}
         <View style={styles.section}>
-          <Text style={sectionLabelStyle}>
-            What is your current level?
-          </Text>
-          <View style={styles.levelGrid}>
-            {LEVELS.map(renderLevelCard)}
-          </View>
+          <Text style={sectionLabelStyle}>What is your current level?</Text>
+          <View style={styles.levelGrid}>{LEVELS.map(renderLevelCard)}</View>
           {levelValidationError && (
             <View style={styles.inlineErrorContainer}>
               <Text style={styles.inlineErrorText}>
@@ -286,14 +291,6 @@ export default function NewHobbyScreen() {
               </Text>
             </View>
           )}
-        </View>
-
-        {/* Curated Suggestions Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionLabel}>
-            Or start with a curated roadmap
-          </Text>
-          {CURATED_HOBBIES.map(renderCuratedHobby)}
         </View>
 
         {/* Error Message */}
@@ -305,6 +302,14 @@ export default function NewHobbyScreen() {
             </Pressable>
           </View>
         )}
+
+        {/* Curated Suggestions Section */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>
+            Or start with a curated roadmap
+          </Text>
+          {CURATED_HOBBIES.map(renderCuratedHobby)}
+        </View>
       </ScrollView>
 
       {/* Submit Button */}
@@ -327,38 +332,40 @@ interface SuggestionChipProps {
   disabled?: boolean;
 }
 
-const SuggestionChip = React.memo(({ item, isSelected, onPress, disabled }: SuggestionChipProps) => {
-  const handlePress = useCallback(() => {
-    if (!disabled) {
-      onPress(item);
-    }
-  }, [onPress, item, disabled]);
+const SuggestionChip = React.memo(
+  ({ item, isSelected, onPress, disabled }: SuggestionChipProps) => {
+    const handlePress = useCallback(() => {
+      if (!disabled) {
+        onPress(item);
+      }
+    }, [onPress, item, disabled]);
 
-  return (
-    <Pressable
-      style={[
-        styles.suggestionChip,
-        isSelected && styles.suggestionChipSelected,
-      ]}
-      onPress={handlePress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel={`Select suggested hobby: ${item}`}
-    >
-      <Text
+    return (
+      <Pressable
         style={[
-          styles.suggestionText,
-          isSelected && styles.suggestionTextSelected,
+          styles.suggestionChip,
+          isSelected && styles.suggestionChipSelected,
         ]}
+        onPress={handlePress}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel={`Select suggested hobby: ${item}`}
       >
-        {item}
-      </Text>
-    </Pressable>
-  );
-});
+        <Text
+          style={[
+            styles.suggestionText,
+            isSelected && styles.suggestionTextSelected,
+          ]}
+        >
+          {item}
+        </Text>
+      </Pressable>
+    );
+  },
+);
 
 interface LevelCardProps {
-  level: typeof LEVELS[number];
+  level: (typeof LEVELS)[number];
   isSelected: boolean;
   levelValidationError: boolean;
   isLoading: boolean;
@@ -373,55 +380,67 @@ const getLevelCardShadow = (color: string) => ({
   elevation: Platform.OS === "android" ? 0 : 6,
 });
 
-const LevelCard = React.memo(({ level, isSelected, levelValidationError, isLoading, onPress }: LevelCardProps) => {
-  const color = getLevelColor(level.value);
-  const dimColor = getLevelDimColor(level.value);
+const LevelCard = React.memo(
+  ({
+    level,
+    isSelected,
+    levelValidationError,
+    isLoading,
+    onPress,
+  }: LevelCardProps) => {
+    const color = getLevelColor(level.value);
+    const dimColor = getLevelDimColor(level.value);
 
-  const handlePress = useCallback(() => {
-    if (!isLoading) {
-      onPress(level.value);
-    }
-  }, [isLoading, onPress, level.value]);
+    const handlePress = useCallback(() => {
+      if (!isLoading) {
+        onPress(level.value);
+      }
+    }, [isLoading, onPress, level.value]);
 
-  const cardStyle = useMemo(() => [
-    styles.levelCard,
-    {
-      backgroundColor: isSelected ? dimColor : colors.surface,
-      borderColor: isSelected
-        ? color
-        : levelValidationError
-          ? colors.error
-          : colors.borderSubtle,
-    },
-    isSelected && getLevelCardShadow(color),
-  ], [isSelected, dimColor, color, levelValidationError]);
+    const cardStyle = useMemo(
+      () => [
+        styles.levelCard,
+        {
+          backgroundColor: isSelected ? dimColor : colors.surface,
+          borderColor: isSelected
+            ? color
+            : levelValidationError
+              ? colors.error
+              : colors.borderSubtle,
+        },
+        isSelected && getLevelCardShadow(color),
+      ],
+      [isSelected, dimColor, color, levelValidationError],
+    );
 
-  const accessibilityState = useMemo(() => ({ selected: isSelected }), [isSelected]);
-  const iconStyle = useMemo(() => [styles.levelIcon, { color }], [color]);
-  const labelStyle = useMemo(() => [
-    styles.levelLabel,
-    { color: isSelected ? color : colors.textPrimary }
-  ], [isSelected, color]);
+    const accessibilityState = useMemo(
+      () => ({ selected: isSelected }),
+      [isSelected],
+    );
+    const iconStyle = useMemo(() => [styles.levelIcon, { color }], [color]);
+    const labelStyle = useMemo(
+      () => [
+        styles.levelLabel,
+        { color: isSelected ? color : colors.textPrimary },
+      ],
+      [isSelected, color],
+    );
 
-  return (
-    <Pressable
-      style={cardStyle}
-      onPress={handlePress}
-      accessibilityRole="radio"
-      accessibilityState={accessibilityState}
-      accessibilityLabel={`${level.label}: ${level.subtitle}`}
-    >
-      <Ionicons
-        name={level.icon as any}
-        style={iconStyle}
-      />
-      <Text style={labelStyle}>
-        {level.label}
-      </Text>
-      <Text style={styles.levelSubtitle}>{level.subtitle}</Text>
-    </Pressable>
-  );
-});
+    return (
+      <Pressable
+        style={cardStyle}
+        onPress={handlePress}
+        accessibilityRole="radio"
+        accessibilityState={accessibilityState}
+        accessibilityLabel={`${level.label}: ${level.subtitle}`}
+      >
+        <Ionicons name={level.icon as any} style={iconStyle} />
+        <Text style={labelStyle}>{level.label}</Text>
+        <Text style={styles.levelSubtitle}>{level.subtitle}</Text>
+      </Pressable>
+    );
+  },
+);
 
 interface SubmitButtonProps {
   onPress: () => void;
@@ -430,47 +449,44 @@ interface SubmitButtonProps {
   loadingMsgIndex: number;
 }
 
-const SubmitButton = React.memo(({ onPress, disabled, isLoading, loadingMsgIndex }: SubmitButtonProps) => {
-  const getStyle = useCallback(
-    ({ pressed }: { pressed: boolean }) => [
-      styles.submitButton,
-      disabled && !isLoading && styles.submitDisabled,
-      pressed && !disabled && styles.submitPressed,
-    ],
-    [disabled, isLoading]
-  );
+const SubmitButton = React.memo(
+  ({ onPress, disabled, isLoading, loadingMsgIndex }: SubmitButtonProps) => {
+    const getStyle = useCallback(
+      ({ pressed }: { pressed: boolean }) => [
+        styles.submitButton,
+        disabled && !isLoading && styles.submitDisabled,
+        pressed && !disabled && styles.submitPressed,
+      ],
+      [disabled, isLoading],
+    );
 
-  const textStyle = useMemo(
-    () => [
-      styles.submitText,
-      disabled && styles.submitTextDisabled,
-    ],
-    [disabled]
-  );
+    const textStyle = useMemo(
+      () => [styles.submitText, disabled && styles.submitTextDisabled],
+      [disabled],
+    );
 
-  return (
-    <Pressable
-      style={getStyle}
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel="Generate Plan"
-    >
-      {isLoading ? (
-        <View style={styles.loadingContent}>
-          <ActivityIndicator color={colors.white} size="small" />
-          <Text style={styles.submitText}>
-            {LOADING_MESSAGES[loadingMsgIndex]}
-          </Text>
-        </View>
-      ) : (
-        <Text style={textStyle}>
-          Generate Plan
-        </Text>
-      )}
-    </Pressable>
-  );
-});
+    return (
+      <Pressable
+        style={getStyle}
+        onPress={onPress}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel="Generate Plan"
+      >
+        {isLoading ? (
+          <View style={styles.loadingContent}>
+            <ActivityIndicator color={colors.white} size="small" />
+            <Text style={styles.submitText}>
+              {LOADING_MESSAGES[loadingMsgIndex]}
+            </Text>
+          </View>
+        ) : (
+          <Text style={textStyle}>Generate Plan</Text>
+        )}
+      </Pressable>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -543,6 +559,7 @@ const styles = StyleSheet.create({
     borderRadius: radii.md,
     padding: spacing.base,
     alignItems: "center",
+    marginBottom: spacing.xl,
   },
   errorText: {
     color: colors.error,

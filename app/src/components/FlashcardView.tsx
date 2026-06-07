@@ -12,7 +12,7 @@ import Animated, {
   withTiming,
   interpolate,
 } from "react-native-reanimated";
-import { scheduleOnRN } from "react-native-worklets";
+import { runOnJS, scheduleOnRN } from "react-native-worklets";
 import * as Haptics from "expo-haptics";
 import {
   colors,
@@ -66,7 +66,7 @@ export function FlashcardView({ flashcards }: FlashcardViewProps) {
     // If flipped, flip back first, then change index
     if (isFlipped.value === 1) {
       isFlipped.value = withTiming(0, { duration: 250 }, () => {
-        scheduleOnRN(() => {
+        runOnJS(() => {
           setCardSide("front");
           setCurrentIndex((prev) => (prev + 1) % flashcards.length);
         });

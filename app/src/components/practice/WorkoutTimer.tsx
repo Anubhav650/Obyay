@@ -1,10 +1,24 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
-import * as Haptics from 'expo-haptics';
-import { colors, spacing, radii, fontSize, fontWeight, shadows, lineHeight } from '../../theme/tokens';
-import type { PracticeToolConfig } from '../../types/models';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
+import { View, Text, StyleSheet, Pressable } from "react-native";
+import * as Haptics from "expo-haptics";
+import {
+  colors,
+  spacing,
+  radii,
+  fontSize,
+  fontWeight,
+  shadows,
+  lineHeight,
+} from "../../theme/tokens";
+import type { PracticeToolConfig } from "../../types/models";
 
-type PhaseType = 'prepare' | 'work' | 'rest';
+type PhaseType = "prepare" | "work" | "rest";
 
 interface IntervalStage {
   name: string;
@@ -12,17 +26,25 @@ interface IntervalStage {
 }
 
 export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
-  const defaultIntervals: IntervalStage[] = useMemo(() => config?.intervals || [
-    { name: 'Prepare', duration: 10 },
-    { name: 'Work', duration: 40 },
-    { name: 'Recover', duration: 20 }
-  ], [config?.intervals]);
-  
+  const defaultIntervals: IntervalStage[] = useMemo(
+    () =>
+      config?.intervals || [
+        { name: "Prepare", duration: 10 },
+        { name: "Work", duration: 40 },
+        { name: "Recover", duration: 20 },
+      ],
+    [config?.intervals],
+  );
+
   const maxCycles = config?.cycles || 4;
-  const instruction = config?.instruction || 'Focus on correct posture and slow, deliberate movements.';
+  const instruction =
+    config?.instruction ||
+    "Focus on correct posture and slow, deliberate movements.";
 
   // Workout state machine: 'idle' | 'running' | 'paused' | 'finished'
-  const [workoutState, setWorkoutState] = useState<'idle' | 'running' | 'paused' | 'finished'>('idle');
+  const [workoutState, setWorkoutState] = useState<
+    "idle" | "running" | "paused" | "finished"
+  >("idle");
 
   // Active training state
   const [currentCycle, setCurrentCycle] = useState(1);
@@ -50,7 +72,7 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
         setTimeLeft(defaultIntervals[0].duration);
       } else {
         // Workout complete!
-        setWorkoutState('finished');
+        setWorkoutState("finished");
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       }
     }
@@ -58,7 +80,7 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
 
   // Interval timer tick controller
   useEffect(() => {
-    if (workoutState === 'running') {
+    if (workoutState === "running") {
       timerRef.current = setInterval(() => {
         setTimeLeft((prev) => {
           if (prev <= 1) {
@@ -92,78 +114,85 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
     setCurrentCycle(1);
     setCurrentIntervalIdx(0);
     setTimeLeft(defaultIntervals[0].duration);
-    setWorkoutState('running');
+    setWorkoutState("running");
   }, [defaultIntervals]);
 
   const togglePause = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setWorkoutState((prev) => (prev === 'running' ? 'paused' : 'running'));
+    setWorkoutState((prev) => (prev === "running" ? "paused" : "running"));
   }, []);
 
   const stopWorkout = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setWorkoutState('idle');
+    setWorkoutState("idle");
   }, []);
 
   const phaseName = useMemo(() => {
-    return defaultIntervals[currentIntervalIdx]?.name || 'Prepare';
+    return defaultIntervals[currentIntervalIdx]?.name || "Prepare";
   }, [currentIntervalIdx, defaultIntervals]);
 
   const phaseColor = useMemo(() => {
     const name = phaseName.toLowerCase();
-    if (name.includes('prep')) return colors.intermediate; // Amber
-    if (name.includes('work') || name.includes('active')) return colors.success; // Green
+    if (name.includes("prep")) return colors.intermediate; // Amber
+    if (name.includes("work") || name.includes("active")) return colors.success; // Green
     return colors.advanced; // Violet / Rest
   }, [phaseName]);
 
   const phaseDimColor = useMemo(() => {
     const name = phaseName.toLowerCase();
-    if (name.includes('prep')) return colors.intermediateDim;
-    if (name.includes('work') || name.includes('active')) return colors.successDim;
+    if (name.includes("prep")) return colors.intermediateDim;
+    if (name.includes("work") || name.includes("active"))
+      return colors.successDim;
     return colors.advancedDim;
   }, [phaseName]);
 
-  const ringStyle = useMemo(() => [
-    styles.countdownRing,
-    {
-      borderColor: phaseColor,
-      backgroundColor: phaseDimColor,
-    },
-  ], [phaseColor, phaseDimColor]);
+  const ringStyle = useMemo(
+    () => [
+      styles.countdownRing,
+      {
+        borderColor: phaseColor,
+        backgroundColor: phaseDimColor,
+      },
+    ],
+    [phaseColor, phaseDimColor],
+  );
 
-  const timeLabelStyle = useMemo(() => [
-    styles.timeLabel,
-    { color: phaseColor }
-  ], [phaseColor]);
+  const timeLabelStyle = useMemo(
+    () => [styles.timeLabel, { color: phaseColor }],
+    [phaseColor],
+  );
 
-  const renderBreakdownRow = useCallback((stage: IntervalStage, idx: number) => (
-    <View key={idx} style={styles.breakdownRow}>
-      <Text style={styles.breakdownName}>🔹 {stage.name}</Text>
-      <Text style={styles.breakdownDur}>{stage.duration}s</Text>
-    </View>
-  ), []);
+  const renderBreakdownRow = useCallback(
+    (stage: IntervalStage, idx: number) => (
+      <View key={idx} style={styles.breakdownRow}>
+        <Text style={styles.breakdownName}>🔹 {stage.name}</Text>
+        <Text style={styles.breakdownDur}>{stage.duration}s</Text>
+      </View>
+    ),
+    [],
+  );
 
   const activeTimerActionButtonStyle = useCallback(
     ({ pressed }: { pressed: boolean }) => [
       styles.timerActionBtn,
-      workoutState === 'running' ? styles.pauseBtn : styles.resumeBtn,
+      workoutState === "running" ? styles.pauseBtn : styles.resumeBtn,
       pressed && styles.stopBtn, // simple fallback overlay
     ],
-    [workoutState]
+    [workoutState],
   );
 
   const activeTimerActionButtonTextStyle = useMemo(
     () => [
       styles.timerActionText,
-      workoutState === 'running' && styles.pauseBtnText,
+      workoutState === "running" && styles.pauseBtnText,
     ],
-    [workoutState]
+    [workoutState],
   );
 
   return (
     <View style={styles.container}>
       {/* Workout State Views */}
-      {workoutState === 'idle' ? (
+      {workoutState === "idle" ? (
         <View style={styles.idlePanel}>
           <Text style={styles.idleHeading}>Ready to Practice?</Text>
           <Text style={styles.idleSubheading}>
@@ -189,12 +218,13 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
             <Text style={styles.startBtnText}>Start Routine</Text>
           </Pressable>
         </View>
-      ) : workoutState === 'finished' ? (
+      ) : workoutState === "finished" ? (
         <View style={styles.finishedPanel}>
           <Text style={styles.finishedEmoji}>🏆</Text>
           <Text style={styles.finishedTitle}>Routine Completed!</Text>
           <Text style={styles.finishedSubtitle}>
-            Great job! You executed all {maxCycles} cycles of this drill focus. Your muscle memory is growing.
+            Great job! You executed all {maxCycles} cycles of this drill focus.
+            Your muscle memory is growing.
           </Text>
           <Pressable style={styles.startBtn} onPress={startWorkout}>
             <Text style={styles.startBtnText}>Practice Again</Text>
@@ -231,7 +261,7 @@ export function WorkoutTimer({ config }: { config?: PracticeToolConfig }) {
               onPress={togglePause}
             >
               <Text style={activeTimerActionButtonTextStyle}>
-                {workoutState === 'running' ? 'Pause' : 'Resume'}
+                {workoutState === "running" ? "Pause" : "Resume"}
               </Text>
             </Pressable>
 
@@ -250,7 +280,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
   },
   idlePanel: {
-    alignItems: 'stretch',
+    alignItems: "stretch",
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: spacing.xl,
@@ -262,13 +292,13 @@ const styles = StyleSheet.create({
     fontSize: fontSize.xl,
     fontWeight: fontWeight.bold,
     color: colors.textPrimary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.xs,
   },
   idleSubheading: {
     fontSize: fontSize.sm,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: spacing.xl,
   },
   cueBox: {
@@ -285,14 +315,14 @@ const styles = StyleSheet.create({
     color: colors.textTertiary,
     letterSpacing: 1,
     marginBottom: spacing.xs,
-    textAlign: 'center',
+    textAlign: "center",
   },
   cueText: {
     color: colors.textPrimary,
     fontSize: fontSize.base,
     fontWeight: fontWeight.semibold,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    textAlign: "center",
+    fontStyle: "italic",
     lineHeight: lineHeight.base,
   },
   intervalsBreakdown: {
@@ -303,9 +333,9 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   breakdownRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   breakdownName: {
     fontSize: fontSize.sm,
@@ -321,8 +351,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     borderRadius: radii.pill,
     minHeight: 56,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: spacing.xl,
     ...shadows.card,
   },
   startBtnText: {
@@ -331,7 +362,7 @@ const styles = StyleSheet.create({
     fontSize: fontSize.base,
   },
   finishedPanel: {
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: spacing.xl,
@@ -352,7 +383,7 @@ const styles = StyleSheet.create({
   finishedSubtitle: {
     fontSize: fontSize.base,
     color: colors.textSecondary,
-    textAlign: 'center',
+    textAlign: "center",
     lineHeight: lineHeight.base,
     marginBottom: spacing.xl,
     paddingHorizontal: spacing.sm,
@@ -367,7 +398,7 @@ const styles = StyleSheet.create({
     fontWeight: fontWeight.bold,
   },
   timerPanel: {
-    alignItems: 'center',
+    alignItems: "center",
     backgroundColor: colors.surface,
     borderRadius: radii.lg,
     padding: spacing.xl,
@@ -395,8 +426,8 @@ const styles = StyleSheet.create({
     height: 180,
     borderRadius: radii.full,
     borderWidth: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: spacing.xl,
   },
   timeLabel: {
@@ -424,21 +455,21 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: fontSize.sm,
     fontWeight: fontWeight.medium,
-    textAlign: 'center',
-    fontStyle: 'italic',
+    textAlign: "center",
+    fontStyle: "italic",
     lineHeight: lineHeight.sm,
   },
   controlsRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: spacing.md,
-    width: '100%',
+    width: "100%",
   },
   timerActionBtn: {
     flex: 2,
     borderRadius: radii.pill,
     minHeight: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   pauseBtn: {
     backgroundColor: colors.surfaceElevated,
@@ -463,8 +494,8 @@ const styles = StyleSheet.create({
     borderColor: colors.error,
     borderRadius: radii.pill,
     minHeight: 52,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   stopBtnText: {
     color: colors.error,

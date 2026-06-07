@@ -1,4 +1,10 @@
-import React, { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useRef,
+  useMemo,
+} from "react";
 import {
   View,
   Text,
@@ -45,6 +51,8 @@ const SUGGESTED_HOBBIES = [
   "Sourdough Baking",
   "Running",
 ];
+
+const paddingTopBase = Platform.OS === "ios" ? 0 : 30;
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -131,7 +139,7 @@ export default function OnboardingScreen() {
         setIsLoading(false);
       }
     },
-    [hobbyName, createHobby, progressShared, router]
+    [hobbyName, createHobby, progressShared, router],
   );
 
   const handleRetry = useCallback(() => {
@@ -168,18 +176,18 @@ export default function OnboardingScreen() {
         />
       );
     },
-    [hobbyName, handleSuggestionPress]
+    [hobbyName, handleSuggestionPress],
   );
 
   const renderLevelCard = useCallback(
-    (level: typeof LEVELS[number]) => (
+    (level: (typeof LEVELS)[number]) => (
       <LevelCard
         key={level.value}
         level={level}
         onPress={handleGenerateRoadmap}
       />
     ),
-    [handleGenerateRoadmap]
+    [handleGenerateRoadmap],
   );
 
   const retryButtonStyle = useCallback(
@@ -188,12 +196,15 @@ export default function OnboardingScreen() {
       styles.retryButton,
       pressed && styles.buttonPressed,
     ],
-    []
+    [],
   );
 
   const headerStyle = useMemo(
-    () => [styles.header, { paddingTop: Math.max(insets.top, spacing.base) }],
-    [insets.top]
+    () => [
+      styles.header,
+      { paddingTop: Math.max(insets.top + paddingTopBase, spacing.base) },
+    ],
+    [insets.top],
   );
 
   const scrollContentStyle = useMemo(
@@ -201,12 +212,12 @@ export default function OnboardingScreen() {
       styles.scrollContent,
       { paddingBottom: Math.max(insets.bottom, spacing.base) + spacing.xl },
     ],
-    [insets.bottom]
+    [insets.bottom],
   );
 
   const continueButtonTextStyle = useMemo(
     () => [styles.continueButtonText],
-    []
+    [],
   );
 
   // Render Hobby Input Step
@@ -260,9 +271,7 @@ export default function OnboardingScreen() {
         accordingly.
       </Text>
 
-      <View style={styles.levelGrid}>
-        {LEVELS.map(renderLevelCard)}
-      </View>
+      <View style={styles.levelGrid}>{LEVELS.map(renderLevelCard)}</View>
     </View>
   );
 
@@ -287,10 +296,7 @@ export default function OnboardingScreen() {
           <Text style={styles.errorTitle}>Plan Generation Failed</Text>
           <Text style={styles.errorText}>{error}</Text>
 
-          <Pressable
-            style={retryButtonStyle}
-            onPress={handleRetry}
-          >
+          <Pressable style={retryButtonStyle} onPress={handleRetry}>
             <Text style={continueButtonTextStyle}>Try Again</Text>
           </Pressable>
 
@@ -337,30 +343,32 @@ interface SuggestionChipProps {
   onPress: (item: string) => void;
 }
 
-const SuggestionChip = React.memo(({ item, isSelected, onPress }: SuggestionChipProps) => {
-  const handlePress = useCallback(() => {
-    onPress(item);
-  }, [onPress, item]);
+const SuggestionChip = React.memo(
+  ({ item, isSelected, onPress }: SuggestionChipProps) => {
+    const handlePress = useCallback(() => {
+      onPress(item);
+    }, [onPress, item]);
 
-  return (
-    <Pressable
-      style={[
-        styles.suggestionChip,
-        isSelected && styles.suggestionChipSelected,
-      ]}
-      onPress={handlePress}
-    >
-      <Text
+    return (
+      <Pressable
         style={[
-          styles.suggestionText,
-          isSelected && styles.suggestionTextSelected,
+          styles.suggestionChip,
+          isSelected && styles.suggestionChipSelected,
         ]}
+        onPress={handlePress}
       >
-        {item}
-      </Text>
-    </Pressable>
-  );
-});
+        <Text
+          style={[
+            styles.suggestionText,
+            isSelected && styles.suggestionTextSelected,
+          ]}
+        >
+          {item}
+        </Text>
+      </Pressable>
+    );
+  },
+);
 
 interface LevelCardProps {
   level: {
@@ -385,7 +393,7 @@ const LevelCard = React.memo(({ level, onPress }: LevelCardProps) => {
       styles.levelCardColors,
       pressed && { borderColor: color, backgroundColor: dimColor },
     ],
-    [color, dimColor]
+    [color, dimColor],
   );
 
   const iconStyle = useMemo(() => [styles.levelIcon, { color }], [color]);
@@ -405,22 +413,12 @@ const LevelCard = React.memo(({ level, onPress }: LevelCardProps) => {
   }, [level.value]);
 
   return (
-    <Pressable
-      style={cardStyle}
-      onPress={handlePress}
-    >
+    <Pressable style={cardStyle} onPress={handlePress}>
       <View style={styles.levelCardHeader}>
-        <Ionicons
-          name={level.icon as any}
-          style={iconStyle}
-        />
-        <Text style={labelStyle}>
-          {level.label}
-        </Text>
+        <Ionicons name={level.icon as any} style={iconStyle} />
+        <Text style={labelStyle}>{level.label}</Text>
       </View>
-      <Text style={styles.levelSubtitle}>
-        {levelDescription}
-      </Text>
+      <Text style={styles.levelSubtitle}>{levelDescription}</Text>
     </Pressable>
   );
 });
@@ -431,36 +429,29 @@ interface ContinueButtonProps {
   label: string;
 }
 
-const ContinueButton = React.memo(({ onPress, disabled, label }: ContinueButtonProps) => {
-  const getStyle = useCallback(
-    ({ pressed }: { pressed: boolean }) => [
-      styles.continueButton,
-      disabled && styles.buttonDisabled,
-      pressed && !disabled && styles.buttonPressed,
-    ],
-    [disabled]
-  );
+const ContinueButton = React.memo(
+  ({ onPress, disabled, label }: ContinueButtonProps) => {
+    const getStyle = useCallback(
+      ({ pressed }: { pressed: boolean }) => [
+        styles.continueButton,
+        disabled && styles.buttonDisabled,
+        pressed && !disabled && styles.buttonPressed,
+      ],
+      [disabled],
+    );
 
-  const textStyle = useMemo(
-    () => [
-      styles.continueButtonText,
-      disabled && styles.buttonTextDisabled,
-    ],
-    [disabled]
-  );
+    const textStyle = useMemo(
+      () => [styles.continueButtonText, disabled && styles.buttonTextDisabled],
+      [disabled],
+    );
 
-  return (
-    <Pressable
-      style={getStyle}
-      onPress={onPress}
-      disabled={disabled}
-    >
-      <Text style={textStyle}>
-        {label}
-      </Text>
-    </Pressable>
-  );
-});
+    return (
+      <Pressable style={getStyle} onPress={onPress} disabled={disabled}>
+        <Text style={textStyle}>{label}</Text>
+      </Pressable>
+    );
+  },
+);
 
 const styles = StyleSheet.create({
   container: {
