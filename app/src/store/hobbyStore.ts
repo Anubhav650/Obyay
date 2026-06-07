@@ -4,7 +4,6 @@ import type {
   TechniqueStatus,
   Resource,
   Progress,
-  UserProfile,
 } from "../types/models";
 
 // ─── Storage Keys ────────────────────────────────────────────────────────────
@@ -129,16 +128,19 @@ export async function updateTechniqueResources(
   await AsyncStorage.setItem(hobbyKey(hobbyId), JSON.stringify(updated));
 }
 
-export async function saveProfile(profile: UserProfile): Promise<void> {
-  await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+const ONBOARDING_COMPLETED_KEY = "hobyay:onboarding_completed";
+
+export async function saveOnboardingCompleted(): Promise<void> {
+  await AsyncStorage.setItem(ONBOARDING_COMPLETED_KEY, "true");
 }
 
-export async function loadProfile(): Promise<UserProfile | null> {
+export async function isOnboardingCompleted(): Promise<boolean> {
   try {
-    const raw = await AsyncStorage.getItem(PROFILE_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw) as UserProfile;
+    const completed = await AsyncStorage.getItem(ONBOARDING_COMPLETED_KEY);
+    if (completed === "true") return true;
+    const profile = await AsyncStorage.getItem(PROFILE_KEY);
+    return profile !== null;
   } catch {
-    return null;
+    return false;
   }
 }

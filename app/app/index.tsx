@@ -13,7 +13,7 @@ import { useRouter, useFocusEffect } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { useHobbies } from "../src/hooks/useHobbies";
-import { loadProfile } from "../src/store/hobbyStore";
+import { isOnboardingCompleted } from "../src/store/hobbyStore";
 import { HobbyCard } from "../src/components/HobbyCard";
 import { CuratedHobbyCard } from "../src/components/CuratedHobbyCard";
 import { FAB } from "../src/components/FAB";
@@ -43,8 +43,8 @@ const HomeScreen = () => {
 
   useEffect(() => {
     (async () => {
-      const profile = await loadProfile();
-      if (!profile) {
+      const completed = await isOnboardingCompleted();
+      if (!completed) {
         router.replace("/onboarding");
       } else {
         setCheckingProfile(false);

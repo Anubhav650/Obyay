@@ -104,12 +104,6 @@ function getModel(modelName: string) {
   });
 }
 
-export interface UserProfile {
-  roles: string[];
-  goals: string[];
-  interests: string[];
-  learningPreferences: string[];
-}
 
 /**
  * Generate a learning plan for the given hobby and goal level.
@@ -120,7 +114,6 @@ export interface UserProfile {
 export async function generatePlan(
   hobby: string,
   level: string,
-  profile?: UserProfile | null,
 ): Promise<GeminiOutput> {
   const modelsToTry = [
     "gemini-flash-latest",
@@ -129,24 +122,7 @@ export async function generatePlan(
     "gemini-2.0-flash",
   ];
 
-  let userMessage = `Hobby: ${hobby}\nGoal level: ${level}`;
-  if (profile) {
-    if (profile.roles && profile.roles.length > 0) {
-      userMessage += `\nUser's Role/Expertise: ${profile.roles.join(", ")}`;
-      userMessage += `\nInstruction: We will use examples, explanations, and analogies that are relevant to user's role and expertise when helpful (e.g. if developer/engineer, design patterns, logical constructs or algorithms; if designer/creative, visual compositions, hierarchy or alignments; if product manager, roadmap prioritization or iterative feedback loops; etc.). Make sure to apply these subtle hints when explaining the techniques and why they matter.`;
-    }
-    if (profile.goals && profile.goals.length > 0) {
-      userMessage += `\nUser's Learning Goals: ${profile.goals.join(", ")}`;
-      userMessage += `\nInstruction: Target the plan's details and motivational summaries to help them achieve these goals (e.g. if 'boost my career', show practical utility in professional settings; if 'just for fun', keep descriptions approachable, light and engaging; if 'make better use of my time', focus on high-efficiency techniques).`;
-    }
-    if (profile.interests && profile.interests.length > 0) {
-      userMessage += `\nUser's Other Interests: ${profile.interests.join(", ")}`;
-    }
-    if (profile.learningPreferences && profile.learningPreferences.length > 0) {
-      userMessage += `\nUser's Learning Preferences: ${profile.learningPreferences.join(", ")}`;
-      userMessage += `\nInstruction: Structure the plan or describe the techniques to emphasize their preferences (e.g., highlighting step-by-step clear learning paths or focusing on hands-on practical exercises/descriptions).`;
-    }
-  }
+  const userMessage = `Hobby: ${hobby}\nGoal level: ${level}`;
 
   let lastError: Error | null = null;
 

@@ -11,17 +11,9 @@ const router = Router();
 
 // ── Request validation ─────────────────────────────────────────────────────
 
-const profileSchema = z.object({
-  roles: z.array(z.string()),
-  goals: z.array(z.string()),
-  interests: z.array(z.string()),
-  learningPreferences: z.array(z.string()),
-});
-
 const planRequestSchema = z.object({
   hobby: z.string().min(1, "hobby must be a non-empty string"),
   level: z.enum(["beginner", "intermediate", "advanced"]),
-  profile: profileSchema.nullable().optional(),
 });
 
 // ── POST /api/plan ─────────────────────────────────────────────────────────
@@ -37,10 +29,10 @@ router.post("/", async (req: Request, res: Response): Promise<void> => {
     return;
   }
 
-  const { hobby, level, profile } = parseResult.data;
+  const { hobby, level } = parseResult.data;
 
   try {
-    const output = await generatePlan(hobby, level, profile);
+    const output = await generatePlan(hobby, level);
 
     // Check if it's a NOT_A_HOBBY error
     if ("error" in output) {

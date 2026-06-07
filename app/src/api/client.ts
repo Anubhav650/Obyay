@@ -3,7 +3,6 @@ import type {
   Hobby,
   Resource,
   Technique,
-  UserProfile,
   HobbyCategory,
   QuizQuestion,
   Flashcard,
@@ -143,7 +142,6 @@ const mapErrorCode = (
 export const generatePlan = async (
   hobby: string,
   level: GoalLevel,
-  profile?: UserProfile | null,
 ): Promise<PlanResponse> => {
   interface ServerResponse {
     plan: {
@@ -166,7 +164,7 @@ export const generatePlan = async (
 
   const response = await apiFetch<ServerResponse>("/api/plan", {
     method: "POST",
-    body: { hobby, level, profile },
+    body: { hobby, level },
     timeoutMs: 30000, // Plan generation can take longer
   });
 

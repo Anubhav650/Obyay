@@ -86,9 +86,3 @@ export interface Progress {
   percent: number; // mastered / (total - skipped), 0 if all skipped
 }
 
-export interface UserProfile {
-  roles: string[];
-  goals: string[];
-  interests: string[];
-  learningPreferences: string[];
-}

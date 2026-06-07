@@ -56,8 +56,7 @@ export const useHobbies = (): UseHobbiesReturn => {
 
   const createHobby = useCallback(
     async (name: string, level: GoalLevel): Promise<Hobby> => {
-      const profile = await store.loadProfile();
-      const plan = await generatePlan(name, level, profile);
+      const plan = await generatePlan(name, level);
 
       const hobby: Hobby = {
         id: generateUUID(),

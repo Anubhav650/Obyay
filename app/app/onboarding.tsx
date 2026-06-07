@@ -37,7 +37,7 @@ import {
   getLevelDimColor,
   getLevelGlowColor,
 } from "../src/theme/tokens";
-import { saveProfile } from "../src/store/hobbyStore";
+import { saveOnboardingCompleted } from "../src/store/hobbyStore";
 import { useHobbies, getErrorMessage } from "../src/hooks/useHobbies";
 import type { GoalLevel } from "../src/types/models";
 import { LEVELS, LOADING_MESSAGES } from "../src/constants";
@@ -114,13 +114,8 @@ const OnboardingScreen = () => {
       setError(null);
 
       try {
-        // Create profile first so check on home screen succeeds
-        await saveProfile({
-          roles: [],
-          goals: [],
-          interests: [hobbyName.trim()],
-          learningPreferences: [],
-        });
+        // Mark onboarding completed first so check on home screen succeeds
+        await saveOnboardingCompleted();
 
         // Fetch plan from Gemini and save
         const hobby = await createHobby(hobbyName.trim(), level);
