@@ -84,6 +84,45 @@ obyay/
    - **Android**: Press `a` in the terminal to load in the Android emulator, or scan the QR code using the Expo Go app.
    - **iOS**: Press `i` in the terminal to run on the iOS simulator, or scan the QR code using your Camera app.
 
+### 3. Running on macOS (Desktop App)
+
+Hobyay supports running on macOS via two primary methods:
+
+#### Option A: Mac Catalyst (Native iOS-on-Mac - Recommended)
+Since the app utilizes native Expo modules, compiling the app via Mac Catalyst lets you run the native iOS workspace directly as a desktop application on your Mac with full plugin compatibility:
+1. Generate the native iOS workspace:
+   ```bash
+   cd app
+   npx expo prebuild --platform ios
+   ```
+2. Open the iOS workspace in Xcode:
+   ```bash
+   open ios/app.xcworkspace
+   ```
+3. Under **General** -> **Supported Destinations**, click the `+` button and add **Mac (Catalyst)**.
+4. Select **My Mac (Mac Catalyst)** in the top scheme bar and press `Cmd + R` to compile and run.
+
+#### Option B: Native macOS AppKit (Via `react-native-macos`)
+The workspace includes a native AppKit desktop configuration under the `app/macos/` directory:
+1. Install macOS peer dependencies and run CocoaPods:
+   ```bash
+   cd app
+   npm install --save "react-native-macos@0.81.7" --legacy-peer-deps
+   npm install --save-dev @react-native-community/cli --legacy-peer-deps
+   cd macos && pod install
+   ```
+2. Start the Metro bundler packager:
+   ```bash
+   npx react-native start
+   ```
+3. Compile and launch the app:
+   ```bash
+   npx react-native run-macos
+   # Or launch workspace directly in Xcode:
+   open macos/app.xcworkspace
+   ```
+   *(Note: iOS-specific Expo SDK libraries, like expo-camera, do not support AppKit native desktop components out of the box. Use Catalyst or Web exports if you require these features).*
+
 ## Environment Variables
 
 | Variable              | Scope  | Purpose                                               | Source               |
