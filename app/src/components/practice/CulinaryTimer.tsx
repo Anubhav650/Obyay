@@ -5,7 +5,15 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { View, Text, StyleSheet, Pressable, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  ScrollView,
+  TextInput,
+  Keyboard,
+} from "react-native";
 import * as Haptics from "expo-haptics";
 import {
   colors,
@@ -17,7 +25,11 @@ import {
   lineHeight,
 } from "../../theme/tokens";
 import { FontAwesome6, Ionicons } from "@expo/vector-icons";
-import type { PracticeToolConfig } from "../../types/models";
+import type {
+  PracticeToolConfig,
+  Technique,
+  PracticeLog,
+} from "../../types/models";
 
 interface CulinaryStep {
   name: string;
@@ -25,7 +37,17 @@ interface CulinaryStep {
   sensoryCheck: string;
 }
 
-export const CulinaryTimer = ({ config }: { config?: PracticeToolConfig }) => {
+export const CulinaryTimer = ({
+  technique,
+  config,
+  onCompletePractice,
+  onSavePracticeLog,
+}: {
+  technique?: Technique;
+  config?: PracticeToolConfig;
+  onCompletePractice?: () => void;
+  onSavePracticeLog?: (log: Omit<PracticeLog, "id" | "timestamp">) => void;
+}) => {
   const steps: CulinaryStep[] = useMemo(
     () =>
       config?.steps || [
@@ -58,6 +80,14 @@ export const CulinaryTimer = ({ config }: { config?: PracticeToolConfig }) => {
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [checklistChecked, setChecklistChecked] = useState(false);
 
+  const [showReflection, setShowReflection] = useState(false);
+  const [reflectionText1, setReflectionText1] = useState("");
+  const [reflectionText2, setReflectionText2] = useState("");
+
+  const isSubmitDisabled = useMemo(() => {
+    return !reflectionText1.trim() && !reflectionText2.trim();
+  }, [reflectionText1, reflectionText2]);
+
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Reset timer on step change
@@ -65,6 +95,9 @@ export const CulinaryTimer = ({ config }: { config?: PracticeToolConfig }) => {
     setTimeLeft(steps[activeStepIdx]?.duration || 60);
     setIsTimerRunning(false);
     setChecklistChecked(false);
+    setShowReflection(false);
+    setReflectionText1("");
+    setReflectionText2("");
   }, [activeStepIdx, steps]);
 
   // Timer loop
@@ -108,9 +141,61 @@ export const CulinaryTimer = ({ config }: { config?: PracticeToolConfig }) => {
       setActiveStepIdx((prev) => prev + 1);
     } else {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setActiveStepIdx(0);
+      setShowReflection(true);
     }
   }, [activeStepIdx, steps]);
+
+  const handleSubmitReflection = useCallback(() => {
+    if (isSubmitDisabled) return;
+
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Keyboard.dismiss();
+
+    const checkedMilestones = steps.map((s) => `${s.name}: ${s.sensoryCheck}`);
+    const reflections = [
+      {
+        question:
+          config?.reflectionQuestions?.[0] ||
+          "How did the visual/sensory checks turn out? (look, texture, smell, etc.)",
+        answer: reflectionText1,
+      },
+      {
+        question:
+          config?.reflectionQuestions?.[1] ||
+          "What adjustments would you make to the timing, temp, or ingredients?",
+        answer: reflectionText2,
+      },
+    ];
+
+    if (onSavePracticeLog) {
+      onSavePracticeLog({
+        focusTimeSpent: steps.reduce((acc, s) => acc + s.duration, 0),
+        checkedMilestones,
+        reflections: reflections.filter((r) => r.answer.trim().length > 0),
+      });
+    } else if (onCompletePractice) {
+      onCompletePractice();
+    }
+
+    // Reset state and transition back
+    setShowReflection(false);
+    setReflectionText1("");
+    setReflectionText2("");
+    setActiveStepIdx(0);
+  }, [
+    isSubmitDisabled,
+    steps,
+    config?.reflectionQuestions,
+    reflectionText1,
+    reflectionText2,
+    onSavePracticeLog,
+    onCompletePractice,
+  ]);
+
+  const handleBackToTimer = useCallback(() => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    setShowReflection(false);
+  }, []);
 
   const formatTime = useCallback((seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -178,108 +263,261 @@ export const CulinaryTimer = ({ config }: { config?: PracticeToolConfig }) => {
     [activeStepIdx, steps.length],
   );
 
+  const submitButtonStyle = useCallback(
+    ({ pressed }: { pressed: boolean }) => [
+      styles.submitBtn,
+      isSubmitDisabled && styles.submitBtnDisabled,
+      pressed && !isSubmitDisabled && styles.btnPressed,
+    ],
+    [isSubmitDisabled],
+  );
+
   return (
-    <View style={styles.container}>
-      {/* Target Temperature Badge */}
-      {targetTemp && (
-        <View style={styles.tempBadge}>
-          <Text style={styles.tempBadgeLabel}>TARGET TEMPERATURE</Text>
-          <View style={styles.tempRowLayout}>
-            <Ionicons name="flame" size={18} color={colors.intermediate} />
-            <Text style={styles.tempBadgeVal}>{targetTemp}</Text>
-          </View>
-        </View>
-      )}
-
-      {/* Steps List Overview */}
-      <View style={styles.stepsTimeline}>
-        <Text style={styles.guideTitle}>PRACTICE STEPS</Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.timelineScroll}
-        >
-          {steps.map(renderTimelineNode)}
-        </ScrollView>
-      </View>
-
-      {/* Active Step Panel */}
-      {currentStep && (
-        <View style={styles.activeStepCard}>
-          <Text style={styles.stepTitle}>{currentStep.name}</Text>
-
-          {/* Active Timer Display */}
-          <View style={styles.timerDisplay}>
-            <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-            <Pressable style={playPauseButtonStyle} onPress={toggleTimer}>
-              <Text style={playPauseTextStyle}>
-                {isTimerRunning ? "Pause" : "Start Timer"}
-              </Text>
-            </Pressable>
-          </View>
-
-          {/* Sensory Checklist Checkbox */}
-          <View style={styles.sensoryBox}>
-            <View style={styles.sensoryRowLayout}>
-              <Ionicons name="eye" size={14} color={colors.intermediate} />
-              <Text style={styles.sensoryTitle}>
-                SENSORY CHECKLIST (FIRST PRINCIPLES)
-              </Text>
-            </View>
-            <Text style={styles.sensoryDescription}>
-              Don't just wait for the timer. Inspect your prep physically and
-              verify:
-            </Text>
-            <Pressable
-              style={[
-                styles.checkboxRow,
-                checklistChecked && styles.checkboxRowChecked,
-              ]}
-              onPress={handleCheckboxToggle}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  checklistChecked && styles.checkboxChecked,
-                ]}
-              >
-                {checklistChecked && (
-                  <Ionicons name="checkmark" size={14} color={colors.white} />
-                )}
+    <ScrollView
+      style={styles.scrollContainer}
+      keyboardShouldPersistTaps="handled"
+    >
+      {!showReflection ? (
+        <View style={styles.container}>
+          {/* Target Temperature Badge */}
+          {targetTemp && (
+            <View style={styles.tempBadge}>
+              <Text style={styles.tempBadgeLabel}>TARGET TEMPERATURE</Text>
+              <View style={styles.tempRowLayout}>
+                <Ionicons name="flame" size={18} color={colors.intermediate} />
+                <Text style={styles.tempBadgeVal}>{targetTemp}</Text>
               </View>
-              <Text
-                style={[
-                  styles.checkboxText,
-                  checklistChecked && styles.checkboxTextChecked,
-                ]}
-              >
-                {currentStep.sensoryCheck}
-              </Text>
-            </Pressable>
+            </View>
+          )}
+
+          {/* Steps List Overview */}
+          <View style={styles.stepsTimeline}>
+            <Text style={styles.guideTitle}>PRACTICE STEPS</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.timelineScroll}
+            >
+              {steps.map(renderTimelineNode)}
+            </ScrollView>
           </View>
 
-          {/* Action Footer */}
-          <Pressable
-            style={nextStepButtonStyle}
-            onPress={nextStep}
-            disabled={!checklistChecked}
-          >
-            <View style={styles.rowLayout}>
-              <Text style={nextStepButtonTextStyle}>
-                {activeStepIdx + 1 < steps.length
-                  ? "Next Step"
-                  : "Complete Routine"}
-              </Text>
-              <Ionicons
-                name={nextStepIconName}
-                size={18}
-                color={colors.white}
-              />
+          {/* Active Step Panel */}
+          {currentStep && (
+            <View style={styles.activeStepCard}>
+              <Text style={styles.stepTitle}>{currentStep.name}</Text>
+
+              {/* Active Timer Display */}
+              <View style={styles.timerDisplay}>
+                <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+                <Pressable style={playPauseButtonStyle} onPress={toggleTimer}>
+                  <Text style={playPauseTextStyle}>
+                    {isTimerRunning ? "Pause" : "Start Timer"}
+                  </Text>
+                </Pressable>
+              </View>
+
+              {/* Sensory Checklist Checkbox */}
+              <View style={styles.sensoryBox}>
+                <View style={styles.sensoryRowLayout}>
+                  <Ionicons name="eye" size={14} color={colors.intermediate} />
+                  <Text style={styles.sensoryTitle}>
+                    SENSORY CHECKLIST (FIRST PRINCIPLES)
+                  </Text>
+                </View>
+                <Text style={styles.sensoryDescription}>
+                  Don't just wait for the timer. Inspect your prep physically
+                  and verify:
+                </Text>
+                <Pressable
+                  style={[
+                    styles.checkboxRow,
+                    checklistChecked && styles.checkboxRowChecked,
+                  ]}
+                  onPress={handleCheckboxToggle}
+                >
+                  <View
+                    style={[
+                      styles.checkbox,
+                      checklistChecked && styles.checkboxChecked,
+                    ]}
+                  >
+                    {checklistChecked && (
+                      <Ionicons
+                        name="checkmark"
+                        size={14}
+                        color={colors.white}
+                      />
+                    )}
+                  </View>
+                  <Text
+                    style={[
+                      styles.checkboxText,
+                      checklistChecked && styles.checkboxTextChecked,
+                    ]}
+                  >
+                    {currentStep.sensoryCheck}
+                  </Text>
+                </Pressable>
+              </View>
+
+              {/* Action Footer */}
+              <Pressable
+                style={nextStepButtonStyle}
+                onPress={nextStep}
+                disabled={!checklistChecked}
+              >
+                <View style={styles.rowLayout}>
+                  <Text style={nextStepButtonTextStyle}>
+                    {activeStepIdx + 1 < steps.length
+                      ? "Next Step"
+                      : "Complete Routine"}
+                  </Text>
+                  <Ionicons
+                    name={nextStepIconName}
+                    size={18}
+                    color={colors.white}
+                  />
+                </View>
+              </Pressable>
             </View>
+          )}
+
+          {/* Practice History Section */}
+          {technique?.practiceLogs && technique.practiceLogs.length > 0 && (
+            <View style={styles.historySection}>
+              <Text style={styles.sectionTitle}>
+                PRACTICE HISTORY ({technique.practiceLogs.length})
+              </Text>
+              {technique.practiceLogs
+                .slice()
+                .reverse()
+                .map((log) => (
+                  <View key={log.id} style={styles.historyCard}>
+                    <View style={styles.historyHeader}>
+                      <Ionicons
+                        name="calendar-outline"
+                        size={12}
+                        color={colors.textTertiary}
+                      />
+                      <Text style={styles.historyDate}>
+                        {new Date(log.timestamp).toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </Text>
+                    </View>
+
+                    {log.checkedMilestones.length > 0 && (
+                      <View style={styles.historyMilestones}>
+                        <Text style={styles.historySubLabel}>
+                          Steps Completed:
+                        </Text>
+                        {log.checkedMilestones.map((m, mIdx) => (
+                          <Text key={mIdx} style={styles.historyMilestoneItem}>
+                            ✓ {m}
+                          </Text>
+                        ))}
+                      </View>
+                    )}
+
+                    {log.reflections.length > 0 && (
+                      <View style={styles.historyReflections}>
+                        <Text style={styles.historySubLabel}>Reflections:</Text>
+                        {log.reflections.map((r, rIdx) => (
+                          <View key={rIdx} style={styles.historyReflectionItem}>
+                            <Text style={styles.historyQuestion}>
+                              {r.question}
+                            </Text>
+                            <Text style={styles.historyAnswer}>
+                              "{r.answer}"
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                  </View>
+                ))}
+            </View>
+          )}
+        </View>
+      ) : (
+        <View style={styles.reflectionCard}>
+          <View style={styles.reflectionHeader}>
+            <Ionicons name="document-text" size={20} color={colors.success} />
+            <Text
+              style={[
+                styles.cardHeading,
+                styles.marginBottom0,
+                { color: colors.success },
+              ]}
+            >
+              LOG ROUTINE REFLECTION
+            </Text>
+          </View>
+          <Text style={styles.reflectionIntro}>
+            Reflecting on your sensory check outcomes is the key to culinary
+            mastery. Answer these brief cues:
+          </Text>
+
+          {/* Reflection Question 1 */}
+          <View style={styles.reflectionField}>
+            <Text style={styles.reflectionLabel}>
+              {config?.reflectionQuestions?.[0] ||
+                "How did the visual/sensory checks turn out? (look, texture, smell, etc.)"}
+            </Text>
+            <TextInput
+              style={styles.reflectionInput}
+              placeholder="Type your notes here..."
+              placeholderTextColor={colors.textDisabled}
+              value={reflectionText1}
+              onChangeText={setReflectionText1}
+              multiline
+              blurOnSubmit
+            />
+          </View>
+
+          {/* Reflection Question 2 */}
+          <View style={styles.reflectionField}>
+            <Text style={styles.reflectionLabel}>
+              {config?.reflectionQuestions?.[1] ||
+                "What adjustments would you make to the timing, temp, or ingredients?"}
+            </Text>
+            <TextInput
+              style={styles.reflectionInput}
+              placeholder="Type your notes here..."
+              placeholderTextColor={colors.textDisabled}
+              value={reflectionText2}
+              onChangeText={setReflectionText2}
+              multiline
+              blurOnSubmit
+            />
+          </View>
+
+          <Pressable
+            style={submitButtonStyle}
+            onPress={handleSubmitReflection}
+            disabled={isSubmitDisabled}
+          >
+            <Text
+              style={[
+                styles.submitBtnText,
+                isSubmitDisabled && styles.submitBtnTextDisabled,
+              ]}
+            >
+              Complete & Save Practice Log
+            </Text>
+          </Pressable>
+
+          <Pressable style={styles.backBtn} onPress={handleBackToTimer}>
+            <Text style={styles.backBtnText}>Back to Active Steps</Text>
           </Pressable>
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -557,5 +795,182 @@ const styles = StyleSheet.create({
   },
   nextBtnTextDisabled: {
     color: colors.textTertiary,
+  },
+  scrollContainer: {
+    paddingVertical: spacing.xs,
+  },
+  reflectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    justifyContent: "center",
+    marginBottom: spacing.lg,
+  },
+  reflectionCard: {
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    borderRadius: radii.lg,
+    padding: spacing.xl,
+    ...shadows.card,
+    marginBottom: spacing.xl,
+  },
+  cardHeading: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    color: colors.textTertiary,
+    letterSpacing: 1,
+    textAlign: "center",
+    marginBottom: spacing.lg,
+  },
+  marginBottom0: {
+    marginBottom: 0,
+  },
+  reflectionUnlockLink: {
+    alignSelf: "center",
+    paddingVertical: spacing.xs,
+  },
+  reflectionUnlockText: {
+    color: colors.accent,
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+  },
+  reflectionIntro: {
+    color: colors.textSecondary,
+    fontSize: fontSize.sm,
+    lineHeight: lineHeight.base,
+    marginBottom: spacing.lg,
+  },
+  reflectionField: {
+    marginBottom: spacing.lg,
+  },
+  reflectionLabel: {
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.bold,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  reflectionInput: {
+    backgroundColor: colors.surfaceElevated,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    color: colors.textPrimary,
+    fontSize: fontSize.sm,
+    minHeight: 80,
+    textAlignVertical: "top",
+  },
+  submitBtn: {
+    backgroundColor: colors.success,
+    borderRadius: radii.pill,
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    ...shadows.card,
+    marginTop: spacing.md,
+  },
+  submitBtnDisabled: {
+    backgroundColor: colors.borderSubtle,
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  submitBtnText: {
+    color: colors.white,
+    fontWeight: fontWeight.bold,
+    fontSize: fontSize.base,
+  },
+  submitBtnTextDisabled: {
+    color: colors.textDisabled,
+  },
+  backBtn: {
+    alignSelf: "center",
+    marginTop: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  backBtnText: {
+    color: colors.textTertiary,
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+  },
+  historySection: {
+    marginTop: spacing.xl,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderSubtle,
+    paddingTop: spacing.lg,
+    gap: spacing.md,
+  },
+  sectionTitle: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    color: colors.textTertiary,
+    letterSpacing: 0.5,
+    marginBottom: spacing.xs,
+  },
+  historyCard: {
+    backgroundColor: colors.surfaceElevated,
+    borderRadius: radii.md,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+    gap: spacing.sm,
+  },
+  historyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
+    paddingBottom: spacing.xs,
+    marginBottom: 2,
+  },
+  historyDate: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.bold,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  historyTime: {
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    color: colors.accent,
+  },
+  historySubLabel: {
+    fontSize: 10,
+    fontWeight: fontWeight.bold,
+    color: colors.textTertiary,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    marginBottom: 2,
+  },
+  historyMilestones: {
+    gap: 2,
+  },
+  historyMilestoneItem: {
+    fontSize: fontSize.xs,
+    color: colors.textSecondary,
+    paddingLeft: spacing.xs,
+  },
+  historyReflections: {
+    gap: spacing.xs,
+    marginTop: 2,
+  },
+  historyReflectionItem: {
+    backgroundColor: colors.surface,
+    borderRadius: radii.sm,
+    padding: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.borderSubtle,
+  },
+  historyQuestion: {
+    fontSize: 10,
+    fontWeight: fontWeight.bold,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  historyAnswer: {
+    fontSize: fontSize.xs,
+    color: colors.textPrimary,
+    fontStyle: "italic",
   },
 });

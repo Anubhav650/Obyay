@@ -218,7 +218,12 @@ const TechniqueSheetContent = ({
             <WorkoutTimer config={technique.practiceTool} />
           )}
           {hobby.category === "culinary" && (
-            <CulinaryTimer config={technique.practiceTool} />
+            <CulinaryTimer
+              technique={technique}
+              config={technique.practiceTool}
+              onCompletePractice={handleCompletePractice}
+              onSavePracticeLog={onSavePracticeLog}
+            />
           )}
           {hobby.category === "general" && (
             <FocusPracticeTool
